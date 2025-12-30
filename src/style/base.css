@@ -1,0 +1,55 @@
+@import 'tailwindcss';
+@import './component.css';
+
+:root {
+	@apply leading-3 font-normal;
+	font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+
+	--background-light: #f9f5d7;
+	--foreground-light: #654735;
+
+	color-scheme: light dark;
+	color: #d4be98;
+	background-color: #282828;
+
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+body {
+	@apply m-0 flex place-items-center;
+	min-width: 320px;
+	min-height: 100vh;
+}
+
+button {
+	@apply rounded border px-2 py-1 text-xl font-normal;
+	background-color: #1a1a1a;
+}
+button:hover {
+	border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+	outline: 4px auto -webkit-focus-ring-color;
+}
+input {
+	@apply border px-2 py-1 text-xl font-normal;
+}
+
+#app {
+	@apply m-auto max-w-5xl text-center;
+	/* margin: 0 auto; */
+}
+
+@media (prefers-color-scheme: light) {
+	:root {
+		color: var(--foreground-light);
+		background-color: var(--background-light);
+	}
+	button {
+		background-color: var(--background-light);
+	}
+}
