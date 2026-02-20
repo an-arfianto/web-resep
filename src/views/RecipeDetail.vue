@@ -1,35 +1,30 @@
 <template>
     <div>
-        <button @click="$router.back()" class="mb-6 btn-secondary">← Kembali</button>
+        <button
+            @click="$router.back()"
+            class="mb-6 button bg-primarySoft text-primary hover:bg-primary hover:text-textInverse"
+        >
+            ← Kembali
+        </button>
 
         <div v-if="recipeStore.loading" class="py-12 text-center">
-            <div
-                class="inline-block w-12 h-12 rounded-full border-4 animate-spin border-primary-600 border-t-transparent"
-            ></div>
+            <div class="loading-spin"></div>
         </div>
 
         <div v-else-if="recipeStore.error" class="py-12 text-center">
-            <p class="text-red-600">{{ recipeStore.error }}</p>
+            <p class="text-error">{{ recipeStore.error }}</p>
         </div>
 
         <div v-else-if="recipe" class="card">
             <div class="mb-6">
-                <div
-                    class="flex justify-center items-center mb-6 w-full h-64 bg-gradient-to-br rounded-xl from-primary-400 to-primary-600"
-                >
-                    <span class="text-9xl">🍽️</span>
-                </div>
-
-                <div class="flex justify-between items-center mb-4">
-                    <h1 class="text-4xl font-bold text-gray-900">{{ recipe.name }}</h1>
-                    <span
-                        class="py-2 px-4 font-medium rounded-full bg-primary-100 text-primary-700"
-                    >
+                <div class="flex gap-4 justify-between items-center mb-4">
+                    <h1 class="text-4xl font-bold text-textPrimary">{{ recipe.name }}</h1>
+                    <span class="category-badges">
                         {{ recipe.category }}
                     </span>
                 </div>
 
-                <p v-if="recipe.description" class="mb-6 text-lg text-gray-600">
+                <p v-if="recipe.description" class="mb-6 text-lg text-textPrimary">
                     {{ recipe.description }}
                 </p>
             </div>
@@ -37,16 +32,12 @@
             <!-- list bahan -->
             <div class="grid gap-8 md:grid-cols-2">
                 <div>
-                    <h2 class="mb-4 text-2xl font-bold text-gray-900">Bahan</h2>
-                    <div class="p-4 bg-gray-50 rounded-lg">
+                    <h2 class="mb-4 text-2xl font-bold text-textPrimary">Bahan</h2>
+                    <div class="p-4 rounded-lg bg-overlay">
                         <ul class="space-y-2">
-                            <li
-                                v-for="(ingredient, index) in ingredientsList"
-                                :key="index"
-                                class="flex items-start"
-                            >
-                                <span class="mr-2 text-primary-600">•</span>
-                                <span class="text-gray-700">
+                            <li v-for="(ingredient, index) in ingredientsList" :key="index" class="flex items-start">
+                                <span class="mr-2 text-textPrimary">•</span>
+                                <span class="text-textPrimary">
                                     <span v-if="ingredient.quantity" class="font-semibold">
                                         {{ ingredient.quantity }} {{ ingredient.unit }}
                                     </span>
@@ -58,9 +49,9 @@
                 </div>
 
                 <div>
-                    <h2 class="mb-4 text-2xl font-bold text-gray-900">Instruksi</h2>
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <p class="text-gray-700 whitespace-pre-line">{{ recipe.instructions }}</p>
+                    <h2 class="mb-4 text-2xl font-bold text-textPrimary">Instruksi</h2>
+                    <div class="p-4 rounded-lg bg-overlay">
+                        <p class="whitespace-pre-line text-textPrimary">{{ recipe.instructions }}</p>
                     </div>
                 </div>
             </div>

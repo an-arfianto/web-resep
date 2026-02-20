@@ -1,11 +1,11 @@
 <template>
     <div class="mx-auto max-w-3xl">
         <div class="card">
-            <h1 class="mb-6 text-3xl font-bold text-gray-900">Tambah Resep</h1>
+            <h1 class="mb-6 text-3xl font-bold text-textPrimary">Tambah Resep Baru</h1>
 
             <form @submit.prevent="handleSubmit" class="space-y-6">
                 <div>
-                    <label class="block mb-2 text-sm font-medium text-gray-700"> Nama Resep </label>
+                    <label class="block mb-2 text-sm font-medium text-textPrimary"> Nama Resep </label>
                     <input
                         v-model="formData.name"
                         type="text"
@@ -16,7 +16,7 @@
                 </div>
 
                 <div>
-                    <label class="block mb-2 text-sm font-medium text-gray-700"> Kategori </label>
+                    <label class="block mb-2 text-sm font-medium text-textPrimary"> Kategori </label>
                     <select v-model="formData.category" required class="input-field">
                         <option value="" disabled>Pilih Kategori</option>
                         <option value="Appetizer">Appetizer</option>
@@ -28,7 +28,7 @@
                 </div>
 
                 <div>
-                    <label class="block mb-2 text-sm font-medium text-gray-700"> Deskripsi </label>
+                    <label class="block mb-2 text-sm font-medium text-textPrimary"> Deskripsi </label>
                     <textarea
                         v-model="formData.description"
                         rows="3"
@@ -38,22 +38,18 @@
                 </div>
 
                 <div>
-                    <label class="block mb-2 text-sm font-medium text-gray-700"> Bahan </label>
+                    <label class="block mb-2 text-sm font-medium text-textPrimary"> Bahan </label>
 
-                    <div
-                        v-for="(ingredient, index) in formData.ingredients"
-                        :key="index"
-                        class="flex gap-2 mb-2"
-                    >
+                    <div v-for="(ingredient, index) in formData.ingredients" :key="index" class="flex gap-2 mb-2">
                         <input
                             v-model="ingredient.quantity"
                             type="number"
-                            step="0.01"
+                            step="1"
                             class="w-28 input-field"
                             placeholder="Jumlah"
                         />
                         <select v-model="ingredient.unit" class="w-32 input-field">
-                            <option value="" disabled>Berat</option>
+                            <option value="" disabled>Berat unit</option>
                             <option value="g">g (gram)</option>
                             <option value="kg">kg (kilogram)</option>
                             <option value="ml">ml (mililiter)</option>
@@ -67,7 +63,8 @@
                             <option value="batang">batang</option>
                             <option value="lembar">lembar</option>
                             <option value="potong">potong</option>
-                            <option value="pinch">pinch (sejumput)</option>
+                            <option value="jumput">jumput</option>
+                            <option value="secukupnya">secukupnya</option>
                         </select>
                         <input
                             v-model="ingredient.name"
@@ -79,19 +76,23 @@
                         <button
                             type="button"
                             @click="removeIngredient(index)"
-                            class="py-2 px-3 text-red-600 bg-red-100 rounded-lg hover:bg-red-200"
+                            class="py-2 px-3 rounded-lg text-error bg-errorSoft hover:bg-error hover:text-textInverse"
                         >
                             ✕
                         </button>
                     </div>
 
-                    <button type="button" @click="addIngredient" class="mt-2 btn-secondary">
+                    <button
+                        type="button"
+                        @click="addIngredient"
+                        class="mt-2 button bg-primarySoft text-primary hover:bg-primary hover:text-textInverse"
+                    >
                         + Tambah Bahan
                     </button>
                 </div>
 
                 <div>
-                    <label class="block mb-2 text-sm font-medium text-gray-700"> Instruksi </label>
+                    <label class="block mb-2 text-sm font-medium text-textPrimary"> Instruksi </label>
                     <textarea
                         v-model="formData.instructions"
                         rows="6"
@@ -101,16 +102,24 @@
                     ></textarea>
                 </div>
 
-                <div v-if="error" class="p-4 bg-red-50 rounded-lg border border-red-200">
-                    <p class="text-sm text-red-600">{{ error }}</p>
+                <div v-if="error" class="p-4 rounded-lg bg-errorSoft">
+                    <p class="text-sm text-error">{{ error }}</p>
                 </div>
 
                 <div class="flex gap-4">
-                    <button type="submit" :disabled="loading" class="flex-1 btn-primary">
-                        {{ loading ? 'Mohon Tunggu...' : 'Buat Resep' }}
-                    </button>
-                    <button type="button" @click="$router.back()" class="btn-secondary">
+                    <button
+                        type="button"
+                        @click="$router.back()"
+                        class="button bg-overlay text-textPrimary hover:bg-errorSoft hover:text-error"
+                    >
                         Batal
+                    </button>
+                    <button
+                        type="submit"
+                        :disabled="loading"
+                        class="flex-1 button bg-primary text-textInverse hover:bg-primarySoft hover:text-primary"
+                    >
+                        {{ loading ? 'Mohon Tunggu...' : 'Tambah Resep' }}
                     </button>
                 </div>
             </form>

@@ -2,7 +2,7 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore';
 
 const routes: RouteRecordRaw[] = [
-    // Public routes (guest only - redirect to home if logged in)
+    // login register
     {
         path: '/login',
         name: 'Login',
@@ -16,7 +16,15 @@ const routes: RouteRecordRaw[] = [
         meta: { guest: true },
     },
 
-    // Protected routes (require authentication)
+    // protected routes (semua role)
+    {
+        path: '/profile',
+        name: 'Profile',
+        component: () => import('@/views/ProfilePage.vue'),
+        meta: { requiresAuth: true },
+    },
+
+    // protected routes (reguler user)
     {
         path: '/',
         name: 'Home',
@@ -54,7 +62,7 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true },
     },
 
-    // Moderation routes (moderator and admin only)
+    // moderator routes
     {
         path: '/moderation',
         name: 'ModerationDashboard',
@@ -62,7 +70,7 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, requiresModerator: true },
     },
 
-    // Admin-only routes
+    // admin routes
     {
         path: '/admin',
         name: 'AdminDashboard',
@@ -81,12 +89,6 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/admin/Recipes.vue'),
         meta: { requiresAuth: true, requiresAdmin: true },
     },
-    {
-        path: '/profile',
-        name: 'Profile',
-        component: () => import('@/views/ProfilePage.vue'),
-        meta: { requiresAuth: true },
-    },
 ];
 
 const router = createRouter({
@@ -94,17 +96,20 @@ const router = createRouter({
     routes,
 });
 
-// Navigation guard
-router.beforeEach((to, _from, next) => {
+// navigation guard
+router.beforeEach(async (to, _from, next) => {
     const authStore = useAuthStore();
+    if (authStore.token && !authStore.user) {
+        await authStore.checkAuth();
+    }
+
     const isAuthenticated = authStore.isAuthenticated;
     const isAdmin = authStore.user?.role_id === 1;
-    const isModerator = authStore.user?.role_id === 3;
+    const isModerator = authStore.user?.role_id === 2;
 
-    // Guest routes (login/register)
+    // guest routes (belum login)
     if (to.meta.guest) {
         if (isAuthenticated) {
-            // Already logged in, redirect based on role
             if (isAdmin) {
                 next('/admin');
             } else if (isModerator) {
@@ -118,24 +123,21 @@ router.beforeEach((to, _from, next) => {
         return;
     }
 
-    // Protected routes
+    // protected routes
     if (to.meta.requiresAuth) {
         if (!isAuthenticated) {
-            // Not logged in, redirect to login
             next('/login');
             return;
         }
 
-        // Check admin access
+        // cek admin role
         if (to.meta.requiresAdmin && !isAdmin) {
-            // Not admin, redirect based on role
             next(isModerator ? '/moderation' : '/');
             return;
         }
 
-        // Check moderator access
+        // cek moderator role
         if (to.meta.requiresModerator && !isModerator && !isAdmin) {
-            // Not moderator or admin, redirect to user home
             next('/');
             return;
         }

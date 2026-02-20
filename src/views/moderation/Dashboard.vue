@@ -1,363 +1,561 @@
 <template>
-    <div class="container py-8 px-4 mx-auto max-w-7xl">
-        <h1 class="mb-8 text-3xl font-bold">Moderator Dashboard</h1>
-
-        <!-- Statistics Cards -->
-        <div v-if="!moderationStore.loading" class="grid grid-cols-1 gap-6 mb-8 md:grid-cols-4">
-            <div class="card">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">Total Resep</p>
-                        <p class="mt-2 text-3xl font-bold text-gray-900">
-                            {{ moderationStore.stats.total }}
-                        </p>
-                    </div>
-                    <div class="p-3 bg-blue-100 rounded-full">
-                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">Resep Pending</p>
-                        <p class="mt-2 text-3xl font-bold text-yellow-600">
-                            {{ moderationStore.stats.pending }}
-                        </p>
-                    </div>
-                    <div class="p-3 bg-yellow-100 rounded-full">
-                        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">Resep Disetujui</p>
-                        <p class="mt-2 text-3xl font-bold text-green-600">
-                            {{ moderationStore.stats.approved }}
-                        </p>
-                    </div>
-                    <div class="p-3 bg-green-100 rounded-full">
-                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">Resep Ditolak</p>
-                        <p class="mt-2 text-3xl font-bold text-red-600">
-                            {{ moderationStore.stats.rejected }}
-                        </p>
-                    </div>
-                    <div class="p-3 bg-red-100 rounded-full">
-                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Loading State -->
-        <div v-if="moderationStore.loading" class="py-12 text-center">
-            <div class="inline-block w-12 h-12 rounded-full border-4 border-gray-200 animate-spin border-t-primary-600"></div>
-        </div>
-
-        <!-- Error State -->
-        <div v-else-if="moderationStore.error" class="py-12 text-center">
-            <p class="text-red-600">{{ moderationStore.error }}</p>
-        </div>
-
-        <!-- Tab Navigation -->
-        <div v-else class="card">
-            <div class="mb-6 border-b border-gray-200">
-                <nav class="flex -mb-px space-x-8">
-                    <button
-                        @click="setActiveTab('pending')"
-                        :class="[
-                            activeTab === 'pending'
-                                ? 'border-primary-600 text-primary-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                            'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors',
-                        ]"
-                    >
-                        Review Pending
-                        <span
-                            v-if="moderationStore.stats.pending > 0"
-                            class="inline-flex justify-center items-center py-0.5 px-2 ml-2 text-xs font-bold text-white bg-yellow-600 rounded-full"
-                        >
-                            {{ moderationStore.stats.pending }}
-                        </span>
-                    </button>
-                    <button
-                        @click="setActiveTab('reviewed')"
-                        :class="[
-                            activeTab === 'reviewed'
-                                ? 'border-primary-600 text-primary-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                            'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors',
-                        ]"
-                    >
-                        Review Saya
-                    </button>
-                    <button
-                        @click="setActiveTab('all')"
-                        :class="[
-                            activeTab === 'all'
-                                ? 'border-primary-600 text-primary-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                            'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors',
-                        ]"
-                    >
-                        Semua Recipe
-                    </button>
-                </nav>
-            </div>
-
-            <!-- Pending Recipes Tab -->
-            <div v-if="activeTab === 'pending'">
-                <div v-if="moderationStore.pendingRecipes.length === 0" class="py-12 text-center">
-                    <svg class="mx-auto w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <p class="mt-4 text-lg font-medium text-gray-900">Semua sudah direview</p>
-                    <p class="mt-2 text-sm text-gray-600">Tidak ada resep pending sementara waktu.</p>
-                </div>
-
-                <div v-else class="space-y-4">
-                    <PendingRecipeItem
-                        v-for="recipe in paginatedPendingRecipes"
-                        :key="recipe.id"
-                        :recipe="recipe"
-                        @approve="handleApprove"
-                        @reject="handleReject"
-                        @view-detail="openRecipeDetail"
-                    />
-                </div>
-
-                <!-- Pagination -->
-                <Pagination
-                    v-if="moderationStore.pendingRecipes.length > 0"
-                    :current-page="currentPagePending"
-                    :total-items="moderationStore.pendingRecipes.length"
-                    :items-per-page="itemsPerPage"
-                    @page-change="handlePageChangePending"
-                />
-            </div>
-
-            <!-- My Reviews Tab -->
-            <div v-else-if="activeTab === 'reviewed'">
-                <div v-if="loadingReviewed" class="py-12 text-center">
-                    <div class="inline-block w-12 h-12 rounded-full border-4 border-gray-200 animate-spin border-t-primary-600"></div>
-                </div>
-
-                <div v-else-if="reviewedRecipes.length === 0" class="py-12 text-center">
-                    <svg class="mx-auto w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                    </svg>
-                    <p class="mt-4 text-lg font-medium text-gray-900">Tidak ada review</p>
-                    <p class="mt-2 text-sm text-gray-600">Anda belum mereview resep.</p>
-                </div>
-
-                <div v-else class="space-y-4">
-                    <ReviewedRecipeItem
-                        v-for="recipe in paginatedReviewedRecipes"
-                        :key="recipe.id"
-                        :recipe="recipe"
-                        @view-detail="openRecipeDetail"
-                    />
-                </div>
-
-                <!-- Pagination -->
-                <Pagination
-                    v-if="reviewedRecipes.length > 0"
-                    :current-page="currentPageReviewed"
-                    :total-items="reviewedRecipes.length"
-                    :items-per-page="itemsPerPage"
-                    @page-change="handlePageChangeReviewed"
-                />
-            </div>
-
-            <!-- All Recipes Tab -->
-            <div v-else-if="activeTab === 'all'">
-                <div v-if="loadingAll" class="py-12 text-center">
-                    <div class="inline-block w-12 h-12 rounded-full border-4 border-gray-200 animate-spin border-t-primary-600"></div>
-                </div>
-
-                <div v-else-if="moderationStore.allRecipes.length === 0" class="py-12 text-center">
-                    <p class="text-gray-600">Tidak ada resep</p>
-                </div>
-
-                <div v-else class="space-y-4">
-                    <ReviewedRecipeItem
-                        v-for="recipe in paginatedAllRecipes"
-                        :key="recipe.id"
-                        :recipe="recipe"
-                        @view-detail="openRecipeDetail"
-                    />
-                </div>
-
-                <!-- Pagination -->
-                <Pagination
-                    v-if="moderationStore.allRecipes.length > 0"
-                    :current-page="currentPageAll"
-                    :total-items="moderationStore.allRecipes.length"
-                    :items-per-page="itemsPerPage"
-                    @page-change="handlePageChangeAll"
-                />
-            </div>
-        </div>
-
-        <!-- Recipe Detail Modal -->
+    <div class="flex flex-col gap-5 py-6 px-5 mx-auto max-w-[1100px]">
+        <!-- ── Toast notifications ───────────────────────────────── -->
         <teleport to="body">
-            <div
-                v-if="showDetailModal && selectedRecipe"
-                class="flex fixed inset-0 z-50 justify-center items-center p-4 bg-black/50 backdrop-blur-sm"
-                @click.self="closeDetailModal"
-            >
-                <div class="overflow-hidden w-full max-w-3xl max-h-[90vh] bg-white rounded-xl shadow-2xl">
-                    <!-- Modal Header -->
-                    <div class="flex sticky top-0 z-10 justify-between items-center p-6 bg-white border-b border-gray-200">
-                        <div class="flex-1">
-                            <h2 class="text-2xl font-bold text-gray-900">{{ selectedRecipe.name }}</h2>
-                            <div class="flex gap-2 items-center mt-2">
-                                <span class="inline-block py-1 px-3 text-xs font-semibold text-orange-700 bg-orange-100 rounded-full">
-                                    {{ selectedRecipe.category }}
-                                </span>
-                                <span :class="['inline-block py-1 px-3 text-xs font-semibold rounded-full', getStatusBadge(selectedRecipe.status)]">
-                                    {{ getStatusText(selectedRecipe.status) }}
-                                </span>
-                            </div>
-                        </div>
-                        <button
-                            @click="closeDetailModal"
-                            class="p-2 text-gray-400 rounded-lg transition-colors hover:text-gray-600 hover:bg-gray-100"
+            <div class="flex fixed right-5 bottom-5 flex-col gap-2 z-[60]">
+                <transition-group
+                    enter-active-class="transition duration-300 ease-out"
+                    enter-from-class="opacity-0 translate-y-2"
+                    leave-active-class="transition duration-200 ease-in"
+                    leave-to-class="opacity-0 translate-y-1"
+                >
+                    <div
+                        v-for="toast in toasts"
+                        :key="toast.id"
+                        :class="['flex w-[320px] max-w-[calc(100vw-40px)] items-start gap-3 rounded-xl px-4 py-3 shadow-lg',
+                            toast.type === 'error' && 'bg-errorSoft border-error/30 text-error border',
+                            toast.type === 'success' && 'bg-successSoft border-success/30 text-success border',
+                        ]"
+                    >
+                        <!-- Icon -->
+                        <svg
+                            v-if="toast.type === 'error'"
+                            class="mt-0.5 w-4 h-4 shrink-0"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
                         >
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="15" y1="9" x2="9" y2="15" />
+                            <line x1="9" y1="9" x2="15" y2="15" />
+                        </svg>
+                        <svg
+                            v-else
+                            class="mt-0.5 w-4 h-4 shrink-0"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                            <polyline points="22 4 12 14.01 9 11.01" />
+                        </svg>
+                        <p class="flex-1 text-sm font-medium leading-snug">{{ toast.message }}</p>
+                        <button
+                            @click="removeToast(toast.id)"
+                            class="mt-0.5 opacity-60 transition-opacity hover:opacity-100 shrink-0"
+                        >
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                width="14"
+                                height="14"
+                            >
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
                             </svg>
                         </button>
                     </div>
-
-                    <!-- Modal Content -->
-                    <div class="overflow-y-auto p-6 space-y-6 max-h-[calc(90vh-200px)]">
-                        <!-- Creator Info -->
-                        <div class="p-4 bg-gray-50 rounded-lg">
-                            <div class="flex gap-4 text-sm text-gray-600">
-                                <span><strong>Oleh:</strong> {{ selectedRecipe.creator_username }}</span>
-                                <span><strong>Dibuat:</strong> {{ formatDate(selectedRecipe.created_at) }}</span>
-                            </div>
-                            <div v-if="selectedRecipe.reviewed_at" class="mt-2 text-sm text-gray-600">
-                                <strong>Direview:</strong> {{ formatDate(selectedRecipe.reviewed_at) }}
-                                <span v-if="selectedRecipe.reviewer_username">
-                                    oleh {{ selectedRecipe.reviewer_username }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Description -->
-                        <div v-if="selectedRecipe.description">
-                            <h3 class="mb-2 text-lg font-semibold text-gray-900">Deskripsi</h3>
-                            <p class="text-gray-700 leading-relaxed">{{ selectedRecipe.description }}</p>
-                        </div>
-
-                        <!-- Ingredients -->
-                        <div v-if="selectedRecipe.ingredients">
-                            <h3 class="mb-2 text-lg font-semibold text-gray-900">Bahan-bahan</h3>
-                            <div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
-                                <p class="text-gray-800 whitespace-pre-line">{{ selectedRecipe.ingredients }}</p>
-                            </div>
-                        </div>
-
-                        <!-- Instructions -->
-                        <div v-if="selectedRecipe.instructions">
-                            <h3 class="mb-2 text-lg font-semibold text-gray-900">Instruksi</h3>
-                            <div class="p-4 bg-green-50 rounded-lg border border-green-100">
-                                <p class="text-gray-800 leading-relaxed whitespace-pre-line">{{ selectedRecipe.instructions }}</p>
-                            </div>
-                        </div>
-
-                        <!-- Rejection Reason -->
-                        <div v-if="selectedRecipe.status === 'rejected' && selectedRecipe.rejection_reason" class="p-4 bg-red-50 rounded-lg border border-red-200">
-                            <h3 class="mb-2 text-lg font-semibold text-red-900">Alasan Penolakan</h3>
-                            <p class="text-red-700">{{ selectedRecipe.rejection_reason }}</p>
-                        </div>
-                    </div>
-
-                    <!-- Modal Footer - Action Buttons (only for pending recipes) -->
-                    <div v-if="selectedRecipe.status === 'pending'" class="flex gap-3 justify-end p-6 bg-gray-50 border-t border-gray-200">
-                        <button
-                            @click="handleApproveFromModal(selectedRecipe.id)"
-                            :disabled="modalActionLoading"
-                            class="btn-primary bg-green-600 hover:bg-green-700 disabled:opacity-50"
-                        >
-                            {{ modalActionLoading ? 'Memproses...' : 'Setujui' }}
-                        </button>
-                        <button
-                            @click="openRejectModalFromDetail"
-                            :disabled="modalActionLoading"
-                            class="btn-primary bg-red-600 hover:bg-red-700 disabled:opacity-50"
-                        >
-                            Tolak
-                        </button>
-                    </div>
-                </div>
+                </transition-group>
             </div>
         </teleport>
 
-        <!-- Rejection Modal -->
-        <teleport to="body">
-            <div
-                v-if="showRejectModal"
-                class="flex fixed inset-0 z-[60] justify-center items-center p-4 bg-black/50 backdrop-blur-sm"
-                @click.self="closeRejectModal"
-            >
-                <div class="p-6 w-full max-w-md bg-white rounded-xl shadow-2xl">
-                    <h3 class="text-lg font-bold text-gray-900">Tolak Resep</h3>
-                    <p class="mt-2 text-sm text-gray-600">
-                        Berikan alasan penolakan agar pembuat resep dapat memperbaikinya.
+        <!-- ── Stats Bar ─────────────────────────────────────────── -->
+        <div class="flex overflow-hidden rounded-2xl shadow-sm bg-surface max-md:grid max-md:grid-cols-2">
+            <div class="flex flex-1 gap-3 items-center py-4 px-5 max-md:border-divider max-md:border-r max-md:border-b">
+                <svg
+                    class="w-8 h-8 text-primary shrink-0"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                >
+                    <rect x="18" y="3" width="4" height="18" />
+                    <rect x="10" y="8" width="4" height="13" />
+                    <rect x="2" y="13" width="4" height="8" />
+                </svg>
+                <div>
+                    <p class="text-3xl font-extrabold leading-none text-textPrimary">
+                        {{ moderationStore.stats.total }}
                     </p>
-
-                    <textarea
-                        v-model="rejectionReason"
-                        rows="4"
-                        placeholder="Contoh: Bahan-bahan tidak lengkap, instruksi kurang jelas, dll."
-                        class="input-field mt-4 resize-none"
-                        :class="{ 'border-red-300': showRejectError }"
-                    ></textarea>
-                    <p v-if="showRejectError" class="mt-1 text-xs text-red-600">
-                        Mohon berikan alasan penolakan
-                    </p>
-
-                    <div class="flex gap-3 justify-end mt-6">
-                        <button
-                            @click="closeRejectModal"
-                            :disabled="modalActionLoading"
-                            class="btn-secondary disabled:opacity-50"
-                        >
-                            Batal
-                        </button>
-                        <button
-                            @click="handleRejectFromModal"
-                            :disabled="modalActionLoading"
-                            class="btn-primary bg-red-600 hover:bg-red-700 disabled:opacity-50"
-                        >
-                            {{ modalActionLoading ? 'Memproses...' : 'Tolak Resep' }}
-                        </button>
-                    </div>
+                    <p class="font-semibold tracking-wider uppercase text-textSecondary text-[0.68rem]">Total Resep</p>
                 </div>
             </div>
+            <div class="my-3.5 w-px bg-divider max-md:hidden"></div>
+            <div class="flex flex-1 gap-3 items-center py-4 px-5 max-md:border-divider max-md:border-b">
+                <svg
+                    class="w-8 h-8 text-warning shrink-0"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                </svg>
+                <div>
+                    <p class="text-3xl font-extrabold leading-none text-warning">{{ moderationStore.stats.pending }}</p>
+                    <p class="font-semibold tracking-wider uppercase text-textSecondary text-[0.68rem]">Pending</p>
+                </div>
+            </div>
+            <div class="my-3.5 w-px bg-divider max-md:hidden"></div>
+            <div class="flex flex-1 gap-3 items-center py-4 px-5 max-md:border-divider max-md:border-r">
+                <svg
+                    class="w-8 h-8 text-success shrink-0"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                >
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+                <div>
+                    <p class="text-3xl font-extrabold leading-none text-success">
+                        {{ moderationStore.stats.approved }}
+                    </p>
+                    <p class="font-semibold tracking-wider uppercase text-textSecondary text-[0.68rem]">Disetujui</p>
+                </div>
+            </div>
+            <div class="my-3.5 w-px bg-divider max-md:hidden"></div>
+            <div class="flex flex-1 gap-3 items-center py-4 px-5">
+                <svg
+                    class="w-8 h-8 text-error shrink-0"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
+                <div>
+                    <p class="text-3xl font-extrabold leading-none text-error">{{ moderationStore.stats.rejected }}</p>
+                    <p class="font-semibold tracking-wider uppercase text-textSecondary text-[0.68rem]">Ditolak</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Main layout ────────────────────────────────────────── -->
+        <div class="flex gap-5 items-start max-md:flex-col">
+            <!-- Sidebar -->
+            <nav
+                class="flex sticky top-5 flex-col gap-0.5 p-2 rounded-2xl shadow-sm bg-surface w-[215px] shrink-0 max-md:static max-md:w-full max-md:flex-row"
+            >
+                <p
+                    class="px-3 pt-1 pb-2 font-bold uppercase text-textMuted text-[0.68rem] tracking-[0.08em] max-md:hidden"
+                >
+                    Moderasi
+                </p>
+
+                <button
+                    v-for="nav in navItems"
+                    :key="nav.key"
+                    @click="handleTabChange(nav.key)"
+                    :class="['flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                        'max-md:flex-1 max-md:flex-col max-md:items-center max-md:gap-1 max-md:py-2.5 max-md:text-[0.72rem]',
+                        activeTab === nav.key
+                            ? 'bg-overlay text-primary font-bold'
+                            : 'text-textSecondary hover:bg-overlay hover:text-textPrimary',
+                    ]"
+                >
+                    <svg
+                        class="h-[17px] w-[17px] shrink-0 max-md:h-5 max-md:w-5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        v-html="nav.icon"
+                    ></svg>
+                    <span class="max-md:text-center max-md:leading-tight">{{ nav.label }}</span>
+                    <span
+                        v-if="nav.key === 'pending' && moderationStore.stats.pending > 0"
+                        class="inline-flex justify-center items-center px-1 ml-auto h-5 font-bold rounded-full bg-error text-textInverse min-w-[20px] text-[0.65rem] max-md:ml-0"
+                    >
+                        {{ moderationStore.stats.pending }}
+                    </span>
+                </button>
+            </nav>
+
+            <!-- Content panel -->
+            <section class="flex-1 min-w-0 rounded-2xl shadow-sm bg-surface">
+                <!-- Loading / error -->
+                <div v-if="moderationStore.loading" class="flex justify-center py-16">
+                    <div class="loading-spin"></div>
+                </div>
+                <div v-else-if="moderationStore.error" class="flex flex-col gap-3 items-center py-16">
+                    <p class="text-sm text-error">{{ moderationStore.error }}</p>
+                    <button
+                        @click="moderationStore.fetchStats()"
+                        class="py-2 px-5 text-sm font-semibold rounded-lg bg-error text-textInverse"
+                    >
+                        Coba lagi
+                    </button>
+                </div>
+
+                <template v-else>
+                    <!-- Panel header -->
+                    <div class="py-4 px-6 border-b border-divider max-md:px-4">
+                        <h2 class="text-base font-bold text-textPrimary">{{ currentNav?.label }}</h2>
+                        <p class="mt-0.5 text-xs text-textSecondary">{{ panelSubtitle }}</p>
+                    </div>
+
+                    <div class="p-6 max-md:p-4">
+                        <!-- ── Pending ─────────── -->
+                        <template v-if="activeTab === 'pending'">
+                            <div
+                                v-if="moderationStore.pendingRecipes.length === 0"
+                                class="flex flex-col gap-2 items-center py-14"
+                            >
+                                <svg
+                                    class="mb-1 w-11 h-11 text-textMuted"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                >
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p class="font-bold text-textPrimary">Semua sudah direview</p>
+                                <p class="text-sm text-textSecondary">Tidak ada resep pending sementara waktu.</p>
+                            </div>
+                            <div v-else class="flex flex-col gap-3.5">
+                                <PendingRecipeItem
+                                    v-for="recipe in paginatedPendingRecipes"
+                                    :key="recipe.id"
+                                    :recipe="recipe"
+                                    @approve="handleApprove"
+                                    @reject="handleReject"
+                                    @view-detail="openRecipeDetail"
+                                />
+                            </div>
+                            <Pagination
+                                v-if="moderationStore.pendingRecipes.length > itemsPerPage"
+                                class="mt-4"
+                                :current-page="currentPagePending"
+                                :total-items="moderationStore.pendingRecipes.length"
+                                :items-per-page="itemsPerPage"
+                                @page-change="handlePageChangePending"
+                            />
+                        </template>
+
+                        <!-- ── Reviewed ────────── -->
+                        <template v-else-if="activeTab === 'reviewed'">
+                            <div v-if="loadingReviewed" class="flex justify-center py-14">
+                                <div class="loading-spin"></div>
+                            </div>
+                            <div
+                                v-else-if="reviewedRecipes.length === 0"
+                                class="flex flex-col gap-2 items-center py-14"
+                            >
+                                <svg
+                                    class="mb-1 w-11 h-11 text-textMuted"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                >
+                                    <path
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                                    />
+                                </svg>
+                                <p class="font-bold text-textPrimary">Belum ada review</p>
+                                <p class="text-sm text-textSecondary">Anda belum mereview resep apapun.</p>
+                            </div>
+                            <div v-else class="flex flex-col gap-3.5">
+                                <ReviewedRecipeItem
+                                    v-for="recipe in paginatedReviewedRecipes"
+                                    :key="recipe.id"
+                                    :recipe="recipe"
+                                    @view-detail="openRecipeDetail"
+                                />
+                            </div>
+                            <Pagination
+                                v-if="reviewedRecipes.length > itemsPerPage"
+                                class="mt-4"
+                                :current-page="currentPageReviewed"
+                                :total-items="reviewedRecipes.length"
+                                :items-per-page="itemsPerPage"
+                                @page-change="handlePageChangeReviewed"
+                            />
+                        </template>
+
+                        <!-- ── All ────────────── -->
+                        <template v-else-if="activeTab === 'all'">
+                            <div v-if="loadingAll" class="flex justify-center py-14">
+                                <div class="loading-spin"></div>
+                            </div>
+                            <div
+                                v-else-if="moderationStore.allRecipes.length === 0"
+                                class="flex flex-col gap-2 items-center py-14"
+                            >
+                                <svg
+                                    class="mb-1 w-11 h-11 text-textMuted"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                >
+                                    <path
+                                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                                    />
+                                </svg>
+                                <p class="font-bold text-textPrimary">Tidak ada resep</p>
+                            </div>
+                            <div v-else class="flex flex-col gap-3.5">
+                                <ReviewedRecipeItem
+                                    v-for="recipe in paginatedAllRecipes"
+                                    :key="recipe.id"
+                                    :recipe="recipe"
+                                    @view-detail="openRecipeDetail"
+                                />
+                            </div>
+                            <Pagination
+                                v-if="moderationStore.allRecipes.length > itemsPerPage"
+                                class="mt-4"
+                                :current-page="currentPageAll"
+                                :total-items="moderationStore.allRecipes.length"
+                                :items-per-page="itemsPerPage"
+                                @page-change="handlePageChangeAll"
+                            />
+                        </template>
+                    </div>
+                </template>
+            </section>
+        </div>
+
+        <!-- ── Detail Modal ──────────────────────────────────────── -->
+        <teleport to="body">
+            <transition
+                enter-active-class="transition duration-200 ease-out [&_.mpanel]:transition [&_.mpanel]:duration-200 [&_.mpanel]:ease-out"
+                enter-from-class="opacity-0 [&_.mpanel]:translate-y-2.5 [&_.mpanel]:opacity-0"
+                leave-active-class="transition duration-200 ease-in [&_.mpanel]:transition [&_.mpanel]:duration-200 [&_.mpanel]:ease-in"
+                leave-to-class="opacity-0 [&_.mpanel]:translate-y-2.5 [&_.mpanel]:opacity-0"
+            >
+                <div
+                    v-if="showDetailModal && selectedRecipe"
+                    class="flex fixed inset-0 z-50 justify-center items-center p-5 backdrop-blur-sm"
+                    style="background: rgba(0, 0, 0, 0.45)"
+                    @click.self="closeDetailModal"
+                >
+                    <div
+                        class="flex overflow-hidden flex-col w-full rounded-2xl shadow-2xl mpanel bg-surface max-h-[88vh] max-w-[640px]"
+                    >
+                        <!-- Header -->
+                        <div
+                            class="flex gap-3 justify-between items-start py-4 px-6 border-b border-divider bg-background shrink-0"
+                        >
+                            <div class="flex-1 min-w-0">
+                                <h2 class="mb-2 text-lg font-bold text-textPrimary">{{ selectedRecipe.name }}</h2>
+                                <div class="flex flex-wrap gap-1.5">
+                                    <span class="category-badges">{{ selectedRecipe.category }}</span>
+                                    <span :class="['status-badges', statusBadgeClass(selectedRecipe.status)]">{{
+                                        getStatusText(selectedRecipe.status)
+                                    }}</span>
+                                </div>
+                            </div>
+                            <button
+                                @click="closeDetailModal"
+                                aria-label="Tutup"
+                                class="flex justify-center items-center w-8 h-8 rounded-lg transition-colors text-textSecondary shrink-0 hover:bg-overlay hover:text-textPrimary"
+                            >
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    width="17"
+                                    height="17"
+                                >
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                            </button>
+                        </div>
+                        <!-- Body -->
+                        <div class="flex overflow-y-auto flex-col flex-1 gap-5 py-5 px-6">
+                            <div class="flex flex-col gap-1.5 py-3 px-4 rounded-lg bg-background">
+                                <div class="flex gap-2 text-sm">
+                                    <span class="w-20 font-semibold text-textSecondary shrink-0">Oleh</span
+                                    ><span class="text-textPrimary">{{ selectedRecipe.creator_username }}</span>
+                                </div>
+                                <div class="flex gap-2 text-sm">
+                                    <span class="w-20 font-semibold text-textSecondary shrink-0">Dibuat</span
+                                    ><span class="text-textPrimary">{{ formatDate(selectedRecipe.created_at) }}</span>
+                                </div>
+                                <div v-if="selectedRecipe.reviewed_at" class="flex gap-2 text-sm">
+                                    <span class="w-20 font-semibold text-textSecondary shrink-0">Direview</span>
+                                    <span class="text-textPrimary"
+                                        >{{ formatDate(selectedRecipe.reviewed_at)
+                                        }}<span v-if="selectedRecipe.reviewer_username" class="text-textSecondary">
+                                            oleh {{ selectedRecipe.reviewer_username }}</span
+                                        ></span
+                                    >
+                                </div>
+                            </div>
+                            <div v-if="selectedRecipe.description">
+                                <p class="mb-1.5 text-sm font-bold text-textPrimary">Deskripsi</p>
+                                <p class="text-sm leading-relaxed text-textSecondary">
+                                    {{ selectedRecipe.description }}
+                                </p>
+                            </div>
+                            <div v-if="selectedRecipe.ingredients">
+                                <p class="mb-1.5 text-sm font-bold text-textPrimary">Bahan-bahan</p>
+                                <p class="text-sm leading-relaxed whitespace-pre-line text-textSecondary">
+                                    {{ selectedRecipe.ingredients }}
+                                </p>
+                            </div>
+                            <div v-if="selectedRecipe.instructions">
+                                <p class="mb-1.5 text-sm font-bold text-textPrimary">Instruksi</p>
+                                <p class="text-sm leading-relaxed whitespace-pre-line text-textSecondary">
+                                    {{ selectedRecipe.instructions }}
+                                </p>
+                            </div>
+                            <div
+                                v-if="selectedRecipe.status === 'rejected' && selectedRecipe.rejection_reason"
+                                class="py-3 px-4 rounded-lg border-error bg-errorSoft border-l-[3px]"
+                            >
+                                <p class="flex gap-1.5 items-center mb-1 text-sm font-bold text-error">
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        width="14"
+                                        height="14"
+                                    >
+                                        <circle cx="12" cy="12" r="10" />
+                                        <line x1="15" y1="9" x2="9" y2="15" />
+                                        <line x1="9" y1="9" x2="15" y2="15" />
+                                    </svg>
+                                    Alasan Penolakan
+                                </p>
+                                <p class="text-sm leading-relaxed text-error">{{ selectedRecipe.rejection_reason }}</p>
+                            </div>
+                        </div>
+                        <!-- Footer (pending only) -->
+                        <div
+                            v-if="selectedRecipe.status === 'pending'"
+                            class="flex gap-2.5 justify-end py-4 px-6 border-t border-divider bg-background shrink-0"
+                        >
+                            <button
+                                @click="handleApproveFromModal(selectedRecipe.id)"
+                                :disabled="modalActionLoading"
+                                class="inline-flex gap-1.5 items-center py-2 px-5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-successSoft text-success hover:bg-success hover:text-textInverse"
+                            >
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    width="14"
+                                    height="14"
+                                >
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                {{ modalActionLoading ? 'Mohon Tunggu...' : 'Setujui' }}
+                            </button>
+                            <button
+                                @click="openRejectModal"
+                                :disabled="modalActionLoading"
+                                class="inline-flex gap-1.5 items-center py-2 px-5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-errorSoft text-error hover:bg-error hover:text-textInverse"
+                            >
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    width="14"
+                                    height="14"
+                                >
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                                Tolak
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </transition>
+        </teleport>
+
+        <!-- ── Reject reason modal ───────────────────────────────── -->
+        <teleport to="body">
+            <transition
+                enter-active-class="transition duration-200 ease-out [&_.mpanel]:transition [&_.mpanel]:duration-200 [&_.mpanel]:ease-out"
+                enter-from-class="opacity-0 [&_.mpanel]:translate-y-2.5 [&_.mpanel]:opacity-0"
+                leave-active-class="transition duration-200 ease-in [&_.mpanel]:transition [&_.mpanel]:duration-200 [&_.mpanel]:ease-in"
+                leave-to-class="opacity-0 [&_.mpanel]:translate-y-2.5 [&_.mpanel]:opacity-0"
+            >
+                <div
+                    v-if="showRejectModal"
+                    class="flex fixed inset-0 z-50 justify-center items-center p-5 backdrop-blur-sm"
+                    style="background: rgba(0, 0, 0, 0.45)"
+                    @click.self="closeRejectModal"
+                >
+                    <div
+                        class="flex overflow-hidden flex-col w-full rounded-2xl shadow-2xl mpanel bg-surface max-w-[460px]"
+                    >
+                        <div
+                            class="flex gap-3 justify-between items-center py-4 px-6 border-b border-divider bg-background"
+                        >
+                            <h2 class="text-base font-bold text-textPrimary">Tolak Resep</h2>
+                            <button
+                                @click="closeRejectModal"
+                                aria-label="Tutup"
+                                class="flex justify-center items-center w-8 h-8 rounded-lg transition-colors text-textSecondary shrink-0 hover:bg-overlay hover:text-textPrimary"
+                            >
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    width="17"
+                                    height="17"
+                                >
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="flex flex-col gap-2.5 py-5 px-6">
+                            <p class="text-sm text-textSecondary">
+                                Berikan alasan agar pembuat resep dapat memperbaikinya.
+                            </p>
+                            <textarea
+                                v-model="rejectionReason"
+                                rows="5"
+                                placeholder="Contoh: Bahan-bahan tidak lengkap, instruksi kurang jelas, dll."
+                                :disabled="modalActionLoading"
+                                :class="['input-field resize-y text-sm',
+                                    showRejectError && 'border-error focus:ring-error',
+                                ]"
+                            ></textarea>
+                            <p v-if="showRejectError" class="text-xs text-error">Mohon berikan alasan penolakan</p>
+                        </div>
+                        <div class="flex gap-2.5 justify-end py-4 px-6 border-t border-divider bg-background">
+                            <button
+                                @click="closeRejectModal"
+                                :disabled="modalActionLoading"
+                                class="py-2 px-5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                @click="handleRejectFromModal"
+                                :disabled="modalActionLoading"
+                                class="py-2 px-5 text-sm font-semibold rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed bg-error text-textInverse hover:opacity-85"
+                            >
+                                {{ modalActionLoading ? 'Mohon Tunggu...' : 'Tolak Resep' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </transition>
         </teleport>
     </div>
 </template>
@@ -374,10 +572,65 @@ import type { ModerationRecipe } from '@/types';
 const moderationStore = useModerationStore();
 const authStore = useAuthStore();
 
-const activeTab = ref<'pending' | 'reviewed' | 'all'>('pending');
+type TabKey = 'pending' | 'reviewed' | 'all';
+
+// ── Toast system ──────────────────────────────────────────────
+interface Toast {
+    id: number;
+    type: 'success' | 'error';
+    message: string;
+}
+const toasts = ref<Toast[]>([]);
+let toastId = 0;
+
+function showToast(type: Toast['type'], message: string, duration = 4000) {
+    const id = ++toastId;
+    toasts.value.push({ id, type, message });
+    setTimeout(() => removeToast(id), duration);
+}
+
+function removeToast(id: number) {
+    toasts.value = toasts.value.filter((t) => t.id !== id);
+}
+
+// ── Nav items ─────────────────────────────────────────────────
+const navItems: { key: TabKey; label: string; icon: string }[] = [
+    {
+        key: 'pending',
+        label: 'Review Pending',
+        icon: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+    },
+    {
+        key: 'reviewed',
+        label: 'Review Saya',
+        icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+    },
+    {
+        key: 'all',
+        label: 'Semua Resep',
+        icon: '<path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>',
+    },
+];
+
+const activeTab = ref<TabKey>('pending');
+const currentNav = computed(() => navItems.find((n) => n.key === activeTab.value));
+const panelSubtitle = computed(
+    () =>
+        ({
+            pending: `${moderationStore.pendingRecipes.length} resep menunggu review`,
+            reviewed: `${reviewedRecipes.value.length} resep telah Anda review`,
+            all: `${moderationStore.allRecipes.length} total resep terdaftar`,
+        })[activeTab.value]
+);
+
+// ── Tab cache ─────────────────────────────────────────────────
+const reviewedRecipes = ref<ModerationRecipe[]>([]);
+const reviewedLoaded = ref(false);
 const loadingReviewed = ref(false);
+const allLoaded = ref(false);
 const loadingAll = ref(false);
-const reviewedRecipes = ref<any[]>([]);
+
+// ── Modals ────────────────────────────────────────────────────
 const showDetailModal = ref(false);
 const showRejectModal = ref(false);
 const selectedRecipe = ref<ModerationRecipe | null>(null);
@@ -385,7 +638,7 @@ const rejectionReason = ref('');
 const showRejectError = ref(false);
 const modalActionLoading = ref(false);
 
-// Pagination state
+// ── Pagination ────────────────────────────────────────────────
 const currentPagePending = ref(1);
 const currentPageReviewed = ref(1);
 const currentPageAll = ref(1);
@@ -393,23 +646,17 @@ const itemsPerPage = 10;
 
 const currentUserId = computed(() => authStore.user?.id);
 
-// Pagination data
 const paginatedPendingRecipes = computed(() => {
-    const start = (currentPagePending.value - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    return moderationStore.pendingRecipes.slice(start, end);
+    const s = (currentPagePending.value - 1) * itemsPerPage;
+    return moderationStore.pendingRecipes.slice(s, s + itemsPerPage);
 });
-
 const paginatedReviewedRecipes = computed(() => {
-    const start = (currentPageReviewed.value - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    return reviewedRecipes.value.slice(start, end);
+    const s = (currentPageReviewed.value - 1) * itemsPerPage;
+    return reviewedRecipes.value.slice(s, s + itemsPerPage);
 });
-
 const paginatedAllRecipes = computed(() => {
-    const start = (currentPageAll.value - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    return moderationStore.allRecipes.slice(start, end);
+    const s = (currentPageAll.value - 1) * itemsPerPage;
+    return moderationStore.allRecipes.slice(s, s + itemsPerPage);
 });
 
 onMounted(async () => {
@@ -417,107 +664,101 @@ onMounted(async () => {
     await moderationStore.fetchPendingRecipes();
 });
 
-async function loadReviewedRecipes() {
-    loadingReviewed.value = true;
-    try {
-        await moderationStore.fetchAllRecipes();
-        const currentUserIdNum = Number(currentUserId.value);
-        reviewedRecipes.value = moderationStore.allRecipes.filter(
-            (r) => Number(r.reviewed_by) === currentUserIdNum && r.status !== 'pending'
-        );
-    } finally {
-        loadingReviewed.value = false;
-    }
-}
-
-async function loadAllRecipes() {
-    loadingAll.value = true;
-    try {
-        await moderationStore.fetchAllRecipes();
-    } finally {
-        loadingAll.value = false;
-    }
-}
-
-async function handleTabChange(tab: 'pending' | 'reviewed' | 'all') {
+async function handleTabChange(tab: TabKey) {
     activeTab.value = tab;
-    if (tab === 'reviewed') {
-        currentPageReviewed.value = 1; // Reset to page 1
-        await loadReviewedRecipes();
-    } else if (tab === 'all') {
-        currentPageAll.value = 1; // Reset to page 1
-        await loadAllRecipes();
+    if (tab === 'reviewed' && !reviewedLoaded.value) {
+        loadingReviewed.value = true;
+        try {
+            await moderationStore.fetchAllRecipes();
+            rebuildReviewedCache();
+            reviewedLoaded.value = true;
+        } finally {
+            loadingReviewed.value = false;
+        }
+    }
+    if (tab === 'all' && !allLoaded.value) {
+        loadingAll.value = true;
+        try {
+            await moderationStore.fetchAllRecipes();
+            allLoaded.value = true;
+        } finally {
+            loadingAll.value = false;
+        }
     }
 }
 
-const setActiveTab = (tab: 'pending' | 'reviewed' | 'all') => {
-    handleTabChange(tab);
-};
+function rebuildReviewedCache() {
+    const uid = Number(currentUserId.value);
+    reviewedRecipes.value = moderationStore.allRecipes.filter(
+        (r) => Number(r.reviewed_by) === uid && r.status !== 'pending'
+    );
+}
 
 function openRecipeDetail(recipe: ModerationRecipe) {
     selectedRecipe.value = recipe;
     showDetailModal.value = true;
 }
-
 function closeDetailModal() {
     showDetailModal.value = false;
     selectedRecipe.value = null;
 }
-
-function openRejectModalFromDetail() {
+function openRejectModal() {
+    rejectionReason.value = '';
+    showRejectError.value = false;
     showRejectModal.value = true;
 }
-
 function closeRejectModal() {
-    if (!modalActionLoading.value) {
-        showRejectModal.value = false;
-        rejectionReason.value = '';
-        showRejectError.value = false;
-    }
+    if (modalActionLoading.value) return;
+    showRejectModal.value = false;
+    rejectionReason.value = '';
+    showRejectError.value = false;
 }
 
+function invalidateCaches() {
+    reviewedLoaded.value = false;
+    allLoaded.value = false;
+}
+
+// ── Actions — catch backend errors and show toast ─────────────
 async function handleApprove(recipeId: number) {
-    const success = await moderationStore.approveRecipe(recipeId);
-    if (success) {
-        // Reset to page 1 if current page becomes empty
-        if (paginatedPendingRecipes.value.length === 0 && currentPagePending.value > 1) {
-            currentPagePending.value--;
+    try {
+        const success = await moderationStore.approveRecipe(recipeId);
+        if (success) {
+            invalidateCaches();
+            showToast('success', 'Resep berhasil disetujui.');
+            if (paginatedPendingRecipes.value.length === 0 && currentPagePending.value > 1) currentPagePending.value--;
         }
-        if (activeTab.value === 'reviewed') {
-            await loadReviewedRecipes();
-        } else if (activeTab.value === 'all') {
-            await loadAllRecipes();
-        }
+    } catch (err: any) {
+        showToast('error', err?.response?.data?.message ?? err.message ?? 'Gagal menyetujui resep.');
     }
 }
 
 async function handleReject(data: { recipeId: number; reason: string }) {
-    const success = await moderationStore.rejectRecipe(data.recipeId, data.reason);
-    if (success) {
-        // Reset to page 1 if current page becomes empty
-        if (paginatedPendingRecipes.value.length === 0 && currentPagePending.value > 1) {
-            currentPagePending.value--;
+    try {
+        const success = await moderationStore.rejectRecipe(data.recipeId, data.reason);
+        if (success) {
+            invalidateCaches();
+            showToast('success', 'Resep berhasil ditolak.');
+            if (paginatedPendingRecipes.value.length === 0 && currentPagePending.value > 1) currentPagePending.value--;
         }
-        if (activeTab.value === 'reviewed') {
-            await loadReviewedRecipes();
-        } else if (activeTab.value === 'all') {
-            await loadAllRecipes();
-        }
+    } catch (err: any) {
+        showToast('error', err?.response?.data?.message ?? err.message ?? 'Gagal menolak resep.');
     }
 }
 
 async function handleApproveFromModal(recipeId: number) {
     modalActionLoading.value = true;
-    const success = await moderationStore.approveRecipe(recipeId);
-    modalActionLoading.value = false;
-    
-    if (success) {
-        closeDetailModal();
-        if (activeTab.value === 'reviewed') {
-            await loadReviewedRecipes();
-        } else if (activeTab.value === 'all') {
-            await loadAllRecipes();
+    try {
+        const success = await moderationStore.approveRecipe(recipeId);
+        if (success) {
+            invalidateCaches();
+            showToast('success', 'Resep berhasil disetujui.');
+            closeDetailModal();
         }
+    } catch (err: any) {
+        showToast('error', err?.response?.data?.message ?? err.message ?? 'Gagal menyetujui resep.');
+    } finally {
+        modalActionLoading.value = false;
     }
 }
 
@@ -526,59 +767,47 @@ async function handleRejectFromModal() {
         showRejectError.value = true;
         return;
     }
-
     modalActionLoading.value = true;
-    const success = await moderationStore.rejectRecipe(
-        selectedRecipe.value!.id,
-        rejectionReason.value.trim()
-    );
-    modalActionLoading.value = false;
-
-    if (success) {
-        closeRejectModal();
-        closeDetailModal();
-        if (activeTab.value === 'reviewed') {
-            await loadReviewedRecipes();
-        } else if (activeTab.value === 'all') {
-            await loadAllRecipes();
+    try {
+        const success = await moderationStore.rejectRecipe(selectedRecipe.value!.id, rejectionReason.value.trim());
+        if (success) {
+            invalidateCaches();
+            showToast('success', 'Resep berhasil ditolak.');
+            closeRejectModal();
+            closeDetailModal();
         }
+    } catch (err: any) {
+        // Backend "cannot review own recipe" error surfaces here as a toast — not a page error
+        showToast('error', err?.response?.data?.message ?? err.message ?? 'Gagal menolak resep.');
+        closeRejectModal();
+    } finally {
+        modalActionLoading.value = false;
     }
 }
 
-function getStatusBadge(status: string) {
-    if (status === 'approved') return 'bg-green-100 text-green-700';
-    if (status === 'pending') return 'bg-yellow-100 text-yellow-700';
-    if (status === 'rejected') return 'bg-red-100 text-red-700';
-    return 'bg-gray-100 text-gray-700';
+function statusBadgeClass(status: string) {
+    return (
+        {
+            approved: 'bg-successSoft text-success',
+            pending: 'bg-warningSoft text-warning',
+            rejected: 'bg-errorSoft text-error',
+        }[status] ?? 'bg-warningSoft text-warning'
+    );
 }
-
 function getStatusText(status: string) {
-    if (status === 'approved') return 'Disetujui';
-    if (status === 'pending') return 'Pending';
-    if (status === 'rejected') return 'Ditolak';
-    return status;
+    return { approved: 'Disetujui', pending: 'Pending', rejected: 'Ditolak' }[status] ?? status;
 }
-
-function formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('id-ID', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
+function formatDate(dateString: string) {
+    return new Date(dateString).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 }
-
-// Pagination handlers
 function handlePageChangePending(page: number) {
     currentPagePending.value = page;
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
 function handlePageChangeReviewed(page: number) {
     currentPageReviewed.value = page;
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
 function handlePageChangeAll(page: number) {
     currentPageAll.value = page;
     window.scrollTo({ top: 0, behavior: 'smooth' });

@@ -4,9 +4,7 @@
             <h1 class="mb-6 text-3xl font-bold text-gray-900">Edit Resep</h1>
 
             <div v-if="recipeStore.loading && !recipe" class="py-12 text-center">
-                <div
-                    class="border-primary-600 inline-block h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"
-                ></div>
+                <div class="loading-spin"></div>
             </div>
 
             <form v-else-if="recipe" @submit.prevent="handleSubmit" class="space-y-6">

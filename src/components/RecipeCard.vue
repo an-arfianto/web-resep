@@ -1,34 +1,23 @@
 <template>
     <div class="transition-shadow cursor-pointer hover:shadow-lg card" @click="goToDetail">
-        <div class="mb-4">
-            <div
-                class="flex justify-center items-center w-full h-48 bg-gradient-to-br rounded-lg from-primary-400 to-primary-600"
-            >
-                <span class="text-6xl">🍽️</span>
-            </div>
-        </div>
-
-        <h3 class="mb-2 text-xl font-bold text-gray-900">{{ recipe.name }}</h3>
+        <h3 class="mb-2 text-xl font-bold text-textPrimary">{{ recipe.name }}</h3>
 
         <div class="flex gap-2 items-center mb-3">
-            <span
-                class="py-1 px-3 text-sm font-medium rounded-full bg-primary-100 text-primary-700"
-            >
+            <span class="category-badges">
                 {{ recipe.category }}
             </span>
-            <span
-                v-if="recipe.matched_count"
-                class="py-1 px-3 text-sm font-medium text-green-700 bg-green-100 rounded-full"
-            >
+            <span v-if="recipe.matched_count" class="text-success bg-successSoft category-badges">
                 {{ recipe.matched_count }} bahan sama
             </span>
         </div>
 
-        <p class="mb-4 text-sm text-gray-600 line-clamp-2">
+        <p class="mb-4 text-sm text-textPrimary line-clamp-2">
             {{ recipe.ingredients }}
         </p>
 
-        <button class="w-full btn-primary">Lihat Resep</button>
+        <button class="w-full button bg-primarySoft text-primary hover:bg-primary hover:text-textInverse">
+            Lihat Resep
+        </button>
     </div>
 </template>
 

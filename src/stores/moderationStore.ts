@@ -1,9 +1,9 @@
-import { defineStore } from "pinia";
-import { ref } from "vue";
-import api from "@/services/api";
-import type { ModerationRecipe, ModerationStats, RecipeStatus, ApiError } from "@/types";
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import api from '@/services/api';
+import type { ModerationRecipe, ModerationStats, RecipeStatus, ApiError } from '@/types';
 
-export const useModerationStore = defineStore("moderation", () => {
+export const useModerationStore = defineStore('moderation', () => {
     const stats = ref<ModerationStats>({
         total: 0,
         pending: 0,
@@ -104,7 +104,7 @@ export const useModerationStore = defineStore("moderation", () => {
             // Update local state
             pendingRecipes.value = pendingRecipes.value.filter((r) => r.id !== id);
             if (currentRecipe.value?.id === id) {
-                currentRecipe.value.status = "approved";
+                currentRecipe.value.status = 'approved';
             }
 
             // Refresh stats
@@ -130,7 +130,7 @@ export const useModerationStore = defineStore("moderation", () => {
             // Update local state
             pendingRecipes.value = pendingRecipes.value.filter((r) => r.id !== id);
             if (currentRecipe.value?.id === id) {
-                currentRecipe.value.status = "rejected";
+                currentRecipe.value.status = 'rejected';
                 currentRecipe.value.rejection_reason = reason || null;
             }
 

@@ -19,7 +19,7 @@ const api: AxiosInstance = axios.create({
     },
 });
 
-// Request interceptor
+// request interceptor
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
@@ -33,7 +33,7 @@ api.interceptors.request.use(
     }
 );
 
-// Response interceptor
+// response interceptor
 api.interceptors.response.use(
     (response: AxiosResponse) => response.data,
     (error) => {
@@ -45,72 +45,36 @@ api.interceptors.response.use(
 export default {
     auth: {
         register: (data: RegisterData): Promise<AuthResponse> => api.post('/users/register', data),
-
         login: (data: LoginCredentials): Promise<AuthResponse> => api.post('/users/login', data),
-
-        getCurrentUser: (): Promise<{ success: boolean; message: string; data: any }> =>
-            api.get('/users/me'),
+        getCurrentUser: (): Promise<{ success: boolean; message: string; data: any }> => api.get('/users/me'),
     },
 
     recipes: {
-        getAll: (params?: Record<string, any>): Promise<RecipeResponse> =>
-            api.get('/recipes', { params }),
-
+        getAll: (params?: Record<string, any>): Promise<RecipeResponse> => api.get('/recipes', { params }),
         getMy: (): Promise<RecipeResponse> => api.get('/recipes/my'),
-
         getById: (id: number): Promise<RecipeResponse> => api.get(`/recipes/${id}`),
-
         search: (data: SearchCriteria): Promise<SearchResponse> => api.post('/search', data),
-
         create: (data: CreateRecipeData): Promise<RecipeResponse> => api.post('/recipes', data),
-
-        update: (id: number, data: CreateRecipeData): Promise<RecipeResponse> =>
-            api.put(`/recipes/${id}`, data),
-
-        delete: (id: number): Promise<{ success: boolean; message: string }> =>
-            api.delete(`/recipes/${id}`),
+        update: (id: number, data: CreateRecipeData): Promise<RecipeResponse> => api.put(`/recipes/${id}`, data),
+        delete: (id: number): Promise<{ success: boolean; message: string }> => api.delete(`/recipes/${id}`),
     },
 
     moderation: {
-        // Get moderation statistics
         getStats: (): Promise<ModerationStatsResponse> => api.get('/moderation/stats'),
-
-        // Get pending recipes
         getPending: (): Promise<ModerationRecipesResponse> => api.get('/moderation/pending'),
-
-        // Get recipes by status
-        getByStatus: (
-            status: 'pending' | 'approved' | 'rejected'
-        ): Promise<ModerationRecipesResponse> =>
+        getByStatus: (status: 'pending' | 'approved' | 'rejected'): Promise<ModerationRecipesResponse> =>
             api.get('/moderation/recipes', { params: { status } }),
-
-        // Get all recipes (all statuses)
         getAllRecipes: (): Promise<ModerationRecipesResponse> => api.get('/moderation/recipes/all'),
-
-        // Get specific recipe for moderation
-        getRecipeById: (id: number): Promise<RecipeResponse> =>
-            api.get(`/moderation/recipes/${id}`),
-
-        // Approve recipe
-        approve: (id: number): Promise<RecipeResponse> =>
-            api.put(`/moderation/recipes/${id}/approve`),
-
-        // Reject recipe
+        getRecipeById: (id: number): Promise<RecipeResponse> => api.get(`/moderation/recipes/${id}`),
+        approve: (id: number): Promise<RecipeResponse> => api.put(`/moderation/recipes/${id}/approve`),
         reject: (id: number, reason?: string): Promise<RecipeResponse> =>
             api.put(`/moderation/recipes/${id}/reject`, { reason }),
     },
 
     profile: {
-        // Get profile with stats
         getProfile: (): Promise<{ success: boolean; data: any }> => api.get('/profile'),
-
-        // Update username
-        updateProfile: (
-            username: string
-        ): Promise<{ success: boolean; message: string; data: any }> =>
+        updateProfile: (username: string): Promise<{ success: boolean; message: string; data: any }> =>
             api.put('/profile', { username }),
-
-        // Change password
         updatePassword: (
             currentPassword: string,
             newPassword: string
@@ -119,15 +83,10 @@ export default {
     },
 
     admin: {
-        // Promote user to moderator
         promoteUser: (userId: number): Promise<{ success: boolean; message: string }> =>
             api.put(`/admin/users/${userId}/promote`),
-
-        // Demote moderator to user
         demoteUser: (userId: number): Promise<{ success: boolean; message: string }> =>
             api.put(`/admin/users/${userId}/demote`),
-
-        // Delete user
         deleteUser: (userId: number): Promise<{ success: boolean; message: string }> =>
             api.delete(`/admin/users/${userId}`),
     },

@@ -23,7 +23,7 @@ export interface Recipe {
     ingredientsText?: string;
     user_id?: number;
     matched_count?: number;
-    created_at?: string;
+    created_at: string;
     updated_at?: string;
     status?: RecipeStatus;
     rejection_reason?: string;

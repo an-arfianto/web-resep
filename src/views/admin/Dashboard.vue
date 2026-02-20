@@ -1,88 +1,215 @@
 <template>
-    <div>
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold">Admin Dashboard</h1>
+    <div class="flex flex-col gap-5 py-6 px-5 mx-auto max-w-[1100px]">
+        <!-- Loading -->
+        <div v-if="loading" class="flex justify-center py-20">
+            <div class="loading-spin"></div>
         </div>
 
-        <div v-if="loading" class="py-12 text-center">
-            <div
-                class="inline-block w-12 h-12 rounded-full border-4 animate-spin border-primary-600 border-t-transparent"
-            ></div>
-        </div>
-
-        <div v-else>
-            <div class="grid grid-cols-1 gap-6 mb-8 md:grid-cols-3">
-                <div class="bg-blue-50 border-blue-200 card">
-                    <h3 class="mb-2 text-lg font-semibold text-blue-900">Total User</h3>
-                    <p class="text-4xl font-bold text-blue-600">{{ stats?.totalUsers || 0 }}</p>
-                </div>
-
-                <div class="bg-green-50 border-green-200 card">
-                    <h3 class="mb-2 text-lg font-semibold text-green-900">Total Resep</h3>
-                    <p class="text-4xl font-bold text-green-600">{{ stats?.totalRecipes || 0 }}</p>
-                </div>
-
-                <div class="bg-purple-50 border-purple-200 card">
-                    <h3 class="mb-2 text-lg font-semibold text-purple-900">Kategori</h3>
-                    <p class="text-4xl font-bold text-purple-600">
-                        {{ stats?.recipesByCategory?.length || 0 }}
-                    </p>
-                </div>
-            </div>
-
-            <div class="grid gap-6 md:grid-cols-2">
-                <div class="card">
-                    <h2 class="mb-4 text-2xl font-bold">Menu</h2>
-                    <div class="space-y-3">
-                        <RouterLink
-                            to="/admin/users"
-                            class="block p-4 bg-blue-50 rounded-lg transition-colors hover:bg-blue-100"
+        <template v-else>
+            <!-- ── Stats Bar ──────────────────────────────────────── -->
+            <div class="flex overflow-hidden rounded-2xl shadow-sm bg-surface">
+                <!-- Total User -->
+                <div class="flex flex-1 gap-3.5 items-center py-5 px-5">
+                    <div
+                        class="flex justify-center items-center w-11 h-11 text-blue-600 bg-blue-50 rounded-xl shrink-0"
+                    >
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            width="20"
+                            height="20"
                         >
-                            <h3 class="font-semibold text-blue-900">Kelola User</h3>
-                            <p class="text-sm text-blue-700">Kelola semua user</p>
-                        </RouterLink>
-                        <RouterLink
-                            to="/admin/recipes"
-                            class="block p-4 bg-green-50 rounded-lg transition-colors hover:bg-green-100"
-                        >
-                            <h3 class="font-semibold text-green-900">Kelola Resep</h3>
-                            <p class="text-sm text-green-700">Kelola semua resep masakan</p>
-                        </RouterLink>
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="mb-0.5 font-extrabold leading-none text-textPrimary text-[1.75rem]">
+                            {{ stats?.totalUsers || 0 }}
+                        </p>
+                        <p class="font-semibold tracking-widest uppercase text-textSecondary text-[0.7rem]">
+                            Total User
+                        </p>
                     </div>
                 </div>
 
-                <div class="card">
-                    <h2 class="mb-4 text-2xl font-bold">Total Resep berdasarkan Kategori</h2>
-                    <div v-if="stats?.recipesByCategory" class="space-y-2">
-                        <div
-                            v-for="cat in stats.recipesByCategory"
-                            :key="cat.category"
-                            class="flex justify-between items-center p-3 bg-gray-50 rounded"
+                <div class="my-3.5 w-px bg-divider"></div>
+
+                <!-- Total Resep -->
+                <div class="flex flex-1 gap-3.5 items-center py-5 px-5">
+                    <div
+                        class="flex justify-center items-center w-11 h-11 text-green-600 bg-green-50 rounded-xl shrink-0"
+                    >
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            width="20"
+                            height="20"
                         >
-                            <span class="font-medium">{{ cat.category }}</span>
-                            <span
-                                class="py-1 px-3 text-sm font-semibold rounded-full bg-primary-100 text-primary-700"
-                            >
-                                {{ cat.count }}
-                            </span>
+                            <path
+                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                            />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="mb-0.5 font-extrabold leading-none text-textPrimary text-[1.75rem]">
+                            {{ stats?.totalRecipes || 0 }}
+                        </p>
+                        <p class="font-semibold tracking-widest uppercase text-textSecondary text-[0.7rem]">
+                            Total Resep
+                        </p>
+                    </div>
+                </div>
+
+                <div class="my-3.5 w-px bg-divider"></div>
+
+                <!-- Kategori -->
+                <div class="flex flex-1 gap-3.5 items-center py-5 px-5">
+                    <div
+                        class="flex justify-center items-center w-11 h-11 text-purple-600 bg-purple-50 rounded-xl shrink-0"
+                    >
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            width="20"
+                            height="20"
+                        >
+                            <rect x="3" y="3" width="7" height="7" />
+                            <rect x="14" y="3" width="7" height="7" />
+                            <rect x="14" y="14" width="7" height="7" />
+                            <rect x="3" y="14" width="7" height="7" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="mb-0.5 font-extrabold leading-none text-textPrimary text-[1.75rem]">
+                            {{ stats?.recipesByCategory?.length || 0 }}
+                        </p>
+                        <p class="font-semibold tracking-widest uppercase text-textSecondary text-[0.7rem]">Kategori</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Main Layout ────────────────────────────────────── -->
+            <div class="flex gap-5 items-start">
+                <!-- Sidebar — sticky on desktop, horizontal strip on mobile -->
+                <nav
+                    class="flex sticky top-5 flex-col gap-0.5 p-2 rounded-2xl shadow-sm bg-surface max-md:sticky-none w-[215px] shrink-0 max-md:top-auto max-md:w-full max-md:flex-row"
+                >
+                    <p
+                        class="px-3 pt-1 pb-2 font-bold uppercase text-textMuted text-[0.68rem] tracking-[0.08em] max-md:hidden"
+                    >
+                        Menu Admin
+                    </p>
+                    <RouterLink
+                        to="/admin/users"
+                        class="flex gap-2.5 items-center py-2.5 px-3 text-sm font-medium no-underline rounded-lg transition-colors text-textSecondary max-md:flex-1 max-md:flex-col max-md:items-center max-md:gap-1 max-md:py-2.5 max-md:text-center max-md:text-[0.72rem] hover:bg-overlay hover:text-textPrimary"
+                        :class="{ 'bg-overlay !text-primary !font-bold': $route.path === '/admin/users' }"
+                    >
+                        <svg
+                            class="h-[17px] w-[17px] shrink-0 max-md:h-5 max-md:w-5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                        <span>Kelola User</span>
+                    </RouterLink>
+                    <RouterLink
+                        to="/admin/recipes"
+                        class="flex gap-2.5 items-center py-2.5 px-3 text-sm font-medium no-underline rounded-lg transition-colors text-textSecondary max-md:flex-1 max-md:flex-col max-md:items-center max-md:gap-1 max-md:py-2.5 max-md:text-center max-md:text-[0.72rem] hover:bg-overlay hover:text-textPrimary"
+                        :class="{ 'bg-overlay !text-primary !font-bold': $route.path === '/admin/recipes' }"
+                    >
+                        <svg
+                            class="h-[17px] w-[17px] shrink-0 max-md:h-5 max-md:w-5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path
+                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                            />
+                        </svg>
+                        <span>Kelola Resep</span>
+                    </RouterLink>
+                </nav>
+
+                <!-- Content panel -->
+                <section class="flex-1 p-6 min-w-0 rounded-2xl shadow-sm bg-surface max-md:p-4">
+                    <div class="pb-4 mb-5 border-b border-divider">
+                        <h2 class="mb-0.5 text-lg font-bold text-textPrimary">Resep per Kategori</h2>
+                        <p class="text-xs text-textSecondary">Distribusi resep berdasarkan kategori</p>
+                    </div>
+
+                    <div v-if="stats?.recipesByCategory?.length" class="flex flex-col gap-2.5">
+                        <div
+                            v-for="(cat, index) in stats.recipesByCategory"
+                            :key="cat.category"
+                            class="flex gap-3 items-center"
+                        >
+                            <!-- Rank + name -->
+                            <div class="flex gap-2 items-center w-[180px] shrink-0 max-md:w-[130px]">
+                                <span
+                                    class="flex justify-center items-center font-bold rounded-full bg-overlay text-textSecondary h-[22px] w-[22px] shrink-0 text-[0.7rem]"
+                                >
+                                    {{ index + 1 }}
+                                </span>
+                                <span
+                                    class="overflow-hidden text-sm font-medium whitespace-nowrap text-textPrimary text-ellipsis"
+                                >
+                                    {{ cat.category }}
+                                </span>
+                            </div>
+                            <!-- Bar track -->
+                            <div class="overflow-hidden flex-1 h-2 rounded-full bg-overlay">
+                                <div
+                                    class="h-full rounded-full duration-500 bg-primary transition-[width]"
+                                    :style="{ width: barWidth(cat.count) }"
+                                ></div>
+                            </div>
+                            <!-- Count -->
+                            <span class="w-7 text-sm font-bold text-right text-textPrimary shrink-0">{{
+                                cat.count
+                            }}</span>
                         </div>
                     </div>
-                </div>
+
+                    <div v-else class="py-10 text-sm text-center text-textSecondary">Belum ada data kategori.</div>
+                </section>
             </div>
-        </div>
+        </template>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-// import { useRouter } from 'vue-router';
-// import { useAuthStore } from '@/stores/authStore';
+import { ref, computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import axios from 'axios';
 
-// const router = useRouter();
-// const authStore = useAuthStore();
 const stats = ref<any>(null);
 const loading = ref(true);
+const $route = useRoute();
+
+const maxCategoryCount = computed(() => {
+    if (!stats.value?.recipesByCategory?.length) return 1;
+    return Math.max(...stats.value.recipesByCategory.map((c: any) => c.count));
+});
+
+function barWidth(count: number): string {
+    const pct = Math.round((count / maxCategoryCount.value) * 100);
+    return `${Math.max(pct, 4)}%`;
+}
 
 onMounted(async () => {
     try {

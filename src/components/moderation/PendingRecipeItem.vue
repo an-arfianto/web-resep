@@ -1,98 +1,152 @@
 <template>
-    <div
-        class="p-4 bg-white rounded-lg border border-gray-200 transition-colors hover:shadow-md hover:border-primary-300"
-    >
-        <div class="flex gap-4 justify-between items-start">
-            <div class="flex-1 min-w-0">
-                <div class="flex flex-wrap gap-2 items-center mb-2">
-                    <h3 class="text-lg font-semibold text-gray-900 truncate">
-                        {{ recipe.name }}
-                    </h3>
-                    <span
-                        class="inline-block flex-shrink-0 py-1 px-2.5 text-xs font-medium text-orange-700 bg-orange-100 rounded-full"
-                    >
-                        {{ recipe.category }}
-                    </span>
-                </div>
+    <div class="flex flex-col gap-2.5 p-4 rounded-xl border transition-shadow hover:shadow-md border-border bg-surface">
+        <!-- Name + category -->
+        <div class="flex gap-2.5 justify-between items-start">
+            <h3 class="flex-1 text-base font-bold leading-snug text-textPrimary">{{ recipe.name }}</h3>
+            <span class="category-badges shrink-0">{{ recipe.category }}</span>
+        </div>
 
-                <div class="flex flex-wrap gap-4 mb-3 text-sm text-gray-600">
-                    <span>Oleh: {{ recipe.creator_username }}</span>
-                    <span>{{ formatDate(recipe.created_at) }}</span>
-                </div>
+        <!-- Meta -->
+        <div class="flex flex-wrap gap-1.5 items-center">
+            <span class="inline-flex gap-1 items-center text-xs text-textSecondary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg>
+                {{ recipe.creator_username }}
+            </span>
+            <span class="text-xs text-textMuted">·</span>
+            <span class="text-xs text-textSecondary">{{ formatDate(recipe.created_at) }}</span>
+        </div>
 
-                <div v-if="recipe.ingredients" class="p-3 mb-3 bg-gray-50 rounded-lg">
-                    <p class="mb-1 text-xs font-semibold text-gray-700 uppercase">Bahan:</p>
-                    <p class="text-sm text-gray-600 line-clamp-2">{{ recipe.ingredients }}</p>
-                </div>
+        <!-- Ingredients preview -->
+        <div v-if="recipe.ingredients" class="py-2.5 px-3 rounded-lg bg-inputBackground">
+            <p class="mb-1 font-bold tracking-wider uppercase text-textSecondary text-[0.72rem]">Bahan-bahan</p>
+            <p class="leading-relaxed text-textSecondary line-clamp-2 text-[0.8125rem]">{{ recipe.ingredients }}</p>
+        </div>
 
-                <button
-                    @click="$emit('view-detail', recipe)"
-                    class="text-sm font-medium transition-colors text-primary-600 hover:text-primary-700"
-                >
-                    Lihat detail lengkap →
-                </button>
-            </div>
-
-            <div class="flex flex-col flex-shrink-0 gap-2">
+        <!-- Footer -->
+        <div class="flex flex-wrap gap-2 justify-between items-center max-sm:flex-col max-sm:items-stretch">
+            <button
+                @click="$emit('view-detail', recipe)"
+                class="p-0 whitespace-nowrap bg-transparent border-none cursor-pointer view-detail"
+            >
+                Lihat detail lengkap →
+            </button>
+            <div class="flex gap-2 max-sm:w-full">
                 <button
                     @click="handleApprove"
                     :disabled="loading"
-                    class="flex gap-2 justify-center items-center py-2 px-4 text-sm font-medium text-white bg-green-600 rounded-lg transition-colors hover:bg-green-700 disabled:opacity-50"
+                    class="inline-flex flex-1 gap-1.5 justify-center items-center py-2 px-4 font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-successSoft text-success text-[0.8125rem] hover:bg-success hover:text-textInverse"
                 >
-                    ✓ Setujui
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        width="13"
+                        height="13"
+                    >
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Setujui
                 </button>
                 <button
-                    @click="showRejectModal = true"
+                    @click="openRejectModal"
                     :disabled="loading"
-                    class="flex gap-2 justify-center items-center py-2 px-4 text-sm font-medium text-white bg-red-600 rounded-lg transition-colors hover:bg-red-700 disabled:opacity-50"
+                    class="inline-flex flex-1 gap-1.5 justify-center items-center py-2 px-4 font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-errorSoft text-error text-[0.8125rem] hover:bg-error hover:text-textInverse"
                 >
-                    ✕ Tolak
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        width="13"
+                        height="13"
+                    >
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                    Tolak
                 </button>
             </div>
         </div>
 
-        <!-- Rejection Modal -->
+        <!-- Reject modal -->
         <teleport to="body">
-            <div
-                v-if="showRejectModal"
-                class="flex fixed inset-0 z-50 justify-center items-center p-4 bg-black/50 backdrop-blur-sm"
-                @click.self="closeRejectModal"
+            <transition
+                enter-active-class="transition duration-200 ease-out [&_.mpanel]:transition [&_.mpanel]:duration-200 [&_.mpanel]:ease-out"
+                enter-from-class="opacity-0 [&_.mpanel]:translate-y-2.5 [&_.mpanel]:opacity-0"
+                leave-active-class="transition duration-200 ease-in [&_.mpanel]:transition [&_.mpanel]:duration-200 [&_.mpanel]:ease-in"
+                leave-to-class="opacity-0 [&_.mpanel]:translate-y-2.5 [&_.mpanel]:opacity-0"
             >
-                <div class="p-6 w-full max-w-md bg-white rounded-xl shadow-2xl">
-                    <h3 class="text-lg font-bold text-gray-900">Tolak Resep</h3>
-                    <p class="mt-2 text-sm text-gray-600">
-                        Berikan alasan penolakan agar pembuat resep dapat memperbaikinya.
-                    </p>
-
-                    <textarea
-                        v-model="rejectionReason"
-                        rows="4"
-                        placeholder="Contoh: Bahan-bahan tidak lengkap, instruksi kurang jelas, dll."
-                        class="py-2 px-3 mt-4 w-full rounded-lg border border-gray-300 transition-all resize-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                        :class="{ 'border-red-300': showError }"
-                    ></textarea>
-                    <p v-if="showError" class="mt-1 text-xs text-red-600">
-                        Mohon berikan alasan penolakan
-                    </p>
-
-                    <div class="flex gap-3 justify-end mt-6">
-                        <button
-                            @click="closeRejectModal"
-                            :disabled="loading"
-                            class="py-2 px-4 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors hover:bg-gray-200 disabled:opacity-50"
+                <div
+                    v-if="showRejectModal"
+                    class="flex fixed inset-0 z-50 justify-center items-center p-5 backdrop-blur-sm"
+                    style="background: rgba(0, 0, 0, 0.45)"
+                    @click.self="closeRejectModal"
+                >
+                    <div
+                        class="flex overflow-hidden flex-col w-full rounded-2xl shadow-2xl mpanel bg-surface max-w-110"
+                    >
+                        <!-- Header -->
+                        <div
+                            class="flex gap-3 justify-between items-center py-4 px-6 border-b border-divider bg-background"
                         >
-                            Batal
-                        </button>
-                        <button
-                            @click="handleReject"
-                            :disabled="loading"
-                            class="py-2 px-4 text-sm font-medium text-white bg-red-600 rounded-lg transition-colors hover:bg-red-700 disabled:opacity-50"
-                        >
-                            {{ loading ? 'Memproses...' : 'Tolak Resep' }}
-                        </button>
+                            <h2 class="text-base font-bold text-textPrimary">Tolak Resep</h2>
+                            <button
+                                @click="closeRejectModal"
+                                aria-label="Tutup"
+                                class="flex justify-center items-center w-8 h-8 rounded-lg transition-colors text-textSecondary shrink-0 hover:bg-overlay hover:text-textPrimary"
+                            >
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    width="17"
+                                    height="17"
+                                >
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                            </button>
+                        </div>
+                        <!-- Body -->
+                        <div class="flex flex-col gap-2.5 py-5 px-6">
+                            <p class="text-sm font-semibold text-textPrimary">{{ recipe.name }}</p>
+                            <p class="text-textSecondary text-[0.8125rem]">
+                                Berikan alasan agar pembuat resep dapat memperbaikinya.
+                            </p>
+                            <textarea
+                                v-model="rejectionReason"
+                                rows="5"
+                                placeholder="Contoh: Bahan-bahan tidak lengkap, instruksi kurang jelas, dll."
+                                :disabled="loading"
+                                :class="['input-field resize-y text-sm', showError && 'border-error focus:ring-error']"
+                            ></textarea>
+                            <p v-if="showError" class="text-xs text-error">Mohon berikan alasan penolakan</p>
+                        </div>
+                        <!-- Footer -->
+                        <div class="flex gap-2.5 justify-end py-4 px-6 border-t border-divider bg-background">
+                            <button
+                                @click="closeRejectModal"
+                                :disabled="loading"
+                                class="py-2 px-5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                @click="handleReject"
+                                :disabled="loading"
+                                class="py-2 px-5 text-sm font-semibold rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed bg-error text-textInverse hover:opacity-85"
+                            >
+                                {{ loading ? 'Mohon Tunggu...' : 'Tolak Resep' }}
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </transition>
         </teleport>
     </div>
 </template>
@@ -104,7 +158,6 @@ import type { ModerationRecipe } from '@/types';
 interface Props {
     recipe: ModerationRecipe;
 }
-
 interface Emits {
     (e: 'approve', recipeId: number): void;
     (e: 'reject', data: { recipeId: number; reason: string }): void;
@@ -119,21 +172,20 @@ const rejectionReason = ref('');
 const loading = ref(false);
 const showError = ref(false);
 
-function formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('id-ID', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
+function formatDate(d: string) {
+    return new Date(d).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
+function openRejectModal() {
+    rejectionReason.value = '';
+    showError.value = false;
+    showRejectModal.value = true;
+}
 function closeRejectModal() {
-    if (!loading.value) {
-        showRejectModal.value = false;
-        rejectionReason.value = '';
-        showError.value = false;
-    }
+    if (loading.value) return;
+    showRejectModal.value = false;
+    rejectionReason.value = '';
+    showError.value = false;
 }
 
 function handleApprove() {
@@ -142,29 +194,22 @@ function handleApprove() {
     emit('approve', props.recipe.id);
     setTimeout(() => {
         loading.value = false;
-    }, 500);
+    }, 600);
 }
 
 function handleReject() {
     if (loading.value) return;
-
     if (!rejectionReason.value.trim()) {
         showError.value = true;
         return;
     }
-
     loading.value = true;
     showError.value = false;
-
-    emit('reject', {
-        recipeId: props.recipe.id,
-        reason: rejectionReason.value.trim(),
-    });
-
+    emit('reject', { recipeId: props.recipe.id, reason: rejectionReason.value.trim() });
     setTimeout(() => {
         loading.value = false;
         showRejectModal.value = false;
         rejectionReason.value = '';
-    }, 500);
+    }, 600);
 }
 </script>

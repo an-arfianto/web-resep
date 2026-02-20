@@ -1,5 +1,19 @@
-# Vue 3 + TypeScript + Vite
+Roadmap =
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
-
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+- [x] login - register
+- [x] homepage (mod & user. admin klik icon)
+- [x] search method (mod & user)
+- [x] profil page
+- [ ] color palette -> rose pine dawn (wip)
+- [ ] responsive (wip)
+- Admin
+- [x] dashboard
+- [x] stats profil
+- moderator
+- [x] dashboard
+- [x] stats profil
+- [x] tambah resep(= user)
+- user biasa/masyarakat
+- [x] tambah user
+- [x] lihat resep pribadi
+-
