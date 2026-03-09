@@ -19,9 +19,10 @@ export interface Recipe {
     category: string;
     description?: string;
     instructions?: string;
-    ingredients: Ingredient[] | string; // array / string
+    ingredients: Ingredient[] | string;
     ingredientsText?: string;
     user_id?: number;
+    creator_username?: string;
     matched_count?: number;
     created_at: string;
     updated_at?: string;

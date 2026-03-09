@@ -1,57 +1,80 @@
 <template>
-    <div>
+    <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-5xl lg:px-6">
         <button
             @click="$router.back()"
-            class="mb-6 button bg-primarySoft text-primary hover:bg-primary hover:text-textInverse"
+            class="inline-flex gap-1.5 items-center button bg-overlay text-textSecondary w-fit hover:bg-divider hover:text-textPrimary"
         >
-            ← Kembali
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
+            </svg>
+            Kembali
         </button>
 
-        <div v-if="recipeStore.loading" class="py-12 text-center">
+        <div v-if="recipeStore.loading" class="flex justify-center py-20">
             <div class="loading-spin"></div>
         </div>
 
-        <div v-else-if="recipeStore.error" class="py-12 text-center">
-            <p class="text-error">{{ recipeStore.error }}</p>
+        <div v-else-if="recipeStore.error" class="card">
+            <div class="alert-box alert-error">
+                <p class="text-sm font-semibold text-error">{{ recipeStore.error }}</p>
+            </div>
         </div>
 
-        <div v-else-if="recipe" class="card">
-            <div class="mb-6">
-                <div class="flex gap-4 justify-between items-center mb-4">
-                    <h1 class="text-4xl font-bold text-textPrimary">{{ recipe.name }}</h1>
-                    <span class="category-badges">
-                        {{ recipe.category }}
-                    </span>
-                </div>
+        <div v-else-if="recipe" class="flex flex-col gap-5">
+            <div class="card">
+                <div class="flex flex-col gap-4">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
+                        <h1 class="text-2xl font-bold leading-tight lg:text-4xl text-textPrimary">
+                            {{ recipe.name }}
+                        </h1>
+                        <span class="category-badges shrink-0">
+                            {{ recipe.category }}
+                        </span>
+                    </div>
 
-                <p v-if="recipe.description" class="mb-6 text-lg text-textPrimary">
-                    {{ recipe.description }}
-                </p>
+                    <div
+                        class="flex flex-col gap-2 py-3 px-4 rounded-lg sm:flex-row sm:gap-6 sm:items-center bg-background"
+                    >
+                        <div v-if="recipe.creator_username" class="flex gap-2 items-center text-sm">
+                            <span class="font-medium text-textSecondary">Oleh:</span>
+                            <span class="font-semibold text-textPrimary">{{ recipe.creator_username }}</span>
+                        </div>
+
+                        <div v-if="recipe.created_at" class="flex gap-2 items-center text-sm">
+                            <span class="font-medium text-textSecondary">Dibuat:</span>
+                            <span class="text-textPrimary">{{ formatDate(recipe.created_at) }}</span>
+                        </div>
+                    </div>
+
+                    <p v-if="recipe.description" class="text-base leading-relaxed lg:text-lg text-textSecondary">
+                        {{ recipe.description }}
+                    </p>
+                </div>
             </div>
 
-            <!-- list bahan -->
-            <div class="grid gap-8 md:grid-cols-2">
-                <div>
-                    <h2 class="mb-4 text-2xl font-bold text-textPrimary">Bahan</h2>
-                    <div class="p-4 rounded-lg bg-overlay">
-                        <ul class="space-y-2">
-                            <li v-for="(ingredient, index) in ingredientsList" :key="index" class="flex items-start">
-                                <span class="mr-2 text-textPrimary">•</span>
-                                <span class="text-textPrimary">
-                                    <span v-if="ingredient.quantity" class="font-semibold">
-                                        {{ ingredient.quantity }} {{ ingredient.unit }}
-                                    </span>
-                                    {{ ingredient.name }}
+            <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                <div class="card">
+                    <h2 class="mb-4 text-xl font-bold lg:text-2xl text-textPrimary">Bahan-bahan</h2>
+                    <div class="flex flex-col p-4 rounded-lg bg-background">
+                        <div v-for="(ingredient, index) in ingredientsList" :key="index" class="flex gap-1 items-start">
+                            <span class="text-primary shrink-0">•</span>
+                            <span class="text-sm leading-relaxed text-textPrimary">
+                                <span v-if="ingredient.quantity" class="font-semibold text-textPrimary">
+                                    {{ ingredient.quantity }}{{ ingredient.unit ? ' ' + ingredient.unit : '' }}
                                 </span>
-                            </li>
-                        </ul>
+                                {{ ingredient.name }}
+                            </span>
+                        </div>
                     </div>
                 </div>
 
-                <div>
-                    <h2 class="mb-4 text-2xl font-bold text-textPrimary">Instruksi</h2>
-                    <div class="p-4 rounded-lg bg-overlay">
-                        <p class="whitespace-pre-line text-textPrimary">{{ recipe.instructions }}</p>
+                <div class="card">
+                    <h2 class="mb-4 text-xl font-bold lg:text-2xl text-textPrimary">Instruksi</h2>
+                    <div class="p-4 rounded-lg bg-background">
+                        <p class="text-sm leading-relaxed whitespace-pre-line text-textPrimary">
+                            {{ recipe.instructions }}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -87,6 +110,14 @@ const ingredientsList = computed<Ingredient[]>(() => {
 
     return [];
 });
+
+function formatDate(dateString: string): string {
+    return new Date(dateString).toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+}
 
 onMounted(() => {
     const id = Number(route.params.id);

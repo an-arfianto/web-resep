@@ -36,22 +36,13 @@
                         <h3 class="flex-1 text-base font-bold leading-snug text-textPrimary line-clamp-2">
                             {{ recipe.name }}
                         </h3>
-                        <span
-                            :class="['status-badges shrink-0',
-                                recipe.status === 'approved' && 'bg-successSoft text-success',
-                                recipe.status === 'pending' && 'bg-warningSoft text-warning',
-                                recipe.status === 'rejected' && 'bg-errorSoft text-error',
-                                !['approved', 'pending', 'rejected'].includes(recipe.status) &&
-                                    'bg-warningSoft text-warning',
-                            ]"
-                        >
+                        <span :class="['status-badges shrink-0', getStatusClass(recipe.status)]">
                             {{ statusText(recipe.status) }}
                         </span>
                     </div>
 
                     <div class="flex flex-wrap gap-1.5 items-center">
                         <span class="category-badges">{{ recipe.category }}</span>
-                        <span class="text-xs text-textMuted">·</span>
                         <span class="inline-flex gap-1 items-center text-xs text-textSecondary">
                             Oleh: {{ recipe.author }}
                         </span>
@@ -61,17 +52,22 @@
                         {{ recipe.ingredients }}
                     </p>
 
+                    <div v-if="recipe.status === 'rejected' && recipe.rejection_reason" class="alert-box alert-error">
+                        <p class="flex gap-1.5 items-center mb-1 text-xs font-bold">Alasan</p>
+                        <p class="text-xs leading-relaxed line-clamp-2">{{ recipe.rejection_reason }}</p>
+                    </div>
+
                     <div
                         class="flex flex-wrap gap-2 justify-between items-center pt-2.5 mt-auto border-t border-divider"
                     >
                         <span class="text-textMuted text-[0.72rem]">{{ formatDate(recipe.created_at) }}</span>
                         <div class="flex gap-1.5">
-                            <RouterLink
-                                :to="`/recipe/${recipe.id}`"
-                                class="inline-flex gap-1.5 items-center py-1.5 px-3.5 text-xs font-semibold no-underline rounded-lg transition-colors bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
+                            <button
+                                @click="openDetailModal(recipe.id)"
+                                class="inline-flex gap-1.5 items-center py-1.5 px-3.5 text-xs font-semibold rounded-lg transition-colors bg-secondarySoft text-secondary hover:bg-secondary hover:text-textInverse"
                             >
-                                Lihat
-                            </RouterLink>
+                                Detail
+                            </button>
                             <button
                                 @click="deleteRecipe(recipe.id)"
                                 :disabled="deletingId === recipe.id"
@@ -94,25 +90,124 @@
         </template>
 
         <teleport to="body">
-            <div
-                v-if="showDeleteModal"
-                class="flex fixed inset-0 z-50 justify-center items-center p-5 backdrop-blur-sm"
-                style="background: rgba(0, 0, 0, 0.45)"
-                @click.self="cancelDelete"
-            >
-                <div
-                    class="flex overflow-hidden flex-col w-full rounded-2xl shadow-2xl modal-panel bg-surface max-w-105"
-                >
-                    <!-- Header -->
-                    <div
-                        class="flex gap-3 justify-between items-center py-4 px-5 border-b border-divider bg-background"
-                    >
-                        <h2 class="text-base font-bold text-textPrimary">Hapus Resep</h2>
-                        <button
-                            @click="cancelDelete"
-                            aria-label="Tutup"
-                            class="flex justify-center items-center w-8 h-8 rounded-lg transition-colors text-textSecondary shrink-0 hover:bg-overlay hover:text-textPrimary"
-                        >
+            <div v-if="showDetailModal" class="modal-backdrop" @click.self="closeDetailModal">
+                <div class="modal-panel max-h-[88vh] max-w-160">
+                    <div v-if="loadingDetail" class="flex justify-center items-center p-20">
+                        <div class="loading-spin"></div>
+                    </div>
+
+                    <template v-else-if="selectedRecipe">
+                        <div class="modal-header">
+                            <div class="flex-1 min-w-0">
+                                <h2 class="mb-2 modal-title">{{ selectedRecipe.name }}</h2>
+                                <div class="flex flex-wrap gap-1.5">
+                                    <span class="category-badges">{{ selectedRecipe.category }}</span>
+                                    <span :class="['status-badges', getStatusClass(selectedRecipe.status)]">
+                                        {{ statusText(selectedRecipe.status) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <button @click="closeDetailModal" aria-label="Tutup" class="modal-close-btn">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    width="17"
+                                    height="17"
+                                >
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="flex overflow-y-auto flex-col flex-1 gap-5 modal-body">
+                            <div class="flex flex-col gap-1.5 py-3 px-4 rounded-lg bg-background">
+                                <div class="flex gap-2 text-sm">
+                                    <span class="w-24 font-semibold text-textSecondary shrink-0">Oleh</span>
+                                    <span class="text-textPrimary">{{
+                                        selectedRecipe.creator_username || selectedRecipe.author || 'Unknown'
+                                    }}</span>
+                                </div>
+                                <div class="flex gap-2 text-sm">
+                                    <span class="w-24 font-semibold text-textSecondary shrink-0">Dibuat</span>
+                                    <span class="text-textPrimary">{{ formatDate(selectedRecipe.created_at) }}</span>
+                                </div>
+                                <div
+                                    v-if="selectedRecipe.status !== 'pending' && selectedRecipe.reviewer_username"
+                                    class="flex gap-2 text-sm"
+                                >
+                                    <span class="w-24 font-semibold text-textSecondary shrink-0">Direview oleh</span>
+                                    <span class="text-textPrimary">
+                                        {{ selectedRecipe.reviewer_username }}
+                                        <span v-if="selectedRecipe.reviewed_at" class="text-textSecondary">
+                                            — {{ formatDate(selectedRecipe.reviewed_at) }}
+                                        </span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div v-if="selectedRecipe.description">
+                                <p class="mb-1.5 text-sm font-bold text-textPrimary">Deskripsi</p>
+                                <p class="text-sm leading-relaxed text-textSecondary">
+                                    {{ selectedRecipe.description }}
+                                </p>
+                            </div>
+
+                            <div v-if="selectedRecipe.ingredients">
+                                <p class="mb-1.5 text-sm font-bold text-textPrimary">Bahan-bahan</p>
+                                <div v-if="Array.isArray(selectedRecipe.ingredients)" class="flex flex-col gap-1">
+                                    <p
+                                        v-for="(ing, idx) in selectedRecipe.ingredients"
+                                        :key="idx"
+                                        class="text-sm text-textSecondary"
+                                    >
+                                        • {{ formatIngredient(ing) }}
+                                    </p>
+                                </div>
+                                <p v-else class="text-sm leading-relaxed whitespace-pre-line text-textSecondary">
+                                    {{ selectedRecipe.ingredients }}
+                                </p>
+                            </div>
+
+                            <div v-if="selectedRecipe.instructions">
+                                <p class="mb-1.5 text-sm font-bold text-textPrimary">Instruksi</p>
+                                <p class="text-sm leading-relaxed whitespace-pre-line text-textSecondary">
+                                    {{ selectedRecipe.instructions }}
+                                </p>
+                            </div>
+
+                            <div
+                                v-if="selectedRecipe.status === 'rejected' && selectedRecipe.rejection_reason"
+                                class="alert-box alert-error"
+                            >
+                                <p class="flex gap-1.5 items-center mb-1 text-sm font-bold text-error">
+                                    Alasan Penolakan
+                                </p>
+                                <p class="text-sm leading-relaxed text-error">{{ selectedRecipe.rejection_reason }}</p>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button
+                                @click="closeDetailModal"
+                                class="button bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
+                            >
+                                Tutup
+                            </button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </teleport>
+
+        <teleport to="body">
+            <div v-if="showDeleteModal" class="modal-backdrop" @click.self="cancelDelete">
+                <div class="max-w-md modal-panel">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Hapus Resep</h2>
+                        <button @click="cancelDelete" aria-label="Tutup" class="modal-close-btn">
                             <svg
                                 viewBox="0 0 24 24"
                                 fill="none"
@@ -127,8 +222,7 @@
                         </button>
                     </div>
 
-                    <!-- Body -->
-                    <div class="py-5 px-5">
+                    <div class="modal-body">
                         <p class="text-sm leading-relaxed text-textSecondary">
                             Anda yakin ingin menghapus resep
                             <strong class="text-textPrimary">{{ pendingDeleteName }}</strong
@@ -136,23 +230,47 @@
                         </p>
                     </div>
 
-                    <!-- Footer -->
-                    <div class="flex gap-2.5 justify-end py-3.5 px-5 border-t border-divider bg-background">
+                    <div class="modal-footer">
                         <button
                             @click="cancelDelete"
-                            class="py-2 px-5 text-sm font-semibold rounded-lg transition-colors bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
+                            class="button bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
                         >
                             Batal
                         </button>
                         <button
                             @click="confirmDelete"
                             :disabled="deletingId !== null"
-                            class="py-2 px-5 text-sm font-semibold rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed bg-error text-textInverse hover:opacity-85"
+                            class="disabled:opacity-50 disabled:cursor-not-allowed button bg-error text-textInverse hover:opacity-85"
                         >
                             {{ deletingId !== null ? 'Menghapus...' : 'Ya, Hapus' }}
                         </button>
                     </div>
                 </div>
+            </div>
+        </teleport>
+
+        <teleport to="body">
+            <div
+                v-if="showSuccessToast"
+                class="flex fixed right-5 bottom-5 gap-3 items-start py-3 px-4 w-80 rounded-xl border shadow-lg border-success/30 bg-successSoft text-success z-60 max-w-[calc(100vw-40px)]"
+            >
+                <p class="flex-1 text-sm font-medium leading-snug">{{ successMessage }}</p>
+                <button
+                    @click="showSuccessToast = false"
+                    class="mt-0.5 opacity-60 transition-opacity hover:opacity-100 shrink-0"
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        width="14"
+                        height="14"
+                    >
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
             </div>
         </teleport>
     </div>
@@ -172,6 +290,21 @@ const deletingId = ref<number | null>(null);
 const showDeleteModal = ref(false);
 const pendingDeleteId = ref<number | null>(null);
 const pendingDeleteName = ref('');
+
+const showDetailModal = ref(false);
+const loadingDetail = ref(false);
+const selectedRecipe = ref<any>(null);
+
+const showSuccessToast = ref(false);
+const successMessage = ref('');
+
+function showSuccess(msg: string) {
+    successMessage.value = msg;
+    showSuccessToast.value = true;
+    setTimeout(() => {
+        showSuccessToast.value = false;
+    }, 4000);
+}
 
 const paginatedRecipes = computed(() => {
     const start = (currentPage.value - 1) * itemsPerPage;
@@ -195,6 +328,43 @@ async function fetchRecipes() {
     } finally {
         loading.value = false;
     }
+}
+
+async function openDetailModal(recipeId: number) {
+    showDetailModal.value = true;
+    loadingDetail.value = true;
+    selectedRecipe.value = null;
+
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`/api/recipes/${recipeId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        selectedRecipe.value = response.data.data;
+    } catch (err) {
+        console.error('Failed to fetch recipe details:', err);
+        alert('Gagal memuat detail resep');
+        closeDetailModal();
+    } finally {
+        loadingDetail.value = false;
+    }
+}
+
+function closeDetailModal() {
+    showDetailModal.value = false;
+    selectedRecipe.value = null;
+    loadingDetail.value = false;
+}
+
+function formatIngredient(ing: any): string {
+    if (typeof ing === 'string') return ing;
+
+    const parts = [];
+    if (ing.quantity) parts.push(ing.quantity);
+    if (ing.unit) parts.push(ing.unit);
+    parts.push(ing.name || ing.ingredient);
+
+    return parts.join(' ');
 }
 
 function deleteRecipe(id: number) {
@@ -233,12 +403,22 @@ async function confirmDelete() {
     }
 }
 
+function getStatusClass(status: string) {
+    return (
+        {
+            approved: 'bg-successSoft text-success',
+            pending: 'bg-warningSoft text-warning',
+            rejected: 'bg-errorSoft text-error',
+        }[status] ?? 'bg-warningSoft text-warning'
+    );
+}
+
 function statusText(status: string): string {
     return { approved: 'Disetujui', pending: 'Pending', rejected: 'Ditolak' }[status] ?? status;
 }
 
 function formatDate(dateString: string) {
-    return new Date(dateString).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
+    return new Date(dateString).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 function handlePageChange(page: number) {

@@ -28,22 +28,44 @@
 @layer base {
     body {
         @apply bg-background text-textPrimary;
+        font-family: 'Google Sans';
     }
 }
 
 @layer components {
+    /* buttons */
     .button {
         @apply items-center rounded-lg px-4 py-2 text-center font-medium transition-colors;
     }
 
+    /* form inputs */
     .input-field {
         @apply bg-inputBackground text-textPrimary focus:ring-primary border-border w-full rounded-lg border px-4 py-2 transition-all outline-none focus:border-transparent focus:ring-2;
     }
 
+    /* cards */
     .card {
-        @apply bg-surface shadow-border rounded-xl p-6 shadow-sm;
+        @apply bg-surface shadow-border rounded-xl p-4 shadow-sm;
     }
 
+    .card-interactive {
+        @apply border-border bg-surface flex flex-col gap-3 rounded-xl border p-5 hover:shadow-md;
+    }
+
+    /* badges */
+    .role-badges {
+        @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold;
+    }
+
+    .category-badges {
+        @apply bg-secondarySoft text-secondary inline-block shrink-0 rounded-full px-3 py-1 text-xs font-semibold;
+    }
+
+    .status-badges {
+        @apply inline-block shrink-0 rounded-full px-3 py-1 text-xs font-semibold;
+    }
+
+    /* navigation */
     .dropdown {
         @apply bg-surface text-textPrimary hover:bg-primarySoft focus:ring-primarySoft flex items-center space-x-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:ring-2;
     }
@@ -64,6 +86,67 @@
         @apply bg-primarySoft text-primary border-primary border-l-4;
     }
 
+    /* modals */
+    .modal-backdrop {
+        @apply fixed inset-0 z-50 flex items-center justify-center p-5 backdrop-blur-sm;
+        background: rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-panel {
+        @apply bg-surface flex w-full flex-col overflow-hidden rounded-2xl shadow-2xl;
+    }
+
+    .modal-header {
+        @apply bg-background border-divider flex items-center justify-between gap-3 border-b px-6 py-4;
+    }
+
+    .modal-title {
+        @apply text-textPrimary text-base font-bold;
+    }
+
+    .modal-body {
+        @apply px-6 py-5;
+    }
+
+    .modal-footer {
+        @apply bg-background border-divider flex justify-end gap-2.5 border-t px-6 py-4;
+    }
+
+    .modal-close-btn {
+        @apply hover:bg-overlay hover:text-textPrimary text-textSecondary flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors;
+    }
+
+    /* toast notifications */
+    .toast {
+        @apply flex w-80 max-w-sm items-start gap-3 rounded-xl px-4 py-3 shadow-lg;
+    }
+
+    .toast-success {
+        @apply bg-successSoft border-success/30 text-success border;
+    }
+
+    .toast-error {
+        @apply bg-errorSoft border-error/30 text-error border;
+    }
+
+    /* alert boxes */
+    .alert-box {
+        @apply rounded-lg px-3 py-2.5;
+    }
+
+    .alert-error {
+        @apply bg-errorSoft text-error;
+    }
+
+    .alert-warning {
+        @apply bg-warningSoft text-warning;
+    }
+
+    .alert-success {
+        @apply bg-successSoft text-success;
+    }
+
+    /* utilities */
     .notification-number {
         @apply bg-error text-textInverse ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold;
     }
@@ -73,18 +156,37 @@
     }
 
     .view-detail {
-        @apply text-primary hover:text-primaryPressed text-sm font-medium transition-colors;
+        @apply text-secondary cursor-pointer text-sm font-medium transition-colors hover:underline;
     }
 
-    .role-badges {
-        @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold;
+    /* stats card */
+    .stat-card {
+        @apply bg-surface flex flex-1 items-center gap-3 px-4 py-5 lg:px-5;
     }
 
-    .category-badges {
-        @apply bg-secondarySoft text-secondary inline-block shrink-0 rounded-full px-3 py-1 text-xs font-semibold;
+    .stat-value {
+        @apply text-textPrimary mb-0.5 text-3xl leading-none font-extrabold;
     }
 
-    .status-badges {
-        @apply inline-block shrink-0 rounded-full px-3 py-1 text-xs font-semibold;
+    .stat-label {
+        @apply text-textSecondary text-xs font-semibold tracking-widest uppercase;
+    }
+
+    /* section */
+    .section-header {
+        @apply border-divider mb-2 border-b pb-4;
+    }
+
+    .section-title {
+        @apply text-textPrimary mb-0.5 text-lg font-bold;
+    }
+
+    .section-subtitle {
+        @apply text-textSecondary text-xs;
+    }
+
+    /* miscellaneous */
+    .rank-badge {
+        @apply bg-overlay text-textSecondary flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold;
     }
 }

@@ -1,99 +1,165 @@
 <template>
-    <div>
+    <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-7xl lg:px-6">
+        <!-- Search Form -->
         <div class="card">
-            <h1 class="mb-6 text-3xl font-bold text-textPrimary">Pencarian Resep Boolean Retrieval</h1>
+            <h1 class="mb-6 text-2xl font-bold lg:text-3xl text-textPrimary">Pencarian Resep Boolean Retrieval</h1>
 
-            <div class="space-y-4">
+            <div class="flex flex-col gap-4">
+                <!-- Operator Select -->
                 <div>
-                    <label class="block mb-2 text-sm font-medium text-textPrimary"> Operator Pencarian </label>
-                    <select v-model="searchData.operator" class="input-field">
+                    <label class="block mb-2 text-sm font-semibold text-textSecondary">Operator Pencarian</label>
+                    <select v-model="searchData.operator" class="input-field" @change="clearErrors">
                         <option value="OR">OR - Cari resep yang terdapat beberapa bahan tersebut</option>
                         <option value="AND">AND - Cari resep yang terdapat semua bahan tersebut</option>
-                        <option value="NOT">NOT - Cari resep yang terdapat bahan dan dengan pengecualian</option>
+                        <option value="NOT">NOT - Cari resep yang terdapat bahan dengan pengecualian</option>
                     </select>
                 </div>
 
+                <!-- Ingredients Input -->
                 <div>
-                    <label class="block mb-2 text-sm font-medium text-textPrimary">
-                        Bahan-bahan (Gunakan koma sebagai pemisah antar bahan)
-                    </label>
+                    <label class="block mb-2 text-sm font-semibold text-textSecondary"> Bahan-bahan * </label>
                     <input
                         v-model="ingredientsInput"
                         type="text"
                         placeholder="e.g., ayam, nasi, kecap"
-                        class="input-field"
+                        :class="['input-field', errors.ingredients && 'border-error focus:ring-error']"
                         @keypress.enter="handleSearch"
+                        @input="clearError('ingredients')"
                     />
+                    <p v-if="!errors.ingredients" class="mt-1 text-xs text-textMuted">
+                        Gunakan koma sebagai pemisah antar bahan
+                    </p>
+                    <p v-else class="mt-1 text-xs text-error">
+                        {{ errors.ingredients }}
+                    </p>
                 </div>
 
+                <!-- Excluded Ingredients (NOT operator only) -->
                 <div v-if="searchData.operator === 'NOT'">
-                    <label class="block mb-2 text-sm font-medium text-textPrimary">
-                        Bahan-bahan yang tidak diinginkan
+                    <label class="block mb-2 text-sm font-semibold text-textSecondary">
+                        Bahan-bahan yang tidak diinginkan *
                     </label>
                     <input
                         v-model="excludedInput"
                         type="text"
                         placeholder="e.g., babi, cabai, wine"
-                        class="input-field"
+                        :class="['input-field', errors.excluded && 'border-error focus:ring-error']"
                         @keypress.enter="handleSearch"
+                        @input="clearError('excluded')"
                     />
+                    <p v-if="!errors.excluded" class="mt-1 text-xs text-textMuted">
+                        Resep yang mengandung bahan ini akan dikecualikan
+                    </p>
+                    <p v-else class="mt-1 text-xs text-error">
+                        {{ errors.excluded }}
+                    </p>
                 </div>
 
+                <!-- Search Button -->
                 <button
                     @click="handleSearch"
                     :disabled="recipeStore.loading"
-                    class="w-full md:w-auto button bg-primary text-textInverse hover:bg-primarySoft hover:text-primary"
+                    class="w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed button bg-primary text-textInverse hover:opacity-85"
                 >
                     {{ recipeStore.loading ? 'Mohon Tunggu...' : 'Cari Resep' }}
                 </button>
             </div>
         </div>
 
-        <div v-if="searched">
-            <div v-if="recipeStore.loading" class="py-12 text-center">
-                <div
-                    class="inline-block w-12 h-12 rounded-full border-4 animate-spin border-border border-t-transparent"
-                ></div>
+        <!-- Search Results -->
+        <template v-if="searched">
+            <!-- Loading State -->
+            <div v-if="recipeStore.loading" class="flex justify-center py-20">
+                <div class="loading-spin"></div>
             </div>
 
-            <div v-else>
-                <div class="mb-6 bg-secondarySoft border-border card">
-                    <h2 class="mb-2 text-xl font-bold text-textPrimary">Hasil Pencarian</h2>
-                    <p class="text-textPrimary">
-                        Ditemukan
-                        <span class="font-bold">{{ searchResult?.count || 0 }}</span>
-                        resep menggunakan
-                        <span class="font-bold">{{ searchResult?.operator }}</span>
-                        operator
-                    </p>
-                    <p class="mt-2 text-sm text-textSecondary">
-                        Bahan-bahan yang diinginkan:
-                        {{ searchResult?.searchedIngredients?.join(', ') }}
-                    </p>
-                    <p v-if="searchResult?.excludedIngredients" class="text-sm text-textSecondary">
-                        Bahan-bahan yang tidak diinginkan:
-                        {{ searchResult?.excludedIngredients?.join(', ') }}
-                    </p>
+            <!-- Results -->
+            <template v-else>
+                <!-- Results Summary -->
+                <div class="card bg-secondarySoft">
+                    <div class="flex flex-col gap-3">
+                        <div>
+                            <h2 class="mb-1 text-xl font-bold text-textPrimary">Hasil Pencarian</h2>
+                            <p class="text-base text-textPrimary">
+                                Ditemukan
+                                <span class="font-bold text-secondary">{{ searchResult?.count || 0 }}</span>
+                                resep menggunakan operator
+                                <span class="py-0.5 px-2 text-sm font-bold rounded bg-secondary text-textInverse">
+                                    {{ searchResult?.operator }}
+                                </span>
+                            </p>
+                        </div>
+
+                        <!-- Searched Ingredients -->
+                        <div class="pt-3 border-t border-divider">
+                            <p class="mb-1 text-xs font-bold tracking-wide uppercase text-textSecondary">
+                                Bahan yang dicari:
+                            </p>
+                            <div class="flex flex-wrap gap-1.5">
+                                <span
+                                    v-for="ingredient in searchResult?.searchedIngredients"
+                                    :key="ingredient"
+                                    class="category-badges bg-successSoft text-success"
+                                >
+                                    {{ ingredient }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Excluded Ingredients -->
+                        <div v-if="searchResult?.excludedIngredients?.length" class="pt-3 border-t border-divider">
+                            <p class="mb-1 text-xs font-bold tracking-wide uppercase text-textSecondary">
+                                Bahan yang dikecualikan:
+                            </p>
+                            <div class="flex flex-wrap gap-1.5">
+                                <span
+                                    v-for="ingredient in searchResult?.excludedIngredients"
+                                    :key="ingredient"
+                                    class="category-badges bg-errorSoft text-error"
+                                >
+                                    {{ ingredient }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
+                <!-- Recipe Cards -->
                 <div
                     v-if="searchResult && searchResult.count > 0"
-                    class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+                    class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
                 >
                     <RecipeCard v-for="recipe in recipeStore.searchResults" :key="recipe.id" :recipe="recipe" />
                 </div>
 
-                <div v-else class="py-12 text-center">
-                    <p class="text-lg text-textPrimary">Resep tidak ditemukan.</p>
-                    <p class="mt-2 text-textSecondary">Coba dengan bahan yang lain.</p>
+                <!-- No Results -->
+                <div v-else class="flex flex-col gap-3 items-center py-20 card">
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        width="48"
+                        height="48"
+                        class="text-textMuted"
+                    >
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.35-4.35" />
+                    </svg>
+                    <div class="text-center">
+                        <p class="text-lg font-bold text-textPrimary">Resep tidak ditemukan</p>
+                        <p class="mt-1 text-sm text-textSecondary">
+                            Coba dengan bahan yang lain atau ubah operator pencarian
+                        </p>
+                    </div>
                 </div>
-            </div>
-        </div>
+            </template>
+        </template>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, onActivated } from 'vue';
 import { useRecipeStore } from '@/stores/recipeStore';
 import RecipeCard from '@/components/RecipeCard.vue';
 import type { SearchCriteria, SearchResponse } from '@/types';
@@ -105,25 +171,51 @@ const excludedInput = ref<string>('');
 const searched = ref<boolean>(false);
 const searchResult = ref<SearchResponse | null>(null);
 
+const errors = reactive({
+    ingredients: '',
+    excluded: '',
+});
+
 const searchData = reactive<SearchCriteria>({
     operator: 'OR',
     ingredients: [],
     excludedIngredients: [],
 });
 
+// Preserve state when navigating back
+onActivated(() => {
+    // Component is reactivated (user came back from recipe detail)
+    // State is already preserved, no need to do anything
+    console.log('Search page reactivated - state preserved');
+});
+
+function clearError(field: 'ingredients' | 'excluded') {
+    errors[field] = '';
+}
+
+function clearErrors() {
+    errors.ingredients = '';
+    errors.excluded = '';
+}
+
 async function handleSearch(): Promise<void> {
+    // Clear previous errors
+    clearErrors();
+
+    // Validate ingredients
     const ingredients = ingredientsInput.value
         .split(',')
         .map((i) => i.trim())
         .filter(Boolean);
 
     if (ingredients.length === 0) {
-        alert('Masukan setidaknya 1 bahan untuk pencarian');
+        errors.ingredients = 'Masukan setidaknya 1 bahan untuk pencarian';
         return;
     }
 
     searchData.ingredients = ingredients;
 
+    // Validate excluded ingredients for NOT operator
     if (searchData.operator === 'NOT') {
         const excluded = excludedInput.value
             .split(',')
@@ -131,7 +223,7 @@ async function handleSearch(): Promise<void> {
             .filter(Boolean);
 
         if (excluded.length === 0) {
-            alert('Masukan bahan pengecualian jika ingin menggunakan operator NOT');
+            errors.excluded = 'Masukan bahan pengecualian jika ingin menggunakan operator NOT';
             return;
         }
         searchData.excludedIngredients = excluded;
@@ -139,6 +231,7 @@ async function handleSearch(): Promise<void> {
         searchData.excludedIngredients = [];
     }
 
+    // Perform search
     const result = await recipeStore.searchRecipes(searchData);
     searched.value = true;
     searchResult.value = result;

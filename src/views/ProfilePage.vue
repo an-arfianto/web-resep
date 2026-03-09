@@ -1,5 +1,5 @@
 <template>
-    <div class="flex flex-col gap-5 py-6 px-5 mx-auto max-w-6xl">
+    <div class="flex flex-col gap-5 mx-auto max-w-6xl">
         <h1 class="text-2xl font-extrabold text-textPrimary">Profil Saya</h1>
 
         <!-- Tabs -->
@@ -127,7 +127,7 @@
                         <input
                             v-model="newUsername"
                             type="text"
-                            placeholder="Masukkan username baru"
+                            placeholder="Masukan username baru"
                             class="mb-4 input-field"
                         />
                         <button
@@ -148,7 +148,7 @@
                             <input
                                 v-model="currentPassword"
                                 type="password"
-                                placeholder="Masukkan password sekarang"
+                                placeholder="Masukan password sekarang"
                                 class="input-field"
                             />
                         </div>
@@ -157,7 +157,7 @@
                             <input
                                 v-model="newPassword"
                                 type="password"
-                                placeholder="Masukkan password baru"
+                                placeholder="Masukan password baru"
                                 class="input-field"
                             />
                         </div>
@@ -185,35 +185,28 @@
         </template>
 
         <teleport to="body">
-            <transition
-                enter-active-class="transition duration-300 ease-out"
-                enter-from-class="opacity-0 translate-y-2"
-                leave-active-class="transition duration-200 ease-in"
-                leave-to-class="opacity-0 translate-y-1"
+            <div
+                v-if="showSuccessToast"
+                class="flex fixed right-5 bottom-5 gap-3 items-start py-3 px-4 rounded-xl border shadow-lg border-success/30 bg-successSoft text-success z-60 w-[320px] max-w-[calc(100vw-40px)]"
             >
-                <div
-                    v-if="showSuccessToast"
-                    class="flex fixed right-5 bottom-5 gap-3 items-start py-3 px-4 rounded-xl border shadow-lg border-success/30 bg-successSoft text-success z-60 w-[320px] max-w-[calc(100vw-40px)]"
+                <p class="flex-1 text-sm font-medium leading-snug">{{ successMessage }}</p>
+                <button
+                    @click="showSuccessToast = false"
+                    class="mt-0.5 opacity-60 transition-opacity hover:opacity-100 shrink-0"
                 >
-                    <p class="flex-1 text-sm font-medium leading-snug">{{ successMessage }}</p>
-                    <button
-                        @click="showSuccessToast = false"
-                        class="mt-0.5 opacity-60 transition-opacity hover:opacity-100 shrink-0"
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        width="14"
+                        height="14"
                     >
-                        <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2.5"
-                            width="14"
-                            height="14"
-                        >
-                            <line x1="18" y1="6" x2="6" y2="18" />
-                            <line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                    </button>
-                </div>
-            </transition>
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
         </teleport>
     </div>
 </template>
@@ -263,9 +256,9 @@ async function loadProfile() {
 }
 
 function getRoleBadgeClass(roleId: number) {
-    if (roleId === 1) return 'bg-red-100 text-red-700';
-    if (roleId === 2) return 'bg-purple-100 text-purple-700';
-    return 'bg-blue-100 text-blue-700';
+    if (roleId === 1) return 'bg-errorSoft text-error';
+    if (roleId === 2) return 'bg-secondarySoft text-secondary';
+    return 'bg-primarySoft text-primary';
 }
 
 function formatDate(date: string) {
@@ -299,7 +292,7 @@ async function handleUpdateUsername() {
 
 async function handleUpdatePassword() {
     if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
-        alert('Isi semua kolom password yang ada!');
+        alert('Masukan semua kolom password yang ada!');
         return;
     }
     if (newPassword.value !== confirmPassword.value) {

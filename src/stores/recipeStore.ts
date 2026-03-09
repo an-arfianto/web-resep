@@ -1,11 +1,11 @@
-import { defineStore } from "pinia";
-import { ref } from "vue";
-import api from "@/services/api";
-import type { Recipe, SearchCriteria, SearchResponse, CreateRecipeData, ApiError } from "@/types";
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import api from '@/services/api';
+import type { Recipe, SearchCriteria, SearchResponse, CreateRecipeData, ApiError } from '@/types';
 
-export const useRecipeStore = defineStore("recipe", () => {
+export const useRecipeStore = defineStore('recipe', () => {
     const recipes = ref<Recipe[]>([]);
-    const myRecipes = ref<Recipe[]>([]); // separate state untuk resep owner
+    const myRecipes = ref<Recipe[]>([]);
     const currentRecipe = ref<Recipe | null>(null);
     const searchResults = ref<Recipe[]>([]);
     const loading = ref<boolean>(false);
@@ -25,7 +25,6 @@ export const useRecipeStore = defineStore("recipe", () => {
         }
     }
 
-    // etch current user's recipes (all statuses)
     async function fetchMyRecipes(): Promise<void> {
         loading.value = true;
         error.value = null;
@@ -105,7 +104,6 @@ export const useRecipeStore = defineStore("recipe", () => {
         error.value = null;
         try {
             await api.recipes.delete(id);
-            // Remove from both arrays
             recipes.value = recipes.value.filter((r) => r.id !== id);
             myRecipes.value = myRecipes.value.filter((r) => r.id !== id);
             return true;

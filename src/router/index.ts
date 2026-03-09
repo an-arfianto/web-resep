@@ -16,7 +16,7 @@ const routes: RouteRecordRaw[] = [
         meta: { guest: true },
     },
 
-    // protected routes (semua role)
+    // protected routes
     {
         path: '/profile',
         name: 'Profile',
@@ -24,7 +24,6 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true },
     },
 
-    // protected routes (reguler user)
     {
         path: '/',
         name: 'Home',
@@ -62,7 +61,6 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true },
     },
 
-    // moderator routes
     {
         path: '/moderation',
         name: 'ModerationDashboard',
@@ -70,7 +68,6 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, requiresModerator: true },
     },
 
-    // admin routes
     {
         path: '/admin',
         name: 'AdminDashboard',
@@ -130,13 +127,11 @@ router.beforeEach(async (to, _from, next) => {
             return;
         }
 
-        // cek admin role
         if (to.meta.requiresAdmin && !isAdmin) {
             next(isModerator ? '/moderation' : '/');
             return;
         }
 
-        // cek moderator role
         if (to.meta.requiresModerator && !isModerator && !isAdmin) {
             next('/');
             return;

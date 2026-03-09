@@ -1,19 +1,17 @@
 <template>
-    <nav class="sticky border-b bg-surface border-divider shadow-xs">
+    <nav class="sticky top-0 z-50 border-b bg-surface border-divider shadow-xs">
         <div class="container px-4 mx-auto">
             <div class="flex justify-between items-center h-16">
                 <RouterLink to="/" class="text-2xl font-bold text-textPrimary"> 🍳 Resep App </RouterLink>
 
-                <div class="hidden items-center space-x-6 md:flex">
+                <div class="hidden items-center space-x-6 lg:flex">
                     <template v-if="authStore.isAuthenticated">
-                        <!-- admin links -->
                         <template v-if="isAdmin">
                             <RouterLink to="/admin" class="nav-link">Dashboard</RouterLink>
                             <RouterLink to="/admin/users" class="nav-link">User</RouterLink>
                             <RouterLink to="/admin/recipes" class="nav-link">Resep</RouterLink>
                         </template>
 
-                        <!-- moderator links -->
                         <template v-else-if="isModerator">
                             <RouterLink to="/" class="nav-link">Home</RouterLink>
                             <RouterLink to="/search" class="nav-link">Pencarian</RouterLink>
@@ -21,7 +19,6 @@
                             <RouterLink to="/create-recipe" class="nav-link">Buat Resep</RouterLink>
                         </template>
 
-                        <!-- user links -->
                         <template v-else>
                             <RouterLink to="/" class="nav-link">Home</RouterLink>
                             <RouterLink to="/search" class="nav-link">Pencarian</RouterLink>
@@ -29,7 +26,6 @@
                             <RouterLink to="/create-recipe" class="nav-link">Buat Resep</RouterLink>
                         </template>
 
-                        <!-- user dropdown -->
                         <div class="relative" ref="dropdownRef">
                             <button @click="toggleDropdown" class="dropdown">
                                 <div
@@ -40,9 +36,6 @@
                                     </span>
                                 </div>
                                 <span>{{ authStore.user?.username }}</span>
-                                <span v-if="pendingCount > 0" class="notification-number">
-                                    {{ pendingCount }}
-                                </span>
                                 <svg
                                     :class="['h-4 w-4 transition-transform', isDropdownOpen && 'rotate-180']"
                                     fill="none"
@@ -58,84 +51,71 @@
                                 </svg>
                             </button>
 
-                            <!-- dropdown menu -->
-                            <transition
-                                enter-active-class="transition duration-100 ease-out"
-                                enter-from-class="opacity-0 transform scale-95"
-                                enter-to-class="opacity-100 transform scale-100"
-                                leave-active-class="transition duration-75 ease-in"
-                                leave-from-class="opacity-100 transform scale-100"
-                                leave-to-class="opacity-0 transform scale-95"
+                            <div
+                                v-if="isDropdownOpen"
+                                class="absolute right-0 z-10 mt-2 w-56 rounded-lg border shadow-lg bg-surface border-border"
                             >
-                                <div
-                                    v-if="isDropdownOpen"
-                                    class="absolute right-0 z-10 mt-2 w-56 rounded-lg border shadow-lg bg-surface border-border"
-                                >
-                                    <div class="py-3 px-4 border-b border-border">
-                                        <p class="text-sm font-medium text-textPrimary">
-                                            {{ authStore.user?.username }}
-                                        </p>
-                                        <p class="mt-1 text-xs">
-                                            <span v-if="isAdmin" class="text-error bg-errorSoft role-badges">
-                                                Admin
-                                            </span>
-                                            <span
-                                                v-else-if="isModerator"
-                                                class="text-secondary bg-secondarySoft role-badges"
-                                            >
-                                                Moderator
-                                            </span>
-                                            <span v-else class="text-primary bg-primarySoft role-badges"> User </span>
-                                        </p>
-                                    </div>
-
-                                    <!-- menu items -->
-                                    <div class="py-1">
-                                        <RouterLink to="/profile" @click="closeDropdown" class="dropdown-nav-link">
-                                            Profil Saya
-                                        </RouterLink>
-
-                                        <RouterLink
-                                            v-if="!isAdmin && !isModerator"
-                                            to="/my-recipes"
-                                            @click="closeDropdown"
-                                            class="dropdown-nav-link"
+                                <div class="py-3 px-4 border-b border-border">
+                                    <p class="text-sm font-medium text-textPrimary">
+                                        {{ authStore.user?.username }}
+                                    </p>
+                                    <p class="mt-1 text-xs">
+                                        <span v-if="isAdmin" class="text-error bg-errorSoft role-badges"> Admin </span>
+                                        <span
+                                            v-else-if="isModerator"
+                                            class="text-secondary bg-secondarySoft role-badges"
                                         >
-                                            Resep Saya
-                                        </RouterLink>
-
-                                        <RouterLink
-                                            v-if="isModerator"
-                                            to="/moderation"
-                                            @click="closeDropdown"
-                                            class="dropdown-nav-link"
-                                        >
-                                            Dashboard
-                                            <span v-if="pendingCount > 0" class="notification-number">
-                                                {{ pendingCount }}
-                                            </span>
-                                        </RouterLink>
-
-                                        <RouterLink
-                                            v-if="isAdmin"
-                                            to="/admin"
-                                            @click="closeDropdown"
-                                            class="dropdown-nav-link"
-                                        >
-                                            Dashboard
-                                        </RouterLink>
-                                    </div>
-
-                                    <div class="pt-1 border-t border-divider">
-                                        <button
-                                            @click="handleLogout"
-                                            class="dropdown-nav-link text-error hover:bg-errorSoft"
-                                        >
-                                            Keluar
-                                        </button>
-                                    </div>
+                                            Moderator
+                                        </span>
+                                        <span v-else class="text-primary bg-primarySoft role-badges"> User </span>
+                                    </p>
                                 </div>
-                            </transition>
+
+                                <div class="py-1">
+                                    <RouterLink to="/profile" @click="closeDropdown" class="dropdown-nav-link">
+                                        Profil Saya
+                                    </RouterLink>
+
+                                    <RouterLink
+                                        v-if="!isAdmin && !isModerator"
+                                        to="/my-recipes"
+                                        @click="closeDropdown"
+                                        class="dropdown-nav-link"
+                                    >
+                                        Resep Saya
+                                    </RouterLink>
+
+                                    <RouterLink
+                                        v-if="isModerator"
+                                        to="/moderation"
+                                        @click="closeDropdown"
+                                        class="dropdown-nav-link"
+                                    >
+                                        Dashboard
+                                        <span v-if="pendingCount > 0" class="notification-number">
+                                            {{ pendingCount }}
+                                        </span>
+                                    </RouterLink>
+
+                                    <RouterLink
+                                        v-if="isAdmin"
+                                        to="/admin"
+                                        @click="closeDropdown"
+                                        class="dropdown-nav-link"
+                                    >
+                                        Dashboard
+                                    </RouterLink>
+                                </div>
+
+                                <div class="pt-1 border-t border-divider">
+                                    <button
+                                        @click="handleLogout"
+                                        class="dropdown-nav-link text-error hover:bg-errorSoft"
+                                    >
+                                        Keluar
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </template>
                 </div>
@@ -143,7 +123,7 @@
                 <button
                     v-if="authStore.isAuthenticated"
                     @click="toggleMobileMenu"
-                    class="flex justify-center items-center w-10 h-10 rounded-lg transition-colors md:hidden text-textPrimary bg-overlay hover:bg-primarySoft"
+                    class="flex justify-center items-center w-10 h-10 rounded-lg lg:hidden text-textPrimary bg-overlay hover:bg-primarySoft"
                 >
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
@@ -164,100 +144,83 @@
                 </button>
             </div>
 
-            <!-- Mobile Menu -->
-            <transition
-                enter-active-class="transition duration-100 ease-out"
-                enter-from-class="opacity-0 transform -translate-y-2"
-                enter-to-class="opacity-100 transform translate-y-0"
-                leave-active-class="transition duration-75 ease-in"
-                leave-from-class="opacity-100 transform translate-y-0"
-                leave-to-class="opacity-0 transform -translate-y-2"
-            >
-                <div
-                    v-if="isMobileMenuOpen && authStore.isAuthenticated"
-                    class="pb-4 border-t md:hidden border-divider"
-                >
-                    <div class="py-3 px-4 border-b bg-surface border-divider">
-                        <div class="flex items-center space-x-3">
-                            <div
-                                class="flex justify-center items-center w-10 h-10 rounded-full text-textInverse bg-primary"
-                            >
-                                <span class="text-sm font-bold">
-                                    {{ getUserInitial() }}
-                                </span>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-textPrimary">
-                                    {{ authStore.user?.username }}
-                                </p>
-                                <p class="mt-1 text-xs">
-                                    <span v-if="isAdmin" class="role-badges text-error bg-errorSoft"> Admin </span>
-                                    <span v-else-if="isModerator" class="role-badges text-secondary bg-secondarySoft">
-                                        Moderator
-                                    </span>
-                                    <span v-else class="role-badges text-primary bg-primarySoft"> User </span>
-                                </p>
-                            </div>
+            <div v-if="isMobileMenuOpen && authStore.isAuthenticated" class="pb-4 border-t lg:hidden border-divider">
+                <div class="py-3 px-4 border-b bg-surface border-divider">
+                    <div class="flex items-center space-x-3">
+                        <div
+                            class="flex justify-center items-center w-10 h-10 rounded-full text-textInverse bg-primary"
+                        >
+                            <span class="text-sm font-bold">
+                                {{ getUserInitial() }}
+                            </span>
                         </div>
-                    </div>
-
-                    <div class="py-2">
-                        <!-- admin links -->
-                        <template v-if="isAdmin">
-                            <RouterLink to="/admin" @click="closeMobileMenu" class="mobile-nav-link">
-                                Dashboard
-                            </RouterLink>
-                            <RouterLink to="/admin/users" @click="closeMobileMenu" class="mobile-nav-link">
-                                User
-                            </RouterLink>
-                            <RouterLink to="/admin/recipes" @click="closeMobileMenu" class="mobile-nav-link">
-                                Resep
-                            </RouterLink>
-                        </template>
-
-                        <!-- moderator links -->
-                        <template v-else-if="isModerator">
-                            <RouterLink to="/" @click="closeMobileMenu" class="mobile-nav-link"> Home </RouterLink>
-                            <RouterLink to="/search" @click="closeMobileMenu" class="mobile-nav-link">
-                                Pencarian
-                            </RouterLink>
-                            <RouterLink to="/moderation" @click="closeMobileMenu" class="mobile-nav-link">
-                                <span class="flex justify-between items-center">
-                                    Dashboard
-                                    <span v-if="pendingCount > 0" class="notification-badges">
-                                        {{ pendingCount }}
-                                    </span>
+                        <div>
+                            <p class="text-sm font-medium text-textPrimary">
+                                {{ authStore.user?.username }}
+                            </p>
+                            <p class="mt-1 text-xs">
+                                <span v-if="isAdmin" class="role-badges text-error bg-errorSoft"> Admin </span>
+                                <span v-else-if="isModerator" class="role-badges text-secondary bg-secondarySoft">
+                                    Moderator
                                 </span>
-                            </RouterLink>
-                            <RouterLink to="/my-recipes" @click="closeMobileMenu" class="mobile-nav-link">
-                                Resep Saya
-                            </RouterLink>
-                        </template>
-
-                        <!-- user links -->
-                        <template v-else>
-                            <RouterLink to="/" @click="closeMobileMenu" class="mobile-nav-link"> Home </RouterLink>
-                            <RouterLink to="/search" @click="closeMobileMenu" class="mobile-nav-link">
-                                Pencarian
-                            </RouterLink>
-                            <RouterLink to="/my-recipes" @click="closeMobileMenu" class="mobile-nav-link">
-                                Resep Saya
-                            </RouterLink>
-                            <RouterLink to="/create-recipe" @click="closeMobileMenu" class="mobile-nav-link">
-                                Buat Resep
-                            </RouterLink>
-                        </template>
-
-                        <!-- dropdown links -->
-                        <div class="pt-2 mt-2 border-t border-divider">
-                            <RouterLink to="/profile" @click="closeMobileMenu" class="mobile-nav-link">
-                                Profil Saya
-                            </RouterLink>
-                            <button @click="handleLogout" class="text-error mobile-nav-link">Keluar</button>
+                                <span v-else class="role-badges text-primary bg-primarySoft"> User </span>
+                            </p>
                         </div>
                     </div>
                 </div>
-            </transition>
+
+                <div class="py-2">
+                    <template v-if="isAdmin">
+                        <RouterLink to="/admin" @click="closeMobileMenu" class="mobile-nav-link">
+                            Dashboard
+                        </RouterLink>
+                        <RouterLink to="/admin/users" @click="closeMobileMenu" class="mobile-nav-link">
+                            User
+                        </RouterLink>
+                        <RouterLink to="/admin/recipes" @click="closeMobileMenu" class="mobile-nav-link">
+                            Resep
+                        </RouterLink>
+                    </template>
+
+                    <template v-else-if="isModerator">
+                        <RouterLink to="/" @click="closeMobileMenu" class="mobile-nav-link"> Home </RouterLink>
+                        <RouterLink to="/search" @click="closeMobileMenu" class="mobile-nav-link">
+                            Pencarian
+                        </RouterLink>
+                        <RouterLink to="/moderation" @click="closeMobileMenu" class="mobile-nav-link">
+                            <span class="flex justify-between items-center">
+                                Dashboard
+                                <span v-if="pendingCount > 0" class="notification-badges">
+                                    {{ pendingCount }}
+                                </span>
+                            </span>
+                        </RouterLink>
+                        <RouterLink to="/my-recipes" @click="closeMobileMenu" class="mobile-nav-link">
+                            Resep Saya
+                        </RouterLink>
+                    </template>
+
+                    <template v-else>
+                        <RouterLink to="/" @click="closeMobileMenu" class="mobile-nav-link"> Home </RouterLink>
+                        <RouterLink to="/search" @click="closeMobileMenu" class="mobile-nav-link">
+                            Pencarian
+                        </RouterLink>
+                        <RouterLink to="/my-recipes" @click="closeMobileMenu" class="mobile-nav-link">
+                            Resep Saya
+                        </RouterLink>
+                        <RouterLink to="/create-recipe" @click="closeMobileMenu" class="mobile-nav-link">
+                            Buat Resep
+                        </RouterLink>
+                    </template>
+
+                    <div class="pt-2 mt-2 border-t border-divider">
+                        <RouterLink to="/profile" @click="closeMobileMenu" class="mobile-nav-link">
+                            Profil Saya
+                        </RouterLink>
+                        <button @click="handleLogout" class="text-error mobile-nav-link">Keluar</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </nav>
 </template>

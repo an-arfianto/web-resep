@@ -26,8 +26,8 @@
                     />
                 </div>
 
-                <div v-if="authStore.error" class="p-4 rounded-lg bg-errorSoft">
-                    <p class="text-sm text-error">{{ authStore.error }}</p>
+                <div v-if="authStore.error" class="alert-box alert-error">
+                    <p class="text-sm">{{ authStore.error }}</p>
                 </div>
 
                 <button

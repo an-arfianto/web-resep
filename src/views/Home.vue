@@ -5,7 +5,7 @@
             <p class="mb-8 text-xl text-textSecondary">Pencarian resep masakan menggunakan Boolean Retrieval</p>
             <RouterLink
                 to="/search"
-                class="inline-block py-3 px-8 button bg-primary text-textInverse hover:bg-primarySoft hover:text-primary"
+                class="inline-block button bg-primary text-textInverse hover:bg-primarySoft hover:text-primary"
             >
                 Cari Resep
             </RouterLink>

@@ -102,7 +102,7 @@
                                             class="py-1.5 px-3 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg transition-colors hover:bg-blue-100"
                                             title="Promote to Moderator"
                                         >
-                                            ↑ Promosi
+                                            Promosi
                                         </button>
                                         <button
                                             v-if="user.role_id === 2"
@@ -110,7 +110,7 @@
                                             class="py-1.5 px-3 text-sm font-medium text-orange-700 bg-orange-50 rounded-lg transition-colors hover:bg-orange-100"
                                             title="Demote to User"
                                         >
-                                            ↓ Turun
+                                            Turun
                                         </button>
                                         <button
                                             v-if="user.role_id !== 1"
@@ -200,211 +200,166 @@
         </teleport>
 
         <teleport to="body">
-            <transition
-                enter-active-class="transition duration-200 ease-out [&_.mpanel]:transition [&_.mpanel]:duration-200 [&_.mpanel]:ease-out"
-                enter-from-class="opacity-0 [&_.mpanel]:translate-y-2.5 [&_.mpanel]:opacity-0"
-                leave-active-class="transition duration-200 ease-in [&_.mpanel]:transition [&_.mpanel]:duration-200 [&_.mpanel]:ease-in"
-                leave-to-class="opacity-0 [&_.mpanel]:translate-y-2.5 [&_.mpanel]:opacity-0"
+            <div
+                v-if="showDemoteModal && pendingUser"
+                class="flex fixed inset-0 z-50 justify-center items-center p-5 backdrop-blur-sm"
+                style="background: rgba(0, 0, 0, 0.45)"
+                @click.self="cancelDemote"
             >
-                <div
-                    v-if="showDemoteModal && pendingUser"
-                    class="flex fixed inset-0 z-50 justify-center items-center p-5 backdrop-blur-sm"
-                    style="background: rgba(0, 0, 0, 0.45)"
-                    @click.self="cancelDemote"
-                >
+                <div class="flex overflow-hidden flex-col w-full rounded-2xl shadow-2xl mpanel bg-surface max-w-105">
                     <div
-                        class="flex overflow-hidden flex-col w-full rounded-2xl shadow-2xl mpanel bg-surface max-w-105"
+                        class="flex gap-3 justify-between items-center py-4 px-6 border-b border-divider bg-background"
                     >
-                        <div
-                            class="flex gap-3 justify-between items-center py-4 px-6 border-b border-divider bg-background"
+                        <h2 class="text-base font-bold text-textPrimary">Turunkan User</h2>
+                        <button
+                            @click="cancelDemote"
+                            aria-label="Tutup"
+                            class="flex justify-center items-center w-8 h-8 rounded-lg transition-colors text-textSecondary shrink-0 hover:bg-overlay hover:text-textPrimary"
                         >
-                            <h2 class="text-base font-bold text-textPrimary">Turunkan User</h2>
-                            <button
-                                @click="cancelDemote"
-                                aria-label="Tutup"
-                                class="flex justify-center items-center w-8 h-8 rounded-lg transition-colors text-textSecondary shrink-0 hover:bg-overlay hover:text-textPrimary"
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                width="17"
+                                height="17"
                             >
-                                <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2.5"
-                                    width="17"
-                                    height="17"
-                                >
-                                    <line x1="18" y1="6" x2="6" y2="18" />
-                                    <line x1="6" y1="6" x2="18" y2="18" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="py-5 px-6">
-                            <p class="text-sm leading-relaxed text-textSecondary">
-                                Turunkan <strong class="text-textPrimary">{{ pendingUser.username }}</strong> ke role
-                                <strong class="text-textPrimary">User</strong>?
-                            </p>
-                        </div>
-                        <div class="flex gap-2.5 justify-end py-4 px-6 border-t border-divider bg-background">
-                            <button
-                                @click="cancelDemote"
-                                :disabled="actionLoading"
-                                class="py-2 px-5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
-                            >
-                                Batal
-                            </button>
-                            <button
-                                @click="confirmDemote"
-                                :disabled="actionLoading"
-                                class="py-2 px-5 text-sm font-semibold text-white bg-orange-600 rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-85"
-                            >
-                                {{ actionLoading ? 'Memproses...' : 'Ya, Turunkan' }}
-                            </button>
-                        </div>
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="py-5 px-6">
+                        <p class="text-sm leading-relaxed text-textSecondary">
+                            Turunkan <strong class="text-textPrimary">{{ pendingUser.username }}</strong> ke role
+                            <strong class="text-textPrimary">User</strong>?
+                        </p>
+                    </div>
+                    <div class="flex gap-2.5 justify-end py-4 px-6 border-t border-divider bg-background">
+                        <button
+                            @click="cancelDemote"
+                            :disabled="actionLoading"
+                            class="py-2 px-5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            @click="confirmDemote"
+                            :disabled="actionLoading"
+                            class="py-2 px-5 text-sm font-semibold text-white bg-orange-600 rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-85"
+                        >
+                            {{ actionLoading ? 'Memproses...' : 'Ya, Turunkan' }}
+                        </button>
                     </div>
                 </div>
-            </transition>
+            </div>
         </teleport>
 
         <teleport to="body">
-            <transition
-                enter-active-class="transition duration-200 ease-out [&_.mpanel]:transition [&_.mpanel]:duration-200 [&_.mpanel]:ease-out"
-                enter-from-class="opacity-0 [&_.mpanel]:translate-y-2.5 [&_.mpanel]:opacity-0"
-                leave-active-class="transition duration-200 ease-in [&_.mpanel]:transition [&_.mpanel]:duration-200 [&_.mpanel]:ease-in"
-                leave-to-class="opacity-0 [&_.mpanel]:translate-y-2.5 [&_.mpanel]:opacity-0"
+            <div
+                v-if="showDeleteModal && pendingUser"
+                class="flex fixed inset-0 z-50 justify-center items-center p-5 backdrop-blur-sm"
+                style="background: rgba(0, 0, 0, 0.45)"
+                @click.self="cancelDelete"
             >
-                <div
-                    v-if="showDeleteModal && pendingUser"
-                    class="flex fixed inset-0 z-50 justify-center items-center p-5 backdrop-blur-sm"
-                    style="background: rgba(0, 0, 0, 0.45)"
-                    @click.self="cancelDelete"
-                >
+                <div class="flex overflow-hidden flex-col w-full rounded-2xl shadow-2xl mpanel bg-surface max-w-115">
                     <div
-                        class="flex overflow-hidden flex-col w-full rounded-2xl shadow-2xl mpanel bg-surface max-w-115"
+                        class="flex gap-3 justify-between items-center py-4 px-6 border-b border-divider bg-background"
                     >
-                        <div
-                            class="flex gap-3 justify-between items-center py-4 px-6 border-b border-divider bg-background"
+                        <h2 class="text-base font-bold text-textPrimary">Hapus User</h2>
+                        <button
+                            @click="cancelDelete"
+                            aria-label="Tutup"
+                            class="flex justify-center items-center w-8 h-8 rounded-lg transition-colors text-textSecondary shrink-0 hover:bg-overlay hover:text-textPrimary"
                         >
-                            <h2 class="text-base font-bold text-textPrimary">Hapus User</h2>
-                            <button
-                                @click="cancelDelete"
-                                aria-label="Tutup"
-                                class="flex justify-center items-center w-8 h-8 rounded-lg transition-colors text-textSecondary shrink-0 hover:bg-overlay hover:text-textPrimary"
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                width="17"
+                                height="17"
                             >
-                                <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2.5"
-                                    width="17"
-                                    height="17"
-                                >
-                                    <line x1="18" y1="6" x2="6" y2="18" />
-                                    <line x1="6" y1="6" x2="18" y2="18" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="py-5 px-6">
-                            <p class="mb-3 text-sm leading-relaxed text-textSecondary">
-                                Anda yakin ingin menghapus user
-                                <strong class="text-textPrimary">{{ pendingUser.username }}</strong
-                                >?
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="py-5 px-6">
+                        <p class="mb-3 text-sm leading-relaxed text-textSecondary">
+                            Anda yakin ingin menghapus user
+                            <strong class="text-textPrimary">{{ pendingUser.username }}</strong
+                            >?
+                        </p>
+                        <div
+                            v-if="pendingUser.recipe_count > 0"
+                            class="py-3 px-4 rounded-lg border-error bg-errorSoft border-l-[3px]"
+                        >
+                            <p class="flex gap-1.5 items-center mb-1 text-sm font-bold text-error">PERHATIAN</p>
+                            <p class="text-sm text-error">
+                                Tindakan ini juga akan
+                                <strong>MENGHAPUS {{ pendingUser.recipe_count }} resep</strong> yang dibuat oleh user
+                                ini!
                             </p>
-                            <div
-                                v-if="pendingUser.recipe_count > 0"
-                                class="py-3 px-4 rounded-lg border-error bg-errorSoft border-l-[3px]"
-                            >
-                                <p class="flex gap-1.5 items-center mb-1 text-sm font-bold text-error">
-                                    <svg
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        width="14"
-                                        height="14"
-                                    >
-                                        <path
-                                            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-                                        />
-                                        <line x1="12" y1="9" x2="12" y2="13" />
-                                        <line x1="12" y1="17" x2="12.01" y2="17" />
-                                    </svg>
-                                    PERHATIAN
-                                </p>
-                                <p class="text-sm text-error">
-                                    Tindakan ini juga akan
-                                    <strong>MENGHAPUS {{ pendingUser.recipe_count }} resep</strong> yang dibuat oleh
-                                    user ini!
-                                </p>
-                            </div>
-                            <p
-                                v-if="!deleteConfirmed && pendingUser.recipe_count > 0"
-                                class="mt-3 text-xs text-textSecondary"
-                            >
-                                Centang untuk konfirmasi:
-                            </p>
-                            <label
-                                v-if="pendingUser.recipe_count > 0"
-                                class="flex gap-2 items-center mt-2 cursor-pointer"
-                            >
-                                <input
-                                    type="checkbox"
-                                    v-model="deleteConfirmed"
-                                    class="w-4 h-4 rounded cursor-pointer focus:ring-2 border-border text-error focus:ring-error"
-                                />
-                                <span class="text-sm text-textPrimary">Saya mengerti dan ingin melanjutkan</span>
-                            </label>
                         </div>
-                        <div class="flex gap-2.5 justify-end py-4 px-6 border-t border-divider bg-background">
-                            <button
-                                @click="cancelDelete"
-                                :disabled="actionLoading"
-                                class="py-2 px-5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
-                            >
-                                Batal
-                            </button>
-                            <button
-                                @click="confirmDelete"
-                                :disabled="actionLoading || (pendingUser.recipe_count > 0 && !deleteConfirmed)"
-                                class="py-2 px-5 text-sm font-semibold rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed bg-error text-textInverse hover:opacity-85"
-                            >
-                                {{ actionLoading ? 'Menghapus...' : 'Ya, Hapus' }}
-                            </button>
-                        </div>
+                        <p
+                            v-if="!deleteConfirmed && pendingUser.recipe_count > 0"
+                            class="mt-3 text-xs text-textSecondary"
+                        >
+                            Centang untuk konfirmasi:
+                        </p>
+                        <label v-if="pendingUser.recipe_count > 0" class="flex gap-2 items-center mt-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                v-model="deleteConfirmed"
+                                class="w-4 h-4 rounded cursor-pointer focus:ring-2 border-border text-error focus:ring-error"
+                            />
+                            <span class="text-sm text-textPrimary">Saya mengerti dan ingin melanjutkan</span>
+                        </label>
+                    </div>
+                    <div class="flex gap-2.5 justify-end py-4 px-6 border-t border-divider bg-background">
+                        <button
+                            @click="cancelDelete"
+                            :disabled="actionLoading"
+                            class="py-2 px-5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            @click="confirmDelete"
+                            :disabled="actionLoading || (pendingUser.recipe_count > 0 && !deleteConfirmed)"
+                            class="py-2 px-5 text-sm font-semibold rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed bg-error text-textInverse hover:opacity-85"
+                        >
+                            {{ actionLoading ? 'Menghapus...' : 'Ya, Hapus' }}
+                        </button>
                     </div>
                 </div>
-            </transition>
+            </div>
         </teleport>
 
-        <!-- ── Success Toast ─────────────────────────────────────── -->
         <teleport to="body">
-            <transition
-                enter-active-class="transition duration-300 ease-out"
-                enter-from-class="opacity-0 translate-y-2"
-                leave-active-class="transition duration-200 ease-in"
-                leave-to-class="opacity-0 translate-y-1"
+            <div
+                v-if="showSuccessToast"
+                class="flex fixed right-5 bottom-5 gap-3 items-start py-3 px-4 w-80 rounded-xl border shadow-lg border-success/30 bg-successSoft text-success z-60 max-w-[calc(100vw-40px)]"
             >
-                <div
-                    v-if="showSuccessToast"
-                    class="flex fixed right-5 bottom-5 gap-3 items-start py-3 px-4 rounded-xl border shadow-lg border-success/30 bg-successSoft text-success z-60 w-[320px] max-w-[calc(100vw-40px)]"
+                <p class="flex-1 text-sm font-medium leading-snug">{{ successMessage }}</p>
+                <button
+                    @click="showSuccessToast = false"
+                    class="mt-0.5 opacity-60 transition-opacity hover:opacity-100 shrink-0"
                 >
-                    <p class="flex-1 text-sm font-medium leading-snug">{{ successMessage }}</p>
-                    <button
-                        @click="showSuccessToast = false"
-                        class="mt-0.5 opacity-60 transition-opacity hover:opacity-100 shrink-0"
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        width="14"
+                        height="14"
                     >
-                        <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2.5"
-                            width="14"
-                            height="14"
-                        >
-                            <line x1="18" y1="6" x2="6" y2="18" />
-                            <line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                    </button>
-                </div>
-            </transition>
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
         </teleport>
     </div>
 </template>
@@ -419,7 +374,6 @@ const loading = ref(true);
 const currentPage = ref(1);
 const itemsPerPage = 10;
 
-// Sorting
 const sortColumn = ref<string>('created_at');
 const sortDirection = ref<'asc' | 'desc'>('desc');
 
@@ -467,7 +421,6 @@ const pendingUser = ref<any>(null);
 const actionLoading = ref(false);
 const deleteConfirmed = ref(false);
 
-// Success toast
 const showSuccessToast = ref(false);
 const successMessage = ref('');
 
@@ -493,7 +446,6 @@ function openDeleteModal(user: any) {
     showDeleteModal.value = true;
 }
 
-// Cancel functions — allow closing even when loading (for X button)
 function cancelPromote() {
     showPromoteModal.value = false;
     pendingUser.value = null;
@@ -508,7 +460,6 @@ function cancelDelete() {
     deleteConfirmed.value = false;
 }
 
-// API calls
 onMounted(() => {
     fetchUsers();
 });
@@ -563,7 +514,7 @@ async function confirmDemote() {
         alert('Gagal menurunkan user: ' + (err.response?.data?.message || err.message));
     } finally {
         actionLoading.value = false;
-        cancelDemote(); // Close modal after action completes
+        cancelDemote();
     }
 }
 
@@ -582,7 +533,7 @@ async function confirmDelete() {
         alert('Gagal menghapus user: ' + (err.response?.data?.message || err.message));
     } finally {
         actionLoading.value = false;
-        cancelDelete(); // Close modal after action completes
+        cancelDelete();
     }
 }
 

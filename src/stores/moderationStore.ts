@@ -18,7 +18,6 @@ export const useModerationStore = defineStore('moderation', () => {
     const loading = ref<boolean>(false);
     const error = ref<string | null>(null);
 
-    // Fetch moderation statistics
     async function fetchStats(): Promise<void> {
         loading.value = true;
         error.value = null;
@@ -33,7 +32,6 @@ export const useModerationStore = defineStore('moderation', () => {
         }
     }
 
-    // Fetch pending recipes
     async function fetchPendingRecipes(): Promise<void> {
         loading.value = true;
         error.value = null;
@@ -48,7 +46,6 @@ export const useModerationStore = defineStore('moderation', () => {
         }
     }
 
-    // Fetch recipes by status
     async function fetchByStatus(status: RecipeStatus): Promise<ModerationRecipe[]> {
         loading.value = true;
         error.value = null;
@@ -64,7 +61,6 @@ export const useModerationStore = defineStore('moderation', () => {
         }
     }
 
-    // Fetch all recipes (all statuses)
     async function fetchAllRecipes(): Promise<void> {
         loading.value = true;
         error.value = null;
@@ -79,7 +75,6 @@ export const useModerationStore = defineStore('moderation', () => {
         }
     }
 
-    // Fetch specific recipe for review
     async function fetchRecipeById(id: number): Promise<void> {
         loading.value = true;
         error.value = null;
@@ -94,54 +89,46 @@ export const useModerationStore = defineStore('moderation', () => {
         }
     }
 
-    // Approve recipe
     async function approveRecipe(id: number): Promise<boolean> {
         loading.value = true;
-        error.value = null;
         try {
             await api.moderation.approve(id);
 
-            // Update local state
+            // update state
             pendingRecipes.value = pendingRecipes.value.filter((r) => r.id !== id);
             if (currentRecipe.value?.id === id) {
                 currentRecipe.value.status = 'approved';
             }
 
-            // Refresh stats
+            // refresh stats
             await fetchStats();
 
             return true;
         } catch (err) {
-            const apiError = err as ApiError;
-            error.value = apiError.message;
-            return false;
+            throw err;
         } finally {
             loading.value = false;
         }
     }
 
-    // Reject recipe
     async function rejectRecipe(id: number, reason?: string): Promise<boolean> {
         loading.value = true;
-        error.value = null;
         try {
             await api.moderation.reject(id, reason);
 
-            // Update local state
+            // update state
             pendingRecipes.value = pendingRecipes.value.filter((r) => r.id !== id);
             if (currentRecipe.value?.id === id) {
                 currentRecipe.value.status = 'rejected';
                 currentRecipe.value.rejection_reason = reason || null;
             }
 
-            // Refresh stats
+            // refresh stats
             await fetchStats();
 
             return true;
         } catch (err) {
-            const apiError = err as ApiError;
-            error.value = apiError.message;
-            return false;
+            throw err;
         } finally {
             loading.value = false;
         }

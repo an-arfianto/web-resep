@@ -1,21 +1,29 @@
 <template>
-    <div class="transition-shadow cursor-pointer hover:shadow-lg card" @click="goToDetail">
-        <h3 class="mb-2 text-xl font-bold text-textPrimary">{{ recipe.name }}</h3>
-
-        <div class="flex gap-2 items-center mb-3">
-            <span class="category-badges">
+    <div class="card-interactive" @click="goToDetail">
+        <div class="flex gap-2 justify-between items-start mb-2">
+            <h3 class="flex-1 text-lg font-bold leading-snug text-textPrimary line-clamp-2">
+                {{ recipe.name }}
+            </h3>
+            <span class="category-badges shrink-0">
                 {{ recipe.category }}
             </span>
-            <span v-if="recipe.matched_count" class="text-success bg-successSoft category-badges">
+        </div>
+
+        <div class="flex flex-wrap gap-2 items-center mb-2">
+            <span v-if="recipe.creator_username" class="inline-flex gap-1 items-center text-xs text-textMuted">
+                {{ recipe.creator_username }}
+            </span>
+
+            <span v-if="recipe.matched_count" class="category-badges bg-successSoft text-success">
                 {{ recipe.matched_count }} bahan sama
             </span>
         </div>
 
-        <p class="mb-4 text-sm text-textPrimary line-clamp-2">
+        <p class="flex-1 mb-3 text-sm leading-relaxed text-textSecondary line-clamp-2">
             {{ recipe.ingredients }}
         </p>
 
-        <button class="w-full button bg-primarySoft text-primary hover:bg-primary hover:text-textInverse">
+        <button class="mt-auto w-full button bg-primarySoft text-primary hover:bg-primary hover:text-textInverse">
             Lihat Resep
         </button>
     </div>
