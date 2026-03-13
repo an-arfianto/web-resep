@@ -39,7 +39,7 @@
 
         <teleport to="body">
             <div v-if="showRejectModal" class="modal-backdrop" @click.self="closeRejectModal">
-                <div class="modal-panel max-h-[88vh] max-w-160">
+                <div class="modal-panel max-h-[80vh] max-w-160">
                     <div class="modal-header">
                         <h2 class="modal-title">Tolak Resep</h2>
                         <button @click="closeRejectModal" aria-label="Tutup" class="modal-close-btn">

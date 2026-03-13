@@ -1,5 +1,5 @@
 <template>
-    <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-3xl lg:px-6">
+    <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-4xl lg:px-6">
         <div class="card">
             <h1 class="mb-6 text-2xl font-bold lg:text-3xl text-textPrimary">Tambah Resep Baru</h1>
 
@@ -53,7 +53,7 @@
                                 v-model="ingredient.quantity"
                                 type="number"
                                 step="0.1"
-                                class="w-full sm:w-24 input-field"
+                                class="w-full sm:w-28 input-field"
                                 placeholder="Jumlah"
                             />
                             <select v-model="ingredient.unit" class="w-full sm:w-32 input-field">
@@ -122,7 +122,7 @@
                     ></textarea>
                 </div>
 
-                <div v-if="error" class="alert-box alert-box-error">
+                <div v-if="error" class="alert-box alert-error">
                     <p class="text-sm font-semibold text-error">{{ error }}</p>
                 </div>
 

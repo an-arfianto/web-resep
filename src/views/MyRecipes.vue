@@ -1,7 +1,7 @@
 <template>
-    <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-7xl lg:px-6">
+    <div class="flex flex-col gap-5 p-4 mx-auto w-full max-w-6xl lg:px-6">
         <div class="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
-            <h1 class="text-2xl font-bold lg:text-3xl text-textPrimary">Resep Saya</h1>
+            <h1 class="text-2xl font-bold text-textPrimary">Resep Saya</h1>
             <RouterLink
                 to="/create-recipe"
                 class="inline-flex gap-1.5 items-center button bg-successSoft text-success hover:bg-success hover:text-textInverse"
@@ -15,7 +15,7 @@
         </div>
 
         <div v-else-if="recipeStore.error" class="card">
-            <div class="alert-box alert-box-error">
+            <div class="alert-box alert-error">
                 <p class="text-sm font-semibold text-error">{{ recipeStore.error }}</p>
             </div>
         </div>
@@ -120,11 +120,8 @@
         </div>
 
         <teleport to="body">
-            <div
-                v-if="showSuccessToast"
-                class="flex fixed right-5 bottom-5 gap-3 items-start py-3 px-4 w-80 rounded-xl border shadow-lg border-success/30 bg-successSoft text-success z-60 max-w-[calc(100vw-40px)]"
-            >
-                <p class="flex-1 text-sm font-medium leading-snug">{{ successMessage }}</p>
+            <div v-if="showSuccessToast" class="fixed right-5 bottom-5 toast toast-success">
+                <p class="flex-1 font-medium">{{ successMessage }}</p>
                 <button
                     @click="showSuccessToast = false"
                     class="mt-0.5 opacity-60 transition-opacity hover:opacity-100 shrink-0"

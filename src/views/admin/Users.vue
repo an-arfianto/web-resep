@@ -1,5 +1,5 @@
 <template>
-    <div class="flex flex-col gap-5 py-6 px-5 mx-auto max-w-7xl">
+    <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-6xl lg:px-6">
         <div class="flex flex-wrap gap-3 justify-between items-start">
             <div>
                 <h1 class="mb-0.5 text-2xl font-extrabold text-textPrimary">Kelola User</h1>

@@ -1,38 +1,5 @@
 <template>
-    <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-7xl lg:px-6">
-        <!-- notifications -->
-        <teleport to="body">
-            <div class="flex fixed right-5 bottom-5 flex-col gap-2 z-60">
-                <div
-                    v-for="toast in toasts"
-                    :key="toast.id"
-                    :class="['toast',
-                        toast.type === 'error' && 'toast-error',
-                        toast.type === 'success' && 'toast-success',
-                    ]"
-                >
-                    <p class="flex-1 text-sm font-medium leading-snug">{{ toast.message }}</p>
-                    <button
-                        @click="removeToast(toast.id)"
-                        class="mt-0.5 opacity-60 transition-opacity hover:opacity-100 shrink-0"
-                    >
-                        <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2.5"
-                            width="14"
-                            height="14"
-                        >
-                            <line x1="18" y1="6" x2="6" y2="18" />
-                            <line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </teleport>
-
-        <!-- stats bar -->
+    <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-6xl lg:px-6">
         <div class="grid overflow-hidden grid-cols-2 gap-px rounded-2xl shadow-sm lg:flex lg:gap-0 bg-divider">
             <div class="stat-card">
                 <div>
@@ -65,7 +32,7 @@
 
         <div class="flex flex-col gap-5 lg:flex-row lg:items-start">
             <nav
-                class="flex flex-row gap-1 p-2 rounded-2xl shadow-sm lg:sticky lg:top-5 lg:flex-col lg:w-52 bg-surface lg:shrink-0"
+                class="flex flex-row gap-1 p-2 rounded-2xl shadow-sm lg:sticky lg:top-20 lg:flex-col lg:w-52 bg-surface lg:shrink-0"
             >
                 <p class="px-3 pt-1 pb-2 text-xs font-bold tracking-widest uppercase text-textMuted max-lg:hidden">
                     Menu Moderasi
@@ -91,7 +58,6 @@
                 </button>
             </nav>
 
-            <!-- content panel -->
             <section class="flex-1 w-full min-w-0 card">
                 <div v-if="moderationStore.loading" class="flex justify-center py-16">
                     <div class="loading-spin"></div>
@@ -197,10 +163,9 @@
             </section>
         </div>
 
-        <!-- detail modal -->
         <teleport to="body">
             <div v-if="showDetailModal && selectedRecipe" class="modal-backdrop" @click.self="closeDetailModal">
-                <div class="modal-panel max-h-[88vh] max-w-160">
+                <div class="modal-panel max-h-[80vh] max-w-160">
                     <div class="modal-header">
                         <div class="flex-1 min-w-0">
                             <h2 class="mb-2 modal-title">{{ selectedRecipe.name }}</h2>
@@ -291,7 +256,6 @@
             </div>
         </teleport>
 
-        <!-- alasan modal -->
         <teleport to="body">
             <div v-if="showRejectModal" class="modal-backdrop" @click.self="closeRejectModal">
                 <div class="max-w-md modal-panel">
@@ -330,7 +294,7 @@
                         <button
                             @click="closeRejectModal"
                             :disabled="modalActionLoading"
-                            class="py-2 px-5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
+                            class="font-semibold disabled:opacity-50 button bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
                         >
                             Batal
                         </button>
@@ -342,6 +306,37 @@
                             {{ modalActionLoading ? 'Mohon Tunggu...' : 'Tolak Resep' }}
                         </button>
                     </div>
+                </div>
+            </div>
+        </teleport>
+
+        <teleport to="body">
+            <div class="flex fixed right-5 bottom-5 flex-col gap-2 z-60">
+                <div
+                    v-for="toast in toasts"
+                    :key="toast.id"
+                    :class="['toast',
+                        toast.type === 'error' && 'toast-error',
+                        toast.type === 'success' && 'toast-success',
+                    ]"
+                >
+                    <p class="flex-1 text-sm font-medium leading-snug">{{ toast.message }}</p>
+                    <button
+                        @click="removeToast(toast.id)"
+                        class="mt-0.5 opacity-60 transition-opacity hover:opacity-100 shrink-0"
+                    >
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            width="14"
+                            height="14"
+                        >
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
                 </div>
             </div>
         </teleport>
@@ -362,7 +357,6 @@ const authStore = useAuthStore();
 
 type TabKey = 'pending' | 'reviewed' | 'all';
 
-// Toast system
 interface Toast {
     id: number;
     type: 'success' | 'error';

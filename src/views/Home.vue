@@ -1,18 +1,15 @@
 <template>
-    <div class="container py-8 px-4 mx-auto max-w-7xl">
+    <div class="flex flex-col gap-5 p-4 mx-auto w-full max-w-6xl lg:px-6">
         <div class="mb-12 text-center">
-            <h1 class="mb-4 text-4xl font-bold md:text-5xl text-textPrimary">Resep App</h1>
+            <h1 class="mb-4 text-4xl font-bold lg:text-5xl text-textPrimary">Resep App</h1>
             <p class="mb-8 text-xl text-textSecondary">Pencarian resep masakan menggunakan Boolean Retrieval</p>
-            <RouterLink
-                to="/search"
-                class="inline-block button bg-primary text-textInverse hover:bg-primarySoft hover:text-primary"
-            >
+            <RouterLink to="/search" class="button bg-primary text-textInverse hover:bg-primarySoft hover:text-primary">
                 Cari Resep
             </RouterLink>
         </div>
 
         <div class="mb-12">
-            <h2 class="mb-6 text-2xl font-bold text-textPrimary">Resep Terbaru</h2>
+            <h2 class="section-header section-title">Resep Terbaru</h2>
 
             <div v-if="recipeStore.loading" class="py-12 text-center">
                 <div class="loading-spin"></div>
@@ -52,7 +49,7 @@ import Pagination from '@/components/Pagination.vue';
 
 const recipeStore = useRecipeStore();
 const currentPage = ref(1);
-const itemsPerPage = 15;
+const itemsPerPage = 12;
 
 const paginatedRecipes = computed(() => {
     const start = (currentPage.value - 1) * itemsPerPage;

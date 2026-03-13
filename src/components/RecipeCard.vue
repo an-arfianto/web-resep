@@ -1,6 +1,6 @@
 <template>
     <div class="card-interactive" @click="goToDetail">
-        <div class="flex gap-2 justify-between items-start mb-2">
+        <div class="flex gap-2 justify-between items-start mb-1">
             <h3 class="flex-1 text-lg font-bold leading-snug text-textPrimary line-clamp-2">
                 {{ recipe.name }}
             </h3>
@@ -9,7 +9,7 @@
             </span>
         </div>
 
-        <div class="flex flex-wrap gap-2 items-center mb-2">
+        <div class="flex flex-wrap gap-2 items-center mb-1">
             <span v-if="recipe.creator_username" class="inline-flex gap-1 items-center text-xs text-textMuted">
                 {{ recipe.creator_username }}
             </span>
@@ -19,7 +19,7 @@
             </span>
         </div>
 
-        <p class="flex-1 mb-3 text-sm leading-relaxed text-textSecondary line-clamp-2">
+        <p class="flex-1 mb-2 text-sm leading-relaxed text-textSecondary line-clamp-2">
             {{ recipe.ingredients }}
         </p>
 

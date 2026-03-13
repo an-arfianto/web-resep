@@ -1,12 +1,12 @@
 <template>
     <div v-if="totalPages > 1" class="flex flex-col gap-4 justify-between items-center mt-6 lg:flex-row">
-        <div class="text-sm text-textPrimary">Menampilkan {{ startItem }} - {{ endItem }}, total {{ totalItems }}</div>
+        <div class="text-xs text-textPrimary">{{ startItem }} - {{ endItem }}, dari {{ totalItems }} item</div>
 
         <div class="flex gap-2 items-center">
             <button
                 @click="goToPage(currentPage - 1)"
                 :disabled="currentPage === 1"
-                class="flex gap-1 disabled:opacity-50 text-textPrimary button hover:bg-overlay"
+                class="flex justify-center items-center w-8 h-8 rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-border bg-surface text-textPrimary hover:bg-overlay"
             >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -19,11 +19,11 @@
                     :key="page"
                     @click="page !== '...' ? goToPage(page as number) : null"
                     :disabled="page === '...'"
-                    :class="['button min-w-5 text-sm font-medium',
+                    :class="['flex h-8 w-8 items-center justify-center rounded-lg border text-xs font-semibold transition-colors',
                         page === currentPage
-                            ? 'bg-surface border-border text-textMuted'
+                            ? 'bg-primary text-textInverse border-primary cursor-default'
                             : page === '...'
-                              ? 'text-textMuted border-border bg-textSecondary'
+                              ? 'text-textMuted border-border bg-surface cursor-default'
                               : 'border-border bg-surface text-textPrimary hover:bg-overlay',
                     ]"
                 >
@@ -34,7 +34,7 @@
             <button
                 @click="goToPage(currentPage + 1)"
                 :disabled="currentPage === totalPages"
-                class="flex gap-1 disabled:opacity-50 button text-textPrimary hover:bg-overlay"
+                class="flex justify-center items-center w-8 h-8 rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-border bg-surface text-textPrimary hover:bg-overlay"
             >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />

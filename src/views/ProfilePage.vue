@@ -1,8 +1,7 @@
 <template>
-    <div class="flex flex-col gap-5 mx-auto max-w-6xl">
-        <h1 class="text-2xl font-extrabold text-textPrimary">Profil Saya</h1>
+    <div class="flex flex-col gap-5 p-4 mx-auto w-full max-w-6xl lg:px-6">
+        <h1 class="text-2xl font-bold text-textPrimary">Profil Saya</h1>
 
-        <!-- Tabs -->
         <div class="border-b border-divider">
             <nav class="flex gap-8 -mb-px">
                 <button
@@ -20,7 +19,6 @@
             </nav>
         </div>
 
-        <!-- Loading -->
         <div v-if="!profile" class="flex justify-center py-20">
             <div class="loading-spin"></div>
         </div>
@@ -133,7 +131,7 @@
                         <button
                             @click="handleUpdateUsername"
                             :disabled="usernameLoading"
-                            class="transition-colors disabled:opacity-50 disabled:cursor-not-allowed button bg-primary text-textInverse hover:bg-primaryPressed"
+                            class="disabled:opacity-50 disabled:cursor-not-allowed button bg-primary text-textInverse hover:bg-primaryPressed"
                         >
                             {{ usernameLoading ? 'Mohon Tunggu...' : 'Ubah Username' }}
                         </button>
@@ -175,7 +173,7 @@
                         <button
                             @click="handleUpdatePassword"
                             :disabled="passwordLoading"
-                            class="transition-colors disabled:opacity-50 disabled:cursor-not-allowed button bg-primary text-textInverse hover:bg-primaryPressed"
+                            class="disabled:opacity-50 disabled:cursor-not-allowed button bg-primary text-textInverse hover:bg-primaryPressed"
                         >
                             {{ passwordLoading ? 'Mohon Tunggu...' : 'Ubah Password' }}
                         </button>
@@ -185,10 +183,7 @@
         </template>
 
         <teleport to="body">
-            <div
-                v-if="showSuccessToast"
-                class="flex fixed right-5 bottom-5 gap-3 items-start py-3 px-4 rounded-xl border shadow-lg border-success/30 bg-successSoft text-success z-60 w-[320px] max-w-[calc(100vw-40px)]"
-            >
+            <div v-if="showSuccessToast" class="fixed right-5 bottom-5 toast toast-success z-60">
                 <p class="flex-1 text-sm font-medium leading-snug">{{ successMessage }}</p>
                 <button
                     @click="showSuccessToast = false"

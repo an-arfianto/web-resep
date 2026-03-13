@@ -1,10 +1,10 @@
 <template>
-    <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-5xl lg:px-6">
+    <div class="flex flex-col gap-5 p-4 mx-auto w-full max-w-4xl lg:px-6">
         <button
             @click="$router.back()"
             class="inline-flex gap-1.5 items-center button bg-overlay text-textSecondary w-fit hover:bg-divider hover:text-textPrimary"
         >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
                 <line x1="19" y1="12" x2="5" y2="12" />
                 <polyline points="12 19 5 12 12 5" />
             </svg>
@@ -24,7 +24,7 @@
         <div v-else-if="recipe" class="flex flex-col gap-5">
             <div class="card">
                 <div class="flex flex-col gap-4">
-                    <div class="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
+                    <div class="flex flex-row gap-3 justify-between items-start">
                         <h1 class="text-2xl font-bold leading-tight lg:text-4xl text-textPrimary">
                             {{ recipe.name }}
                         </h1>

@@ -1,11 +1,9 @@
 <template>
-    <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-7xl lg:px-6">
-        <!-- Search Form -->
+    <div class="flex flex-col gap-5 p-4 mx-auto w-full max-w-6xl lg:px-6">
         <div class="card">
             <h1 class="mb-6 text-2xl font-bold lg:text-3xl text-textPrimary">Pencarian Resep Boolean Retrieval</h1>
 
             <div class="flex flex-col gap-4">
-                <!-- Operator Select -->
                 <div>
                     <label class="block mb-2 text-sm font-semibold text-textSecondary">Operator Pencarian</label>
                     <select v-model="searchData.operator" class="input-field" @change="clearErrors">
@@ -15,7 +13,6 @@
                     </select>
                 </div>
 
-                <!-- Ingredients Input -->
                 <div>
                     <label class="block mb-2 text-sm font-semibold text-textSecondary"> Bahan-bahan * </label>
                     <input
@@ -34,7 +31,6 @@
                     </p>
                 </div>
 
-                <!-- Excluded Ingredients (NOT operator only) -->
                 <div v-if="searchData.operator === 'NOT'">
                     <label class="block mb-2 text-sm font-semibold text-textSecondary">
                         Bahan-bahan yang tidak diinginkan *
@@ -55,27 +51,22 @@
                     </p>
                 </div>
 
-                <!-- Search Button -->
                 <button
                     @click="handleSearch"
                     :disabled="recipeStore.loading"
-                    class="w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed button bg-primary text-textInverse hover:opacity-85"
+                    class="w-auto disabled:opacity-50 disabled:cursor-not-allowed button bg-primary text-textInverse hover:opacity-85"
                 >
                     {{ recipeStore.loading ? 'Mohon Tunggu...' : 'Cari Resep' }}
                 </button>
             </div>
         </div>
 
-        <!-- Search Results -->
         <template v-if="searched">
-            <!-- Loading State -->
             <div v-if="recipeStore.loading" class="flex justify-center py-20">
                 <div class="loading-spin"></div>
             </div>
 
-            <!-- Results -->
             <template v-else>
-                <!-- Results Summary -->
                 <div class="card bg-secondarySoft">
                     <div class="flex flex-col gap-3">
                         <div>
@@ -90,11 +81,8 @@
                             </p>
                         </div>
 
-                        <!-- Searched Ingredients -->
                         <div class="pt-3 border-t border-divider">
-                            <p class="mb-1 text-xs font-bold tracking-wide uppercase text-textSecondary">
-                                Bahan yang dicari:
-                            </p>
+                            <p class="mb-1 text-xs font-bold uppercase text-textSecondary">Bahan yang dicari:</p>
                             <div class="flex flex-wrap gap-1.5">
                                 <span
                                     v-for="ingredient in searchResult?.searchedIngredients"
@@ -106,7 +94,6 @@
                             </div>
                         </div>
 
-                        <!-- Excluded Ingredients -->
                         <div v-if="searchResult?.excludedIngredients?.length" class="pt-3 border-t border-divider">
                             <p class="mb-1 text-xs font-bold tracking-wide uppercase text-textSecondary">
                                 Bahan yang dikecualikan:
@@ -124,7 +111,6 @@
                     </div>
                 </div>
 
-                <!-- Recipe Cards -->
                 <div
                     v-if="searchResult && searchResult.count > 0"
                     class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
@@ -132,20 +118,7 @@
                     <RecipeCard v-for="recipe in recipeStore.searchResults" :key="recipe.id" :recipe="recipe" />
                 </div>
 
-                <!-- No Results -->
                 <div v-else class="flex flex-col gap-3 items-center py-20 card">
-                    <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        width="48"
-                        height="48"
-                        class="text-textMuted"
-                    >
-                        <circle cx="11" cy="11" r="8" />
-                        <path d="m21 21-4.35-4.35" />
-                    </svg>
                     <div class="text-center">
                         <p class="text-lg font-bold text-textPrimary">Resep tidak ditemukan</p>
                         <p class="mt-1 text-sm text-textSecondary">
@@ -182,10 +155,7 @@ const searchData = reactive<SearchCriteria>({
     excludedIngredients: [],
 });
 
-// Preserve state when navigating back
 onActivated(() => {
-    // Component is reactivated (user came back from recipe detail)
-    // State is already preserved, no need to do anything
     console.log('Search page reactivated - state preserved');
 });
 
@@ -199,10 +169,8 @@ function clearErrors() {
 }
 
 async function handleSearch(): Promise<void> {
-    // Clear previous errors
     clearErrors();
 
-    // Validate ingredients
     const ingredients = ingredientsInput.value
         .split(',')
         .map((i) => i.trim())
@@ -215,7 +183,6 @@ async function handleSearch(): Promise<void> {
 
     searchData.ingredients = ingredients;
 
-    // Validate excluded ingredients for NOT operator
     if (searchData.operator === 'NOT') {
         const excluded = excludedInput.value
             .split(',')
@@ -231,7 +198,6 @@ async function handleSearch(): Promise<void> {
         searchData.excludedIngredients = [];
     }
 
-    // Perform search
     const result = await recipeStore.searchRecipes(searchData);
     searched.value = true;
     searchResult.value = result;

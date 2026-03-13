@@ -1,5 +1,5 @@
 <template>
-    <div class="flex flex-col gap-5 py-6 px-5 mx-auto max-w-5xl">
+    <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-6xl lg:px-6">
         <div class="flex flex-wrap gap-3 justify-between items-start">
             <div>
                 <h1 class="mb-0.5 text-2xl font-extrabold text-textPrimary">Kelola Resep</h1>
@@ -26,7 +26,7 @@
                 <p class="text-base font-bold text-textPrimary">Tidak ada resep</p>
             </div>
 
-            <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div v-else class="grid grid-cols-1 gap-4 lg:grid-cols-3">
                 <div
                     v-for="recipe in paginatedRecipes"
                     :key="recipe.id"
@@ -53,8 +53,8 @@
                     </p>
 
                     <div v-if="recipe.status === 'rejected' && recipe.rejection_reason" class="alert-box alert-error">
-                        <p class="flex gap-1.5 items-center mb-1 text-xs font-bold">Alasan</p>
-                        <p class="text-xs leading-relaxed line-clamp-2">{{ recipe.rejection_reason }}</p>
+                        <p class="flex gap-1.5 items-center mb-1 text-xs font-bold">Alasan Penolakan</p>
+                        <p class="text-xs line-clamp-2">{{ recipe.rejection_reason }}</p>
                     </div>
 
                     <div
@@ -69,7 +69,7 @@
                                 Detail
                             </button>
                             <button
-                                @click="deleteRecipe(recipe.id)"
+                                @click="deleteRecipe(recipe.id, recipe.name)"
                                 :disabled="deletingId === recipe.id"
                                 class="inline-flex gap-1.5 items-center py-1.5 px-3.5 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-errorSoft text-error hover:bg-error hover:text-textInverse"
                             >
@@ -91,7 +91,7 @@
 
         <teleport to="body">
             <div v-if="showDetailModal" class="modal-backdrop" @click.self="closeDetailModal">
-                <div class="modal-panel max-h-[88vh] max-w-160">
+                <div class="modal-panel max-h-[80vh] max-w-160">
                     <div v-if="loadingDetail" class="flex justify-center items-center p-20">
                         <div class="loading-spin"></div>
                     </div>
@@ -185,7 +185,7 @@
                                 <p class="flex gap-1.5 items-center mb-1 text-sm font-bold text-error">
                                     Alasan Penolakan
                                 </p>
-                                <p class="text-sm leading-relaxed text-error">{{ selectedRecipe.rejection_reason }}</p>
+                                <p class="text-sm text-error">{{ selectedRecipe.rejection_reason }}</p>
                             </div>
                         </div>
 
@@ -284,7 +284,7 @@ import Pagination from '@/components/Pagination.vue';
 const recipes = ref<any[]>([]);
 const loading = ref(true);
 const currentPage = ref(1);
-const itemsPerPage = 10;
+const itemsPerPage = 12;
 
 const deletingId = ref<number | null>(null);
 const showDeleteModal = ref(false);
@@ -298,14 +298,6 @@ const selectedRecipe = ref<any>(null);
 const showSuccessToast = ref(false);
 const successMessage = ref('');
 
-function showSuccess(msg: string) {
-    successMessage.value = msg;
-    showSuccessToast.value = true;
-    setTimeout(() => {
-        showSuccessToast.value = false;
-    }, 4000);
-}
-
 const paginatedRecipes = computed(() => {
     const start = (currentPage.value - 1) * itemsPerPage;
     return recipes.value.slice(start, start + itemsPerPage);
@@ -314,6 +306,14 @@ const paginatedRecipes = computed(() => {
 onMounted(() => {
     fetchRecipes();
 });
+
+function showSuccess(msg: string) {
+    successMessage.value = msg;
+    showSuccessToast.value = true;
+    setTimeout(() => {
+        showSuccessToast.value = false;
+    }, 4000);
+}
 
 async function fetchRecipes() {
     try {
@@ -367,10 +367,9 @@ function formatIngredient(ing: any): string {
     return parts.join(' ');
 }
 
-function deleteRecipe(id: number) {
-    const recipe = recipes.value.find((r) => r.id === id);
+function deleteRecipe(id: number, name: string) {
     pendingDeleteId.value = id;
-    pendingDeleteName.value = recipe?.name ?? '';
+    pendingDeleteName.value = name;
     showDeleteModal.value = true;
 }
 
@@ -384,6 +383,8 @@ function cancelDelete() {
 async function confirmDelete() {
     if (!pendingDeleteId.value) return;
     deletingId.value = pendingDeleteId.value;
+    const recipeName = pendingDeleteName.value;
+
     try {
         const token = localStorage.getItem('token');
         await axios.delete(`/api/admin/recipes/${pendingDeleteId.value}`, {
@@ -396,6 +397,8 @@ async function confirmDelete() {
         showDeleteModal.value = false;
         pendingDeleteId.value = null;
         pendingDeleteName.value = '';
+
+        showSuccess(`Resep "${recipeName}" berhasil dihapus!`);
     } catch (err: any) {
         alert('Gagal menghapus resep: ' + err.message);
     } finally {

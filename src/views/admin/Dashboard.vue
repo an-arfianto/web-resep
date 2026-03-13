@@ -1,5 +1,5 @@
 <template>
-    <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-7xl lg:px-6">
+    <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-6xl lg:px-6">
         <div v-if="loading" class="flex justify-center py-20">
             <div class="loading-spin"></div>
         </div>
@@ -15,7 +15,7 @@
                     </div>
                 </div>
 
-                <div class="hidden my-3.5 w-px lg:block bg-divider"></div>
+                <div class="hidden my-3 w-px lg:block bg-divider"></div>
 
                 <div class="stat-card">
                     <div>
@@ -24,7 +24,7 @@
                     </div>
                 </div>
 
-                <div class="hidden my-3.5 w-px lg:block bg-divider"></div>
+                <div class="hidden my-3 w-px lg:block bg-divider"></div>
 
                 <div class="stat-card">
                     <div>
@@ -59,7 +59,7 @@
 
             <div class="flex flex-col gap-5 lg:flex-row lg:items-start">
                 <nav
-                    class="flex flex-row gap-1 p-2 rounded-2xl shadow-sm lg:sticky lg:top-5 lg:flex-col lg:w-52 bg-surface lg:shrink-0"
+                    class="flex flex-row gap-1 p-2 rounded-2xl shadow-sm lg:sticky lg:top-20 lg:flex-col lg:w-52 bg-surface lg:shrink-0"
                 >
                     <p
                         class="hidden px-3 pt-1 pb-2 text-xs font-bold tracking-widest uppercase lg:block text-textMuted"
