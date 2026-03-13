@@ -1,3 +1,157 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import axios from 'axios';
+import Pagination from '@/components/Pagination.vue';
+
+const recipes = ref<any[]>([]);
+const loading = ref(true);
+const currentPage = ref(1);
+const itemsPerPage = 12;
+
+const deletingId = ref<number | null>(null);
+const showDeleteModal = ref(false);
+const pendingDeleteId = ref<number | null>(null);
+const pendingDeleteName = ref('');
+
+const showDetailModal = ref(false);
+const loadingDetail = ref(false);
+const selectedRecipe = ref<any>(null);
+
+const showSuccessToast = ref(false);
+const successMessage = ref('');
+
+const paginatedRecipes = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage;
+    return recipes.value.slice(start, start + itemsPerPage);
+});
+
+onMounted(() => {
+    fetchRecipes();
+});
+
+function showSuccess(msg: string) {
+    successMessage.value = msg;
+    showSuccessToast.value = true;
+    setTimeout(() => {
+        showSuccessToast.value = false;
+    }, 4000);
+}
+
+async function fetchRecipes() {
+    try {
+        loading.value = true;
+        const token = localStorage.getItem('token');
+        const response = await axios.get('/api/admin/recipes', {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        recipes.value = response.data.data;
+    } catch (err) {
+        console.error(err);
+    } finally {
+        loading.value = false;
+    }
+}
+
+async function openDetailModal(recipeId: number) {
+    showDetailModal.value = true;
+    loadingDetail.value = true;
+    selectedRecipe.value = null;
+
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`/api/recipes/${recipeId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        selectedRecipe.value = response.data.data;
+    } catch (err) {
+        console.error('Failed to fetch recipe details:', err);
+        alert('Gagal memuat detail resep');
+        closeDetailModal();
+    } finally {
+        loadingDetail.value = false;
+    }
+}
+
+function closeDetailModal() {
+    showDetailModal.value = false;
+    selectedRecipe.value = null;
+    loadingDetail.value = false;
+}
+
+function formatIngredient(ing: any): string {
+    if (typeof ing === 'string') return ing;
+
+    const parts = [];
+    if (ing.quantity) parts.push(ing.quantity);
+    if (ing.unit) parts.push(ing.unit);
+    parts.push(ing.name || ing.ingredient);
+
+    return parts.join(' ');
+}
+
+function deleteRecipe(id: number, name: string) {
+    pendingDeleteId.value = id;
+    pendingDeleteName.value = name;
+    showDeleteModal.value = true;
+}
+
+function cancelDelete() {
+    if (deletingId.value !== null) return;
+    showDeleteModal.value = false;
+    pendingDeleteId.value = null;
+    pendingDeleteName.value = '';
+}
+
+async function confirmDelete() {
+    if (!pendingDeleteId.value) return;
+    deletingId.value = pendingDeleteId.value;
+    const recipeName = pendingDeleteName.value;
+
+    try {
+        const token = localStorage.getItem('token');
+        await axios.delete(`/api/admin/recipes/${pendingDeleteId.value}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        recipes.value = recipes.value.filter((r) => r.id !== pendingDeleteId.value);
+        if (paginatedRecipes.value.length === 0 && currentPage.value > 1) {
+            currentPage.value--;
+        }
+        showDeleteModal.value = false;
+        pendingDeleteId.value = null;
+        pendingDeleteName.value = '';
+
+        showSuccess(`Resep "${recipeName}" berhasil dihapus!`);
+    } catch (err: any) {
+        alert('Gagal menghapus resep: ' + err.message);
+    } finally {
+        deletingId.value = null;
+    }
+}
+
+function getStatusClass(status: string) {
+    return (
+        {
+            approved: 'bg-successSoft text-success',
+            pending: 'bg-warningSoft text-warning',
+            rejected: 'bg-errorSoft text-error',
+        }[status] ?? 'bg-warningSoft text-warning'
+    );
+}
+
+function statusText(status: string): string {
+    return { approved: 'Disetujui', pending: 'Pending', rejected: 'Ditolak' }[status] ?? status;
+}
+
+function formatDate(dateString: string) {
+    return new Date(dateString).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function handlePageChange(page: number) {
+    currentPage.value = page;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
 <template>
     <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-6xl lg:px-6">
         <div class="flex flex-wrap gap-3 justify-between items-start">
@@ -275,157 +429,3 @@
         </teleport>
     </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import axios from 'axios';
-import Pagination from '@/components/Pagination.vue';
-
-const recipes = ref<any[]>([]);
-const loading = ref(true);
-const currentPage = ref(1);
-const itemsPerPage = 12;
-
-const deletingId = ref<number | null>(null);
-const showDeleteModal = ref(false);
-const pendingDeleteId = ref<number | null>(null);
-const pendingDeleteName = ref('');
-
-const showDetailModal = ref(false);
-const loadingDetail = ref(false);
-const selectedRecipe = ref<any>(null);
-
-const showSuccessToast = ref(false);
-const successMessage = ref('');
-
-const paginatedRecipes = computed(() => {
-    const start = (currentPage.value - 1) * itemsPerPage;
-    return recipes.value.slice(start, start + itemsPerPage);
-});
-
-onMounted(() => {
-    fetchRecipes();
-});
-
-function showSuccess(msg: string) {
-    successMessage.value = msg;
-    showSuccessToast.value = true;
-    setTimeout(() => {
-        showSuccessToast.value = false;
-    }, 4000);
-}
-
-async function fetchRecipes() {
-    try {
-        loading.value = true;
-        const token = localStorage.getItem('token');
-        const response = await axios.get('/api/admin/recipes', {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        recipes.value = response.data.data;
-    } catch (err) {
-        console.error(err);
-    } finally {
-        loading.value = false;
-    }
-}
-
-async function openDetailModal(recipeId: number) {
-    showDetailModal.value = true;
-    loadingDetail.value = true;
-    selectedRecipe.value = null;
-
-    try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`/api/recipes/${recipeId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        selectedRecipe.value = response.data.data;
-    } catch (err) {
-        console.error('Failed to fetch recipe details:', err);
-        alert('Gagal memuat detail resep');
-        closeDetailModal();
-    } finally {
-        loadingDetail.value = false;
-    }
-}
-
-function closeDetailModal() {
-    showDetailModal.value = false;
-    selectedRecipe.value = null;
-    loadingDetail.value = false;
-}
-
-function formatIngredient(ing: any): string {
-    if (typeof ing === 'string') return ing;
-
-    const parts = [];
-    if (ing.quantity) parts.push(ing.quantity);
-    if (ing.unit) parts.push(ing.unit);
-    parts.push(ing.name || ing.ingredient);
-
-    return parts.join(' ');
-}
-
-function deleteRecipe(id: number, name: string) {
-    pendingDeleteId.value = id;
-    pendingDeleteName.value = name;
-    showDeleteModal.value = true;
-}
-
-function cancelDelete() {
-    if (deletingId.value !== null) return;
-    showDeleteModal.value = false;
-    pendingDeleteId.value = null;
-    pendingDeleteName.value = '';
-}
-
-async function confirmDelete() {
-    if (!pendingDeleteId.value) return;
-    deletingId.value = pendingDeleteId.value;
-    const recipeName = pendingDeleteName.value;
-
-    try {
-        const token = localStorage.getItem('token');
-        await axios.delete(`/api/admin/recipes/${pendingDeleteId.value}`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        recipes.value = recipes.value.filter((r) => r.id !== pendingDeleteId.value);
-        if (paginatedRecipes.value.length === 0 && currentPage.value > 1) {
-            currentPage.value--;
-        }
-        showDeleteModal.value = false;
-        pendingDeleteId.value = null;
-        pendingDeleteName.value = '';
-
-        showSuccess(`Resep "${recipeName}" berhasil dihapus!`);
-    } catch (err: any) {
-        alert('Gagal menghapus resep: ' + err.message);
-    } finally {
-        deletingId.value = null;
-    }
-}
-
-function getStatusClass(status: string) {
-    return (
-        {
-            approved: 'bg-successSoft text-success',
-            pending: 'bg-warningSoft text-warning',
-            rejected: 'bg-errorSoft text-error',
-        }[status] ?? 'bg-warningSoft text-warning'
-    );
-}
-
-function statusText(status: string): string {
-    return { approved: 'Disetujui', pending: 'Pending', rejected: 'Ditolak' }[status] ?? status;
-}
-
-function formatDate(dateString: string) {
-    return new Date(dateString).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
-}
-
-function handlePageChange(page: number) {
-    currentPage.value = page;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-</script>

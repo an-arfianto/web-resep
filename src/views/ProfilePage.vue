@@ -1,3 +1,107 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import api from '@/services/api';
+
+const tabs = [
+    { id: 'info', name: 'Info Profil' },
+    { id: 'settings', name: 'Pengaturan Akun' },
+];
+
+const profile = ref<any>(null);
+const activeTab = ref('info');
+
+const newUsername = ref('');
+const usernameLoading = ref(false);
+
+const currentPassword = ref('');
+const newPassword = ref('');
+const confirmPassword = ref('');
+const passwordLoading = ref(false);
+
+const showSuccessToast = ref(false);
+const successMessage = ref('');
+
+const isAdmin = computed(() => profile.value?.role_id === 1);
+const isModerator = computed(() => profile.value?.role_id === 2);
+const isRegularUser = computed(() => profile.value?.role_id === 3);
+
+onMounted(async () => {
+    await loadProfile();
+});
+
+async function loadProfile() {
+    try {
+        const response = await api.profile.getProfile();
+        profile.value = response.data;
+        newUsername.value = profile.value.username;
+    } catch (error: any) {
+        alert(error.message || 'Gagal mendapatkan data profil');
+    }
+}
+
+function getRoleBadgeClass(roleId: number) {
+    if (roleId === 1) return 'bg-errorSoft text-error';
+    if (roleId === 2) return 'bg-secondarySoft text-secondary';
+    return 'bg-primarySoft text-primary';
+}
+
+function formatDate(date: string) {
+    return new Date(date).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function showSuccess(msg: string) {
+    successMessage.value = msg;
+    showSuccessToast.value = true;
+    setTimeout(() => {
+        showSuccessToast.value = false;
+    }, 4000);
+}
+
+async function handleUpdateUsername() {
+    if (!newUsername.value || newUsername.value.trim().length < 3) {
+        alert('Username minimal 3 huruf');
+        return;
+    }
+    usernameLoading.value = true;
+    try {
+        await api.profile.updateProfile(newUsername.value.trim());
+        showSuccess('Username berhasil diubah!');
+        await loadProfile();
+    } catch (err: any) {
+        alert(err.message || 'Gagal mengubah username');
+    } finally {
+        usernameLoading.value = false;
+    }
+}
+
+async function handleUpdatePassword() {
+    if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
+        alert('Masukan semua kolom password yang ada!');
+        return;
+    }
+    if (newPassword.value !== confirmPassword.value) {
+        alert('Password tidak cocok!');
+        return;
+    }
+    if (newPassword.value.length < 6) {
+        alert('Password minimal 6 huruf!');
+        return;
+    }
+    passwordLoading.value = true;
+    try {
+        await api.profile.updatePassword(currentPassword.value, newPassword.value);
+        showSuccess('Password berhasil diubah!');
+        currentPassword.value = '';
+        newPassword.value = '';
+        confirmPassword.value = '';
+    } catch (err: any) {
+        alert(err.message || 'Gagal mengubah password');
+    } finally {
+        passwordLoading.value = false;
+    }
+}
+</script>
+
 <template>
     <div class="flex flex-col gap-5 p-4 mx-auto w-full max-w-6xl lg:px-6">
         <h1 class="text-2xl font-bold text-textPrimary">Profil Saya</h1>
@@ -205,110 +309,3 @@
         </teleport>
     </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import api from '@/services/api';
-
-const tabs = [
-    { id: 'info', name: 'Info Profil' },
-    { id: 'settings', name: 'Pengaturan Akun' },
-];
-
-const profile = ref<any>(null);
-const activeTab = ref('info');
-
-// Username form
-const newUsername = ref('');
-const usernameLoading = ref(false);
-
-// Password form
-const currentPassword = ref('');
-const newPassword = ref('');
-const confirmPassword = ref('');
-const passwordLoading = ref(false);
-
-// Success toast
-const showSuccessToast = ref(false);
-const successMessage = ref('');
-
-const isAdmin = computed(() => profile.value?.role_id === 1);
-const isModerator = computed(() => profile.value?.role_id === 2);
-const isRegularUser = computed(() => profile.value?.role_id === 3);
-
-onMounted(async () => {
-    await loadProfile();
-});
-
-async function loadProfile() {
-    try {
-        const response = await api.profile.getProfile();
-        profile.value = response.data;
-        newUsername.value = profile.value.username;
-    } catch (error: any) {
-        alert(error.message || 'Gagal mendapatkan data profil');
-    }
-}
-
-function getRoleBadgeClass(roleId: number) {
-    if (roleId === 1) return 'bg-errorSoft text-error';
-    if (roleId === 2) return 'bg-secondarySoft text-secondary';
-    return 'bg-primarySoft text-primary';
-}
-
-function formatDate(date: string) {
-    return new Date(date).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
-}
-
-function showSuccess(msg: string) {
-    successMessage.value = msg;
-    showSuccessToast.value = true;
-    setTimeout(() => {
-        showSuccessToast.value = false;
-    }, 4000);
-}
-
-async function handleUpdateUsername() {
-    if (!newUsername.value || newUsername.value.trim().length < 3) {
-        alert('Username minimal 3 huruf');
-        return;
-    }
-    usernameLoading.value = true;
-    try {
-        await api.profile.updateProfile(newUsername.value.trim());
-        showSuccess('Username berhasil diubah!');
-        await loadProfile();
-    } catch (err: any) {
-        alert(err.message || 'Gagal mengubah username');
-    } finally {
-        usernameLoading.value = false;
-    }
-}
-
-async function handleUpdatePassword() {
-    if (!currentPassword.value || !newPassword.value || !confirmPassword.value) {
-        alert('Masukan semua kolom password yang ada!');
-        return;
-    }
-    if (newPassword.value !== confirmPassword.value) {
-        alert('Password tidak cocok!');
-        return;
-    }
-    if (newPassword.value.length < 6) {
-        alert('Password minimal 6 huruf!');
-        return;
-    }
-    passwordLoading.value = true;
-    try {
-        await api.profile.updatePassword(currentPassword.value, newPassword.value);
-        showSuccess('Password berhasil diubah!');
-        currentPassword.value = '';
-        newPassword.value = '';
-        confirmPassword.value = '';
-    } catch (err: any) {
-        alert(err.message || 'Gagal mengubah password');
-    } finally {
-        passwordLoading.value = false;
-    }
-}
-</script>

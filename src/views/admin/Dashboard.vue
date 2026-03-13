@@ -1,3 +1,65 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import axios from 'axios';
+
+const stats = ref<any>(null);
+const loading = ref(true);
+const $route = useRoute();
+
+const maxCategoryCount = computed(() => {
+    if (!stats.value?.recipesByCategory?.length) return 1;
+    return Math.max(...stats.value.recipesByCategory.map((c: any) => c.count));
+});
+
+const maxRoleCount = computed(() => {
+    if (!stats.value?.usersByRole?.length) return 1;
+    return Math.max(...stats.value.usersByRole.map((r: any) => r.count));
+});
+
+function categoryBarWidth(count: number): string {
+    const pct = Math.round((count / maxCategoryCount.value) * 100);
+    return `${Math.max(pct, 4)}%`;
+}
+
+function roleBarWidth(count: number): string {
+    const pct = Math.round((count / maxRoleCount.value) * 100);
+    return `${Math.max(pct, 4)}%`;
+}
+
+function getRoleBadgeClass(roleName: string): string {
+    const classes: Record<string, string> = {
+        Admin: 'bg-errorSoft text-error',
+        Moderator: 'bg-warningSoft text-warning',
+        User: 'bg-primarySoft text-primary',
+    };
+    return classes[roleName] || 'bg-overlay text-textSecondary';
+}
+
+function getRoleBarClass(roleName: string): string {
+    const classes: Record<string, string> = {
+        Admin: 'bg-error',
+        Moderator: 'bg-warning',
+        User: 'bg-primary',
+    };
+    return classes[roleName] || 'bg-primary';
+}
+
+onMounted(async () => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get('/api/admin/stats', {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        stats.value = response.data.data;
+    } catch (err) {
+        console.error(err);
+    } finally {
+        loading.value = false;
+    }
+});
+</script>
+
 <template>
     <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-6xl lg:px-6">
         <div v-if="loading" class="flex justify-center py-20">
@@ -162,65 +224,3 @@
         </template>
     </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import axios from 'axios';
-
-const stats = ref<any>(null);
-const loading = ref(true);
-const $route = useRoute();
-
-const maxCategoryCount = computed(() => {
-    if (!stats.value?.recipesByCategory?.length) return 1;
-    return Math.max(...stats.value.recipesByCategory.map((c: any) => c.count));
-});
-
-const maxRoleCount = computed(() => {
-    if (!stats.value?.usersByRole?.length) return 1;
-    return Math.max(...stats.value.usersByRole.map((r: any) => r.count));
-});
-
-function categoryBarWidth(count: number): string {
-    const pct = Math.round((count / maxCategoryCount.value) * 100);
-    return `${Math.max(pct, 4)}%`;
-}
-
-function roleBarWidth(count: number): string {
-    const pct = Math.round((count / maxRoleCount.value) * 100);
-    return `${Math.max(pct, 4)}%`;
-}
-
-function getRoleBadgeClass(roleName: string): string {
-    const classes: Record<string, string> = {
-        Admin: 'bg-errorSoft text-error',
-        Moderator: 'bg-warningSoft text-warning',
-        User: 'bg-primarySoft text-primary',
-    };
-    return classes[roleName] || 'bg-overlay text-textSecondary';
-}
-
-function getRoleBarClass(roleName: string): string {
-    const classes: Record<string, string> = {
-        Admin: 'bg-error',
-        Moderator: 'bg-warning',
-        User: 'bg-primary',
-    };
-    return classes[roleName] || 'bg-primary';
-}
-
-onMounted(async () => {
-    try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get('/api/admin/stats', {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        stats.value = response.data.data;
-    } catch (err) {
-        console.error(err);
-    } finally {
-        loading.value = false;
-    }
-});
-</script>

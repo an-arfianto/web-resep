@@ -1,3 +1,185 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import axios from 'axios';
+import Pagination from '@/components/Pagination.vue';
+
+const users = ref<any[]>([]);
+const loading = ref(true);
+const currentPage = ref(1);
+const itemsPerPage = 10;
+
+const sortColumn = ref<string>('created_at');
+const sortDirection = ref<'asc' | 'desc'>('desc');
+
+const sortedUsers = computed(() => {
+    const sorted = [...users.value];
+    sorted.sort((a, b) => {
+        let aVal = a[sortColumn.value];
+        let bVal = b[sortColumn.value];
+        if (aVal === null || aVal === undefined) aVal = 0;
+        if (bVal === null || bVal === undefined) bVal = 0;
+        if (sortColumn.value === 'created_at') {
+            aVal = new Date(aVal).getTime();
+            bVal = new Date(bVal).getTime();
+        } else if (typeof aVal === 'string') {
+            aVal = aVal.toLowerCase();
+            bVal = bVal.toLowerCase();
+        }
+        if (aVal < bVal) return sortDirection.value === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortDirection.value === 'asc' ? 1 : -1;
+        return 0;
+    });
+    return sorted;
+});
+
+const paginatedUsers = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage;
+    return sortedUsers.value.slice(start, start + itemsPerPage);
+});
+
+function sortBy(column: string) {
+    if (sortColumn.value === column) {
+        sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortColumn.value = column;
+        sortDirection.value = 'asc';
+    }
+    currentPage.value = 1;
+}
+
+const showPromoteModal = ref(false);
+const showDemoteModal = ref(false);
+const showDeleteModal = ref(false);
+const pendingUser = ref<any>(null);
+const actionLoading = ref(false);
+const deleteConfirmed = ref(false);
+
+const showSuccessToast = ref(false);
+const successMessage = ref('');
+
+function showSuccess(msg: string) {
+    successMessage.value = msg;
+    showSuccessToast.value = true;
+    setTimeout(() => {
+        showSuccessToast.value = false;
+    }, 4000);
+}
+
+function openPromoteModal(user: any) {
+    pendingUser.value = user;
+    showPromoteModal.value = true;
+}
+function openDemoteModal(user: any) {
+    pendingUser.value = user;
+    showDemoteModal.value = true;
+}
+function openDeleteModal(user: any) {
+    pendingUser.value = user;
+    deleteConfirmed.value = false;
+    showDeleteModal.value = true;
+}
+
+function cancelPromote() {
+    showPromoteModal.value = false;
+    pendingUser.value = null;
+}
+function cancelDemote() {
+    showDemoteModal.value = false;
+    pendingUser.value = null;
+}
+function cancelDelete() {
+    showDeleteModal.value = false;
+    pendingUser.value = null;
+    deleteConfirmed.value = false;
+}
+
+onMounted(() => {
+    fetchUsers();
+});
+
+async function fetchUsers() {
+    try {
+        loading.value = true;
+        const token = localStorage.getItem('token');
+        const response = await axios.get('/api/admin/users', { headers: { Authorization: `Bearer ${token}` } });
+        users.value = response.data.data;
+    } catch (err) {
+        console.error(err);
+        alert('Failed to load users');
+    } finally {
+        loading.value = false;
+    }
+}
+
+async function confirmPromote() {
+    if (!pendingUser.value) return;
+    actionLoading.value = true;
+    try {
+        const token = localStorage.getItem('token');
+        await axios.put(
+            `/api/admin/users/${pendingUser.value.id}/promote`,
+            {},
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        await fetchUsers();
+        showSuccess(`${pendingUser.value.username} berhasil dipromosikan ke MODERATOR!`);
+    } catch (err: any) {
+        alert('Gagal mempromosikan user: ' + (err.response?.data?.message || err.message));
+    } finally {
+        actionLoading.value = false;
+        cancelPromote();
+    }
+}
+
+async function confirmDemote() {
+    if (!pendingUser.value) return;
+    actionLoading.value = true;
+    try {
+        const token = localStorage.getItem('token');
+        await axios.put(
+            `/api/admin/users/${pendingUser.value.id}/demote`,
+            {},
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        await fetchUsers();
+        showSuccess(`${pendingUser.value.username} berhasil diturunkan ke user.`);
+    } catch (err: any) {
+        alert('Gagal menurunkan user: ' + (err.response?.data?.message || err.message));
+    } finally {
+        actionLoading.value = false;
+        cancelDemote();
+    }
+}
+
+async function confirmDelete() {
+    if (!pendingUser.value) return;
+    actionLoading.value = true;
+    try {
+        const token = localStorage.getItem('token');
+        await axios.delete(`/api/admin/users/${pendingUser.value.id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        users.value = users.value.filter((u) => u.id !== pendingUser.value.id);
+        if (paginatedUsers.value.length === 0 && currentPage.value > 1) currentPage.value--;
+        showSuccess(`User "${pendingUser.value.username}" berhasil dihapus.`);
+    } catch (err: any) {
+        alert('Gagal menghapus user: ' + (err.response?.data?.message || err.message));
+    } finally {
+        actionLoading.value = false;
+        cancelDelete();
+    }
+}
+
+function formatDate(dateString: string) {
+    return new Date(dateString).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function handlePageChange(page: number) {
+    currentPage.value = page;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
 <template>
     <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-6xl lg:px-6">
         <div class="flex flex-wrap gap-3 justify-between items-start">
@@ -363,186 +545,3 @@
         </teleport>
     </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import axios from 'axios';
-import Pagination from '@/components/Pagination.vue';
-
-const users = ref<any[]>([]);
-const loading = ref(true);
-const currentPage = ref(1);
-const itemsPerPage = 10;
-
-const sortColumn = ref<string>('created_at');
-const sortDirection = ref<'asc' | 'desc'>('desc');
-
-const sortedUsers = computed(() => {
-    const sorted = [...users.value];
-    sorted.sort((a, b) => {
-        let aVal = a[sortColumn.value];
-        let bVal = b[sortColumn.value];
-        if (aVal === null || aVal === undefined) aVal = 0;
-        if (bVal === null || bVal === undefined) bVal = 0;
-        if (sortColumn.value === 'created_at') {
-            aVal = new Date(aVal).getTime();
-            bVal = new Date(bVal).getTime();
-        } else if (typeof aVal === 'string') {
-            aVal = aVal.toLowerCase();
-            bVal = bVal.toLowerCase();
-        }
-        if (aVal < bVal) return sortDirection.value === 'asc' ? -1 : 1;
-        if (aVal > bVal) return sortDirection.value === 'asc' ? 1 : -1;
-        return 0;
-    });
-    return sorted;
-});
-
-const paginatedUsers = computed(() => {
-    const start = (currentPage.value - 1) * itemsPerPage;
-    return sortedUsers.value.slice(start, start + itemsPerPage);
-});
-
-function sortBy(column: string) {
-    if (sortColumn.value === column) {
-        sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
-    } else {
-        sortColumn.value = column;
-        sortDirection.value = 'asc';
-    }
-    currentPage.value = 1;
-}
-
-// Modals
-const showPromoteModal = ref(false);
-const showDemoteModal = ref(false);
-const showDeleteModal = ref(false);
-const pendingUser = ref<any>(null);
-const actionLoading = ref(false);
-const deleteConfirmed = ref(false);
-
-const showSuccessToast = ref(false);
-const successMessage = ref('');
-
-function showSuccess(msg: string) {
-    successMessage.value = msg;
-    showSuccessToast.value = true;
-    setTimeout(() => {
-        showSuccessToast.value = false;
-    }, 4000);
-}
-
-function openPromoteModal(user: any) {
-    pendingUser.value = user;
-    showPromoteModal.value = true;
-}
-function openDemoteModal(user: any) {
-    pendingUser.value = user;
-    showDemoteModal.value = true;
-}
-function openDeleteModal(user: any) {
-    pendingUser.value = user;
-    deleteConfirmed.value = false;
-    showDeleteModal.value = true;
-}
-
-function cancelPromote() {
-    showPromoteModal.value = false;
-    pendingUser.value = null;
-}
-function cancelDemote() {
-    showDemoteModal.value = false;
-    pendingUser.value = null;
-}
-function cancelDelete() {
-    showDeleteModal.value = false;
-    pendingUser.value = null;
-    deleteConfirmed.value = false;
-}
-
-onMounted(() => {
-    fetchUsers();
-});
-
-async function fetchUsers() {
-    try {
-        loading.value = true;
-        const token = localStorage.getItem('token');
-        const response = await axios.get('/api/admin/users', { headers: { Authorization: `Bearer ${token}` } });
-        users.value = response.data.data;
-    } catch (err) {
-        console.error(err);
-        alert('Failed to load users');
-    } finally {
-        loading.value = false;
-    }
-}
-
-async function confirmPromote() {
-    if (!pendingUser.value) return;
-    actionLoading.value = true;
-    try {
-        const token = localStorage.getItem('token');
-        await axios.put(
-            `/api/admin/users/${pendingUser.value.id}/promote`,
-            {},
-            { headers: { Authorization: `Bearer ${token}` } }
-        );
-        await fetchUsers();
-        showSuccess(`${pendingUser.value.username} berhasil dipromosikan ke MODERATOR!`);
-    } catch (err: any) {
-        alert('Gagal mempromosikan user: ' + (err.response?.data?.message || err.message));
-    } finally {
-        actionLoading.value = false;
-        cancelPromote(); // Close modal after action completes
-    }
-}
-
-async function confirmDemote() {
-    if (!pendingUser.value) return;
-    actionLoading.value = true;
-    try {
-        const token = localStorage.getItem('token');
-        await axios.put(
-            `/api/admin/users/${pendingUser.value.id}/demote`,
-            {},
-            { headers: { Authorization: `Bearer ${token}` } }
-        );
-        await fetchUsers();
-        showSuccess(`${pendingUser.value.username} berhasil diturunkan ke user.`);
-    } catch (err: any) {
-        alert('Gagal menurunkan user: ' + (err.response?.data?.message || err.message));
-    } finally {
-        actionLoading.value = false;
-        cancelDemote();
-    }
-}
-
-async function confirmDelete() {
-    if (!pendingUser.value) return;
-    actionLoading.value = true;
-    try {
-        const token = localStorage.getItem('token');
-        await axios.delete(`/api/admin/users/${pendingUser.value.id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        users.value = users.value.filter((u) => u.id !== pendingUser.value.id);
-        if (paginatedUsers.value.length === 0 && currentPage.value > 1) currentPage.value--;
-        showSuccess(`User "${pendingUser.value.username}" berhasil dihapus.`);
-    } catch (err: any) {
-        alert('Gagal menghapus user: ' + (err.response?.data?.message || err.message));
-    } finally {
-        actionLoading.value = false;
-        cancelDelete();
-    }
-}
-
-function formatDate(dateString: string) {
-    return new Date(dateString).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
-}
-
-function handlePageChange(page: number) {
-    currentPage.value = page;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-</script>

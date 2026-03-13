@@ -1,3 +1,46 @@
+<script setup lang="ts">
+import { computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import { useRecipeStore } from '@/stores/recipeStore';
+import type { Recipe, Ingredient } from '@/types';
+
+const route = useRoute();
+const recipeStore = useRecipeStore();
+
+const recipe = computed<Recipe | null>(() => recipeStore.currentRecipe);
+
+const ingredientsList = computed<Ingredient[]>(() => {
+    if (!recipe.value) return [];
+
+    if (Array.isArray(recipe.value.ingredients)) {
+        return recipe.value.ingredients;
+    }
+
+    if (typeof recipe.value.ingredients === 'string') {
+        return recipe.value.ingredients.split(',').map((i) => ({
+            name: i.trim(),
+            quantity: null,
+            unit: null,
+        }));
+    }
+
+    return [];
+});
+
+function formatDate(dateString: string): string {
+    return new Date(dateString).toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+}
+
+onMounted(() => {
+    const id = Number(route.params.id);
+    recipeStore.fetchRecipeById(id);
+});
+</script>
+
 <template>
     <div class="flex flex-col gap-5 p-4 mx-auto w-full max-w-4xl lg:px-6">
         <button
@@ -81,46 +124,3 @@
         </div>
     </div>
 </template>
-
-<script setup lang="ts">
-import { computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import { useRecipeStore } from '@/stores/recipeStore';
-import type { Recipe, Ingredient } from '@/types';
-
-const route = useRoute();
-const recipeStore = useRecipeStore();
-
-const recipe = computed<Recipe | null>(() => recipeStore.currentRecipe);
-
-const ingredientsList = computed<Ingredient[]>(() => {
-    if (!recipe.value) return [];
-
-    if (Array.isArray(recipe.value.ingredients)) {
-        return recipe.value.ingredients;
-    }
-
-    if (typeof recipe.value.ingredients === 'string') {
-        return recipe.value.ingredients.split(',').map((i) => ({
-            name: i.trim(),
-            quantity: null,
-            unit: null,
-        }));
-    }
-
-    return [];
-});
-
-function formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
-}
-
-onMounted(() => {
-    const id = Number(route.params.id);
-    recipeStore.fetchRecipeById(id);
-});
-</script>

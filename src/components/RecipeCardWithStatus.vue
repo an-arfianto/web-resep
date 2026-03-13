@@ -1,3 +1,78 @@
+<script setup lang="ts">
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useRecipeStore } from '@/stores/recipeStore';
+import type { Recipe } from '@/types';
+
+const emit = defineEmits<{
+    (e: 'recipe-deleted', recipeName: string): void;
+}>();
+
+interface Props {
+    recipe: Recipe;
+}
+
+const props = defineProps<Props>();
+const router = useRouter();
+const recipeStore = useRecipeStore();
+
+const showDeleteModal = ref(false);
+const deleteLoading = ref(false);
+
+const statusStyles = {
+    pending: 'bg-warningSoft text-warning',
+    approved: 'bg-successSoft text-success',
+    rejected: 'bg-errorSoft text-error',
+};
+
+const statusText = {
+    pending: 'Pending',
+    approved: 'Disetujui',
+    rejected: 'Ditolak',
+};
+
+function formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+}
+
+function goToDetail() {
+    router.push(`/recipe/${props.recipe.id}`);
+}
+
+function goToEdit() {
+    router.push(`/edit-recipe/${props.recipe.id}`);
+}
+
+function openDeleteModal() {
+    showDeleteModal.value = true;
+}
+
+function closeDeleteModal() {
+    if (deleteLoading.value) return;
+    showDeleteModal.value = false;
+}
+
+async function confirmDelete() {
+    deleteLoading.value = true;
+    const recipeName = props.recipe.name;
+
+    try {
+        const success = await recipeStore.deleteRecipe(props.recipe.id);
+        if (success) {
+            emit('recipe-deleted', recipeName);
+            closeDeleteModal();
+        }
+    } finally {
+        deleteLoading.value = false;
+    }
+}
+</script>
+
 <template>
     <div class="card-interactive" @click="goToDetail">
         <div class="flex gap-3 justify-between items-start">
@@ -92,78 +167,3 @@
         </teleport>
     </div>
 </template>
-
-<script setup lang="ts">
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useRecipeStore } from '@/stores/recipeStore';
-import type { Recipe } from '@/types';
-
-const emit = defineEmits<{
-    (e: 'recipe-deleted', recipeName: string): void;
-}>();
-
-interface Props {
-    recipe: Recipe;
-}
-
-const props = defineProps<Props>();
-const router = useRouter();
-const recipeStore = useRecipeStore();
-
-const showDeleteModal = ref(false);
-const deleteLoading = ref(false);
-
-const statusStyles = {
-    pending: 'bg-warningSoft text-warning',
-    approved: 'bg-successSoft text-success',
-    rejected: 'bg-errorSoft text-error',
-};
-
-const statusText = {
-    pending: 'Pending',
-    approved: 'Disetujui',
-    rejected: 'Ditolak',
-};
-
-function formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('id-ID', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
-}
-
-function goToDetail() {
-    router.push(`/recipe/${props.recipe.id}`);
-}
-
-function goToEdit() {
-    router.push(`/edit-recipe/${props.recipe.id}`);
-}
-
-function openDeleteModal() {
-    showDeleteModal.value = true;
-}
-
-function closeDeleteModal() {
-    if (deleteLoading.value) return;
-    showDeleteModal.value = false;
-}
-
-async function confirmDelete() {
-    deleteLoading.value = true;
-    const recipeName = props.recipe.name;
-
-    try {
-        const success = await recipeStore.deleteRecipe(props.recipe.id);
-        if (success) {
-            emit('recipe-deleted', recipeName);
-            closeDeleteModal();
-        }
-    } finally {
-        deleteLoading.value = false;
-    }
-}
-</script>

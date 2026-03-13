@@ -1,3 +1,29 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import { useRecipeStore } from '@/stores/recipeStore';
+import RecipeCard from '@/components/RecipeCard.vue';
+import Pagination from '@/components/Pagination.vue';
+
+const recipeStore = useRecipeStore();
+const currentPage = ref(1);
+const itemsPerPage = 12;
+
+const paginatedRecipes = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return recipeStore.recipes.slice(start, end);
+});
+
+onMounted(() => {
+    recipeStore.fetchAllRecipes();
+});
+
+function handlePageChange(page: number) {
+    currentPage.value = page;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
 <template>
     <div class="flex flex-col gap-5 p-4 mx-auto w-full max-w-6xl lg:px-6">
         <div class="mb-12 text-center">
@@ -40,29 +66,3 @@
         </div>
     </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useRecipeStore } from '@/stores/recipeStore';
-import RecipeCard from '@/components/RecipeCard.vue';
-import Pagination from '@/components/Pagination.vue';
-
-const recipeStore = useRecipeStore();
-const currentPage = ref(1);
-const itemsPerPage = 12;
-
-const paginatedRecipes = computed(() => {
-    const start = (currentPage.value - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    return recipeStore.recipes.slice(start, end);
-});
-
-onMounted(() => {
-    recipeStore.fetchAllRecipes();
-});
-
-function handlePageChange(page: number) {
-    currentPage.value = page;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-</script>

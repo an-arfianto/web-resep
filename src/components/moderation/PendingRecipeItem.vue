@@ -1,3 +1,66 @@
+<script setup lang="ts">
+import { ref } from 'vue';
+import type { ModerationRecipe } from '@/types';
+
+interface Props {
+    recipe: ModerationRecipe;
+}
+interface Emits {
+    (e: 'approve', recipeId: number): void;
+    (e: 'reject', data: { recipeId: number; reason: string }): void;
+    (e: 'view-detail', recipe: ModerationRecipe): void;
+}
+
+const props = defineProps<Props>();
+const emit = defineEmits<Emits>();
+
+const showRejectModal = ref(false);
+const rejectionReason = ref('');
+const loading = ref(false);
+const showError = ref(false);
+
+function formatDate(d: string) {
+    return new Date(d).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function openRejectModal() {
+    rejectionReason.value = '';
+    showError.value = false;
+    showRejectModal.value = true;
+}
+function closeRejectModal() {
+    if (loading.value) return;
+    showRejectModal.value = false;
+    rejectionReason.value = '';
+    showError.value = false;
+}
+
+function handleApprove() {
+    if (loading.value) return;
+    loading.value = true;
+    emit('approve', props.recipe.id);
+    setTimeout(() => {
+        loading.value = false;
+    }, 600);
+}
+
+function handleReject() {
+    if (loading.value) return;
+    if (!rejectionReason.value.trim()) {
+        showError.value = true;
+        return;
+    }
+    loading.value = true;
+    showError.value = false;
+    emit('reject', { recipeId: props.recipe.id, reason: rejectionReason.value.trim() });
+    setTimeout(() => {
+        loading.value = false;
+        showRejectModal.value = false;
+        rejectionReason.value = '';
+    }, 600);
+}
+</script>
+
 <template>
     <div class="card-interactive">
         <div class="flex gap-2.5 justify-between items-start">
@@ -93,66 +156,3 @@
         </teleport>
     </div>
 </template>
-
-<script setup lang="ts">
-import { ref } from 'vue';
-import type { ModerationRecipe } from '@/types';
-
-interface Props {
-    recipe: ModerationRecipe;
-}
-interface Emits {
-    (e: 'approve', recipeId: number): void;
-    (e: 'reject', data: { recipeId: number; reason: string }): void;
-    (e: 'view-detail', recipe: ModerationRecipe): void;
-}
-
-const props = defineProps<Props>();
-const emit = defineEmits<Emits>();
-
-const showRejectModal = ref(false);
-const rejectionReason = ref('');
-const loading = ref(false);
-const showError = ref(false);
-
-function formatDate(d: string) {
-    return new Date(d).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
-}
-
-function openRejectModal() {
-    rejectionReason.value = '';
-    showError.value = false;
-    showRejectModal.value = true;
-}
-function closeRejectModal() {
-    if (loading.value) return;
-    showRejectModal.value = false;
-    rejectionReason.value = '';
-    showError.value = false;
-}
-
-function handleApprove() {
-    if (loading.value) return;
-    loading.value = true;
-    emit('approve', props.recipe.id);
-    setTimeout(() => {
-        loading.value = false;
-    }, 600);
-}
-
-function handleReject() {
-    if (loading.value) return;
-    if (!rejectionReason.value.trim()) {
-        showError.value = true;
-        return;
-    }
-    loading.value = true;
-    showError.value = false;
-    emit('reject', { recipeId: props.recipe.id, reason: rejectionReason.value.trim() });
-    setTimeout(() => {
-        loading.value = false;
-        showRejectModal.value = false;
-        rejectionReason.value = '';
-    }, 600);
-}
-</script>

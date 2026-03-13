@@ -1,3 +1,72 @@
+<script setup lang="ts">
+import { reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useRecipeStore } from '@/stores/recipeStore';
+import type { CreateRecipeData } from '@/types';
+
+const router = useRouter();
+const recipeStore = useRecipeStore();
+
+const loading = ref<boolean>(false);
+const error = ref<string | null>(null);
+
+const showSuccessToast = ref(false);
+const successMessage = ref('');
+
+const formData = reactive<CreateRecipeData>({
+    name: '',
+    category: '',
+    description: '',
+    instructions: '',
+    ingredients: [{ name: '', quantity: null, unit: '' }],
+});
+
+function showSuccess(msg: string) {
+    successMessage.value = msg;
+    showSuccessToast.value = true;
+    setTimeout(() => {
+        showSuccessToast.value = false;
+    }, 4000);
+}
+
+function addIngredient() {
+    formData.ingredients.push({ name: '', quantity: null, unit: '' });
+}
+
+function removeIngredient(index: number) {
+    if (formData.ingredients.length > 1) {
+        formData.ingredients.splice(index, 1);
+    }
+}
+
+async function handleSubmit() {
+    error.value = null;
+
+    const validIngredients = formData.ingredients.filter((i) => i.name.trim() !== '');
+
+    if (validIngredients.length === 0) {
+        error.value = 'Tambah minimal 1 bahan';
+        return;
+    }
+
+    loading.value = true;
+    const result = await recipeStore.createRecipe({
+        ...formData,
+        ingredients: validIngredients,
+    });
+    loading.value = false;
+
+    if (result) {
+        showSuccess(`Resep "${formData.name}" berhasil ditambahkan!`);
+        setTimeout(() => {
+            router.push(`/recipe/${result.data.id}`);
+        }, 1000);
+    } else {
+        error.value = recipeStore.error || 'Gagal Membuat Resep';
+    }
+}
+</script>
+
 <template>
     <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-4xl lg:px-6">
         <div class="card">
@@ -171,72 +240,3 @@
         </teleport>
     </div>
 </template>
-
-<script setup lang="ts">
-import { reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useRecipeStore } from '@/stores/recipeStore';
-import type { CreateRecipeData } from '@/types';
-
-const router = useRouter();
-const recipeStore = useRecipeStore();
-
-const loading = ref<boolean>(false);
-const error = ref<string | null>(null);
-
-const showSuccessToast = ref(false);
-const successMessage = ref('');
-
-const formData = reactive<CreateRecipeData>({
-    name: '',
-    category: '',
-    description: '',
-    instructions: '',
-    ingredients: [{ name: '', quantity: null, unit: '' }],
-});
-
-function showSuccess(msg: string) {
-    successMessage.value = msg;
-    showSuccessToast.value = true;
-    setTimeout(() => {
-        showSuccessToast.value = false;
-    }, 4000);
-}
-
-function addIngredient() {
-    formData.ingredients.push({ name: '', quantity: null, unit: '' });
-}
-
-function removeIngredient(index: number) {
-    if (formData.ingredients.length > 1) {
-        formData.ingredients.splice(index, 1);
-    }
-}
-
-async function handleSubmit() {
-    error.value = null;
-
-    const validIngredients = formData.ingredients.filter((i) => i.name.trim() !== '');
-
-    if (validIngredients.length === 0) {
-        error.value = 'Tambah minimal 1 bahan';
-        return;
-    }
-
-    loading.value = true;
-    const result = await recipeStore.createRecipe({
-        ...formData,
-        ingredients: validIngredients,
-    });
-    loading.value = false;
-
-    if (result) {
-        showSuccess(`Resep "${formData.name}" berhasil ditambahkan!`);
-        setTimeout(() => {
-            router.push(`/recipe/${result.data.id}`);
-        }, 1000);
-    } else {
-        error.value = recipeStore.error || 'Gagal Membuat Resep';
-    }
-}
-</script>

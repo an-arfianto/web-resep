@@ -1,3 +1,66 @@
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore';
+import { useModerationStore } from '@/stores/moderationStore';
+
+const router = useRouter();
+const authStore = useAuthStore();
+const moderationStore = useModerationStore();
+const dropdownRef = ref<HTMLElement | null>(null);
+const isDropdownOpen = ref(false);
+const isMobileMenuOpen = ref(false);
+
+const isAdmin = computed(() => authStore.user?.role_id === 1);
+const isModerator = computed(() => authStore.user?.role_id === 2);
+const pendingCount = computed(() => moderationStore.stats.pending);
+
+onMounted(async () => {
+    if (isModerator.value || isAdmin.value) {
+        await moderationStore.fetchStats();
+    }
+
+    document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('click', handleClickOutside);
+});
+
+function toggleDropdown() {
+    isDropdownOpen.value = !isDropdownOpen.value;
+}
+
+function closeDropdown() {
+    isDropdownOpen.value = false;
+}
+
+function toggleMobileMenu() {
+    isMobileMenuOpen.value = !isMobileMenuOpen.value;
+}
+
+function closeMobileMenu() {
+    isMobileMenuOpen.value = false;
+}
+
+function handleClickOutside(event: MouseEvent) {
+    if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
+        closeDropdown();
+    }
+}
+
+function getUserInitial(): string {
+    return authStore.user?.username?.charAt(0).toUpperCase() || 'U';
+}
+
+function handleLogout() {
+    closeDropdown();
+    closeMobileMenu();
+    authStore.logout();
+    router.push('/login');
+}
+</script>
+
 <template>
     <nav class="sticky top-0 z-50 border-b bg-surface border-divider shadow-xs">
         <div class="container px-4 mx-auto">
@@ -224,67 +287,3 @@
         </div>
     </nav>
 </template>
-
-<script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/authStore';
-import { useModerationStore } from '@/stores/moderationStore';
-
-const router = useRouter();
-const authStore = useAuthStore();
-const moderationStore = useModerationStore();
-const dropdownRef = ref<HTMLElement | null>(null);
-const isDropdownOpen = ref(false);
-const isMobileMenuOpen = ref(false);
-
-const isAdmin = computed(() => authStore.user?.role_id === 1);
-const isModerator = computed(() => authStore.user?.role_id === 2);
-const pendingCount = computed(() => moderationStore.stats.pending);
-
-// mendapatkan jumlah resep pending
-onMounted(async () => {
-    if (isModerator.value || isAdmin.value) {
-        await moderationStore.fetchStats();
-    }
-
-    document.addEventListener('click', handleClickOutside);
-});
-
-onUnmounted(() => {
-    document.removeEventListener('click', handleClickOutside);
-});
-
-function toggleDropdown() {
-    isDropdownOpen.value = !isDropdownOpen.value;
-}
-
-function closeDropdown() {
-    isDropdownOpen.value = false;
-}
-
-function toggleMobileMenu() {
-    isMobileMenuOpen.value = !isMobileMenuOpen.value;
-}
-
-function closeMobileMenu() {
-    isMobileMenuOpen.value = false;
-}
-
-function handleClickOutside(event: MouseEvent) {
-    if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
-        closeDropdown();
-    }
-}
-
-function getUserInitial(): string {
-    return authStore.user?.username?.charAt(0).toUpperCase() || 'U';
-}
-
-function handleLogout() {
-    closeDropdown();
-    closeMobileMenu();
-    authStore.logout();
-    router.push('/login');
-}
-</script>

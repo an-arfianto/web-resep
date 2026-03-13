@@ -1,3 +1,106 @@
+<script setup lang="ts">
+import { reactive, ref, computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useRecipeStore } from '@/stores/recipeStore';
+import type { CreateRecipeData, Recipe, Ingredient } from '@/types';
+
+const route = useRoute();
+const router = useRouter();
+const recipeStore = useRecipeStore();
+
+const loading = ref<boolean>(false);
+const error = ref<string | null>(null);
+
+const showSuccessToast = ref(false);
+const successMessage = ref('');
+
+const recipe = computed<Recipe | null>(() => recipeStore.currentRecipe);
+
+const formData = reactive<CreateRecipeData>({
+    name: '',
+    category: '',
+    description: '',
+    instructions: '',
+    ingredients: [{ name: '', quantity: null, unit: '' }],
+});
+
+function showSuccess(msg: string) {
+    successMessage.value = msg;
+    showSuccessToast.value = true;
+    setTimeout(() => {
+        showSuccessToast.value = false;
+    }, 4000);
+}
+
+function populateForm(recipe: Recipe) {
+    formData.name = recipe.name;
+    formData.category = recipe.category;
+    formData.description = recipe.description || '';
+    formData.instructions = recipe.instructions || '';
+
+    if (Array.isArray(recipe.ingredients)) {
+        formData.ingredients = recipe.ingredients.map((ing: Ingredient) => ({
+            name: ing.name,
+            quantity: ing.quantity || null,
+            unit: ing.unit || '',
+        }));
+    } else if (typeof recipe.ingredients === 'string') {
+        const parsed = recipe.ingredients.split(',').map((item: string) => ({
+            name: item.trim(),
+            quantity: null,
+            unit: '',
+        }));
+        formData.ingredients = parsed.length > 0 ? parsed : [{ name: '', quantity: null, unit: '' }];
+    }
+}
+
+function addIngredient() {
+    formData.ingredients.push({ name: '', quantity: null, unit: '' });
+}
+
+function removeIngredient(index: number) {
+    if (formData.ingredients.length > 1) {
+        formData.ingredients.splice(index, 1);
+    }
+}
+
+async function handleSubmit() {
+    error.value = null;
+
+    const validIngredients = formData.ingredients.filter((i) => i.name.trim() !== '');
+
+    if (validIngredients.length === 0) {
+        error.value = 'Tambah minimal 1 bahan';
+        return;
+    }
+
+    loading.value = true;
+    const recipeId = Number(route.params.id);
+    const result = await recipeStore.updateRecipe(recipeId, {
+        ...formData,
+        ingredients: validIngredients,
+    });
+    loading.value = false;
+
+    if (result) {
+        showSuccess(`Resep "${formData.name}" berhasil diperbarui!`);
+        setTimeout(() => {
+            router.push(`/recipe/${recipeId}`);
+        }, 1000);
+    } else {
+        error.value = recipeStore.error || 'Gagal Memperbarui Resep';
+    }
+}
+
+onMounted(async () => {
+    const id = Number(route.params.id);
+    await recipeStore.fetchRecipeById(id);
+    if (recipe.value) {
+        populateForm(recipe.value);
+    }
+});
+</script>
+
 <template>
     <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-4xl lg:px-6">
         <div class="card">
@@ -175,106 +278,3 @@
         </teleport>
     </div>
 </template>
-
-<script setup lang="ts">
-import { reactive, ref, computed, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useRecipeStore } from '@/stores/recipeStore';
-import type { CreateRecipeData, Recipe, Ingredient } from '@/types';
-
-const route = useRoute();
-const router = useRouter();
-const recipeStore = useRecipeStore();
-
-const loading = ref<boolean>(false);
-const error = ref<string | null>(null);
-
-const showSuccessToast = ref(false);
-const successMessage = ref('');
-
-const recipe = computed<Recipe | null>(() => recipeStore.currentRecipe);
-
-const formData = reactive<CreateRecipeData>({
-    name: '',
-    category: '',
-    description: '',
-    instructions: '',
-    ingredients: [{ name: '', quantity: null, unit: '' }],
-});
-
-function showSuccess(msg: string) {
-    successMessage.value = msg;
-    showSuccessToast.value = true;
-    setTimeout(() => {
-        showSuccessToast.value = false;
-    }, 4000);
-}
-
-function populateForm(recipe: Recipe) {
-    formData.name = recipe.name;
-    formData.category = recipe.category;
-    formData.description = recipe.description || '';
-    formData.instructions = recipe.instructions || '';
-
-    if (Array.isArray(recipe.ingredients)) {
-        formData.ingredients = recipe.ingredients.map((ing: Ingredient) => ({
-            name: ing.name,
-            quantity: ing.quantity || null,
-            unit: ing.unit || '',
-        }));
-    } else if (typeof recipe.ingredients === 'string') {
-        const parsed = recipe.ingredients.split(',').map((item: string) => ({
-            name: item.trim(),
-            quantity: null,
-            unit: '',
-        }));
-        formData.ingredients = parsed.length > 0 ? parsed : [{ name: '', quantity: null, unit: '' }];
-    }
-}
-
-function addIngredient() {
-    formData.ingredients.push({ name: '', quantity: null, unit: '' });
-}
-
-function removeIngredient(index: number) {
-    if (formData.ingredients.length > 1) {
-        formData.ingredients.splice(index, 1);
-    }
-}
-
-async function handleSubmit() {
-    error.value = null;
-
-    const validIngredients = formData.ingredients.filter((i) => i.name.trim() !== '');
-
-    if (validIngredients.length === 0) {
-        error.value = 'Tambah minimal 1 bahan';
-        return;
-    }
-
-    loading.value = true;
-    const recipeId = Number(route.params.id);
-    const result = await recipeStore.updateRecipe(recipeId, {
-        ...formData,
-        ingredients: validIngredients,
-    });
-    loading.value = false;
-
-    if (result) {
-        showSuccess(`Resep "${formData.name}" berhasil diperbarui!`);
-        setTimeout(() => {
-            router.push(`/recipe/${recipeId}`);
-        }, 1000);
-    } else {
-        error.value = recipeStore.error || 'Gagal Memperbarui Resep';
-    }
-}
-
-onMounted(async () => {
-    const id = Number(route.params.id);
-    await recipeStore.fetchRecipeById(id);
-    if (recipe.value) {
-        populateForm(recipe.value);
-    }
-});
-</script>

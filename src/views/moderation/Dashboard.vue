@@ -1,3 +1,249 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import { useModerationStore } from '@/stores/moderationStore';
+import { useAuthStore } from '@/stores/authStore';
+import PendingRecipeItem from '@/components/moderation/PendingRecipeItem.vue';
+import ReviewedRecipeItem from '@/components/moderation/ReviewedRecipeItem.vue';
+import Pagination from '@/components/Pagination.vue';
+import type { ModerationRecipe } from '@/types';
+
+const moderationStore = useModerationStore();
+const authStore = useAuthStore();
+
+type TabKey = 'pending' | 'reviewed' | 'all';
+
+interface Toast {
+    id: number;
+    type: 'success' | 'error';
+    message: string;
+}
+
+const toasts = ref<Toast[]>([]);
+let toastId = 0;
+
+function showToast(type: Toast['type'], message: string, duration = 4000) {
+    const id = ++toastId;
+    toasts.value.push({ id, type, message });
+    setTimeout(() => removeToast(id), duration);
+}
+
+function removeToast(id: number) {
+    toasts.value = toasts.value.filter((t) => t.id !== id);
+}
+
+const navItems: { key: TabKey; label: string }[] = [
+    { key: 'pending', label: 'Review Pending' },
+    { key: 'reviewed', label: 'Review Saya' },
+    { key: 'all', label: 'Semua Resep' },
+];
+
+const activeTab = ref<TabKey>('pending');
+const currentNav = computed(() => navItems.find((n) => n.key === activeTab.value));
+const panelSubtitle = computed(
+    () =>
+        ({
+            pending: `${moderationStore.pendingRecipes.length} resep menunggu review`,
+            reviewed: `${reviewedRecipes.value.length} resep telah Anda review`,
+            all: `${moderationStore.allRecipes.length} total resep terdaftar`,
+        })[activeTab.value]
+);
+
+const reviewedRecipes = ref<ModerationRecipe[]>([]);
+const reviewedLoaded = ref(false);
+const loadingReviewed = ref(false);
+const allLoaded = ref(false);
+const loadingAll = ref(false);
+
+const showDetailModal = ref(false);
+const showRejectModal = ref(false);
+const selectedRecipe = ref<ModerationRecipe | null>(null);
+const rejectionReason = ref('');
+const showRejectError = ref(false);
+const modalActionLoading = ref(false);
+
+const currentPagePending = ref(1);
+const currentPageReviewed = ref(1);
+const currentPageAll = ref(1);
+const itemsPerPage = 10;
+
+const currentUserId = computed(() => authStore.user?.id);
+
+const paginatedPendingRecipes = computed(() => {
+    const s = (currentPagePending.value - 1) * itemsPerPage;
+    return moderationStore.pendingRecipes.slice(s, s + itemsPerPage);
+});
+
+const paginatedReviewedRecipes = computed(() => {
+    const s = (currentPageReviewed.value - 1) * itemsPerPage;
+    return reviewedRecipes.value.slice(s, s + itemsPerPage);
+});
+
+const paginatedAllRecipes = computed(() => {
+    const s = (currentPageAll.value - 1) * itemsPerPage;
+    return moderationStore.allRecipes.slice(s, s + itemsPerPage);
+});
+
+onMounted(async () => {
+    await moderationStore.fetchStats();
+    await moderationStore.fetchPendingRecipes();
+});
+
+async function handleTabChange(tab: TabKey) {
+    activeTab.value = tab;
+    if (tab === 'reviewed' && !reviewedLoaded.value) {
+        loadingReviewed.value = true;
+        try {
+            await moderationStore.fetchAllRecipes();
+            rebuildReviewedCache();
+            reviewedLoaded.value = true;
+        } finally {
+            loadingReviewed.value = false;
+        }
+    }
+    if (tab === 'all' && !allLoaded.value) {
+        loadingAll.value = true;
+        try {
+            await moderationStore.fetchAllRecipes();
+            allLoaded.value = true;
+        } finally {
+            loadingAll.value = false;
+        }
+    }
+}
+
+function rebuildReviewedCache() {
+    const uid = Number(currentUserId.value);
+    reviewedRecipes.value = moderationStore.allRecipes.filter(
+        (r) => Number(r.reviewed_by) === uid && r.status !== 'pending'
+    );
+}
+
+function openRecipeDetail(recipe: ModerationRecipe) {
+    selectedRecipe.value = recipe;
+    showDetailModal.value = true;
+}
+
+function closeDetailModal() {
+    showDetailModal.value = false;
+    selectedRecipe.value = null;
+}
+
+function openRejectModal() {
+    rejectionReason.value = '';
+    showRejectError.value = false;
+    showRejectModal.value = true;
+}
+
+function closeRejectModal() {
+    if (modalActionLoading.value) return;
+    showRejectModal.value = false;
+    rejectionReason.value = '';
+    showRejectError.value = false;
+}
+
+function invalidateCaches() {
+    reviewedLoaded.value = false;
+    allLoaded.value = false;
+}
+
+async function handleApprove(recipeId: number) {
+    try {
+        const success = await moderationStore.approveRecipe(recipeId);
+        if (success) {
+            invalidateCaches();
+            showToast('success', 'Resep berhasil disetujui.');
+            if (paginatedPendingRecipes.value.length === 0 && currentPagePending.value > 1) currentPagePending.value--;
+        }
+    } catch (err: any) {
+        showToast('error', err?.response?.data?.message ?? err.message ?? 'Gagal menyetujui resep.');
+    }
+}
+
+async function handleReject(data: { recipeId: number; reason: string }) {
+    try {
+        const success = await moderationStore.rejectRecipe(data.recipeId, data.reason);
+        if (success) {
+            invalidateCaches();
+            showToast('success', 'Resep berhasil ditolak.');
+            if (paginatedPendingRecipes.value.length === 0 && currentPagePending.value > 1) currentPagePending.value--;
+        }
+    } catch (err: any) {
+        showToast('error', err?.response?.data?.message ?? err.message ?? 'Gagal menolak resep.');
+    }
+}
+
+async function handleApproveFromModal(recipeId: number) {
+    modalActionLoading.value = true;
+    try {
+        const success = await moderationStore.approveRecipe(recipeId);
+        if (success) {
+            invalidateCaches();
+            showToast('success', 'Resep berhasil disetujui.');
+            closeDetailModal();
+        }
+    } catch (err: any) {
+        showToast('error', err?.response?.data?.message ?? err.message ?? 'Gagal menyetujui resep.');
+    } finally {
+        modalActionLoading.value = false;
+    }
+}
+
+async function handleRejectFromModal() {
+    if (!rejectionReason.value.trim()) {
+        showRejectError.value = true;
+        return;
+    }
+    modalActionLoading.value = true;
+    try {
+        const success = await moderationStore.rejectRecipe(selectedRecipe.value!.id, rejectionReason.value.trim());
+        if (success) {
+            invalidateCaches();
+            showToast('success', 'Resep berhasil ditolak.');
+            closeRejectModal();
+            closeDetailModal();
+        }
+    } catch (err: any) {
+        showToast('error', err?.response?.data?.message ?? err.message ?? 'Gagal menolak resep.');
+        closeRejectModal();
+    } finally {
+        modalActionLoading.value = false;
+    }
+}
+
+function statusBadgeClass(status: string) {
+    return (
+        {
+            approved: 'bg-successSoft text-success',
+            pending: 'bg-warningSoft text-warning',
+            rejected: 'bg-errorSoft text-error',
+        }[status] ?? 'bg-warningSoft text-warning'
+    );
+}
+
+function getStatusText(status: string) {
+    return { approved: 'Disetujui', pending: 'Pending', rejected: 'Ditolak' }[status] ?? status;
+}
+
+function formatDate(dateString: string) {
+    return new Date(dateString).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function handlePageChangePending(page: number) {
+    currentPagePending.value = page;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function handlePageChangeReviewed(page: number) {
+    currentPageReviewed.value = page;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function handlePageChangeAll(page: number) {
+    currentPageAll.value = page;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
 <template>
     <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-6xl lg:px-6">
         <div class="grid overflow-hidden grid-cols-2 gap-px rounded-2xl shadow-sm lg:flex lg:gap-0 bg-divider">
@@ -342,242 +588,3 @@
         </teleport>
     </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useModerationStore } from '@/stores/moderationStore';
-import { useAuthStore } from '@/stores/authStore';
-import PendingRecipeItem from '@/components/moderation/PendingRecipeItem.vue';
-import ReviewedRecipeItem from '@/components/moderation/ReviewedRecipeItem.vue';
-import Pagination from '@/components/Pagination.vue';
-import type { ModerationRecipe } from '@/types';
-
-const moderationStore = useModerationStore();
-const authStore = useAuthStore();
-
-type TabKey = 'pending' | 'reviewed' | 'all';
-
-interface Toast {
-    id: number;
-    type: 'success' | 'error';
-    message: string;
-}
-const toasts = ref<Toast[]>([]);
-let toastId = 0;
-
-function showToast(type: Toast['type'], message: string, duration = 4000) {
-    const id = ++toastId;
-    toasts.value.push({ id, type, message });
-    setTimeout(() => removeToast(id), duration);
-}
-
-function removeToast(id: number) {
-    toasts.value = toasts.value.filter((t) => t.id !== id);
-}
-
-// Navigation
-const navItems: { key: TabKey; label: string }[] = [
-    { key: 'pending', label: 'Review Pending' },
-    { key: 'reviewed', label: 'Review Saya' },
-    { key: 'all', label: 'Semua Resep' },
-];
-
-const activeTab = ref<TabKey>('pending');
-const currentNav = computed(() => navItems.find((n) => n.key === activeTab.value));
-const panelSubtitle = computed(
-    () =>
-        ({
-            pending: `${moderationStore.pendingRecipes.length} resep menunggu review`,
-            reviewed: `${reviewedRecipes.value.length} resep telah Anda review`,
-            all: `${moderationStore.allRecipes.length} total resep terdaftar`,
-        })[activeTab.value]
-);
-
-// Tab cache
-const reviewedRecipes = ref<ModerationRecipe[]>([]);
-const reviewedLoaded = ref(false);
-const loadingReviewed = ref(false);
-const allLoaded = ref(false);
-const loadingAll = ref(false);
-
-// Modals
-const showDetailModal = ref(false);
-const showRejectModal = ref(false);
-const selectedRecipe = ref<ModerationRecipe | null>(null);
-const rejectionReason = ref('');
-const showRejectError = ref(false);
-const modalActionLoading = ref(false);
-
-// Pagination
-const currentPagePending = ref(1);
-const currentPageReviewed = ref(1);
-const currentPageAll = ref(1);
-const itemsPerPage = 10;
-
-const currentUserId = computed(() => authStore.user?.id);
-
-const paginatedPendingRecipes = computed(() => {
-    const s = (currentPagePending.value - 1) * itemsPerPage;
-    return moderationStore.pendingRecipes.slice(s, s + itemsPerPage);
-});
-const paginatedReviewedRecipes = computed(() => {
-    const s = (currentPageReviewed.value - 1) * itemsPerPage;
-    return reviewedRecipes.value.slice(s, s + itemsPerPage);
-});
-const paginatedAllRecipes = computed(() => {
-    const s = (currentPageAll.value - 1) * itemsPerPage;
-    return moderationStore.allRecipes.slice(s, s + itemsPerPage);
-});
-
-onMounted(async () => {
-    await moderationStore.fetchStats();
-    await moderationStore.fetchPendingRecipes();
-});
-
-async function handleTabChange(tab: TabKey) {
-    activeTab.value = tab;
-    if (tab === 'reviewed' && !reviewedLoaded.value) {
-        loadingReviewed.value = true;
-        try {
-            await moderationStore.fetchAllRecipes();
-            rebuildReviewedCache();
-            reviewedLoaded.value = true;
-        } finally {
-            loadingReviewed.value = false;
-        }
-    }
-    if (tab === 'all' && !allLoaded.value) {
-        loadingAll.value = true;
-        try {
-            await moderationStore.fetchAllRecipes();
-            allLoaded.value = true;
-        } finally {
-            loadingAll.value = false;
-        }
-    }
-}
-
-function rebuildReviewedCache() {
-    const uid = Number(currentUserId.value);
-    reviewedRecipes.value = moderationStore.allRecipes.filter(
-        (r) => Number(r.reviewed_by) === uid && r.status !== 'pending'
-    );
-}
-
-function openRecipeDetail(recipe: ModerationRecipe) {
-    selectedRecipe.value = recipe;
-    showDetailModal.value = true;
-}
-function closeDetailModal() {
-    showDetailModal.value = false;
-    selectedRecipe.value = null;
-}
-function openRejectModal() {
-    rejectionReason.value = '';
-    showRejectError.value = false;
-    showRejectModal.value = true;
-}
-function closeRejectModal() {
-    if (modalActionLoading.value) return;
-    showRejectModal.value = false;
-    rejectionReason.value = '';
-    showRejectError.value = false;
-}
-
-function invalidateCaches() {
-    reviewedLoaded.value = false;
-    allLoaded.value = false;
-}
-
-async function handleApprove(recipeId: number) {
-    try {
-        const success = await moderationStore.approveRecipe(recipeId);
-        if (success) {
-            invalidateCaches();
-            showToast('success', 'Resep berhasil disetujui.');
-            if (paginatedPendingRecipes.value.length === 0 && currentPagePending.value > 1) currentPagePending.value--;
-        }
-    } catch (err: any) {
-        showToast('error', err?.response?.data?.message ?? err.message ?? 'Gagal menyetujui resep.');
-    }
-}
-
-async function handleReject(data: { recipeId: number; reason: string }) {
-    try {
-        const success = await moderationStore.rejectRecipe(data.recipeId, data.reason);
-        if (success) {
-            invalidateCaches();
-            showToast('success', 'Resep berhasil ditolak.');
-            if (paginatedPendingRecipes.value.length === 0 && currentPagePending.value > 1) currentPagePending.value--;
-        }
-    } catch (err: any) {
-        showToast('error', err?.response?.data?.message ?? err.message ?? 'Gagal menolak resep.');
-    }
-}
-
-async function handleApproveFromModal(recipeId: number) {
-    modalActionLoading.value = true;
-    try {
-        const success = await moderationStore.approveRecipe(recipeId);
-        if (success) {
-            invalidateCaches();
-            showToast('success', 'Resep berhasil disetujui.');
-            closeDetailModal();
-        }
-    } catch (err: any) {
-        showToast('error', err?.response?.data?.message ?? err.message ?? 'Gagal menyetujui resep.');
-    } finally {
-        modalActionLoading.value = false;
-    }
-}
-
-async function handleRejectFromModal() {
-    if (!rejectionReason.value.trim()) {
-        showRejectError.value = true;
-        return;
-    }
-    modalActionLoading.value = true;
-    try {
-        const success = await moderationStore.rejectRecipe(selectedRecipe.value!.id, rejectionReason.value.trim());
-        if (success) {
-            invalidateCaches();
-            showToast('success', 'Resep berhasil ditolak.');
-            closeRejectModal();
-            closeDetailModal();
-        }
-    } catch (err: any) {
-        showToast('error', err?.response?.data?.message ?? err.message ?? 'Gagal menolak resep.');
-        closeRejectModal();
-    } finally {
-        modalActionLoading.value = false;
-    }
-}
-
-function statusBadgeClass(status: string) {
-    return (
-        {
-            approved: 'bg-successSoft text-success',
-            pending: 'bg-warningSoft text-warning',
-            rejected: 'bg-errorSoft text-error',
-        }[status] ?? 'bg-warningSoft text-warning'
-    );
-}
-function getStatusText(status: string) {
-    return { approved: 'Disetujui', pending: 'Pending', rejected: 'Ditolak' }[status] ?? status;
-}
-function formatDate(dateString: string) {
-    return new Date(dateString).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
-}
-function handlePageChangePending(page: number) {
-    currentPagePending.value = page;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-function handlePageChangeReviewed(page: number) {
-    currentPageReviewed.value = page;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-function handlePageChangeAll(page: number) {
-    currentPageAll.value = page;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-</script>

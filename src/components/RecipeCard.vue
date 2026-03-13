@@ -1,3 +1,19 @@
+<script setup lang="ts">
+import { useRouter } from 'vue-router';
+import type { Recipe } from '@/types';
+
+interface Props {
+    recipe: Recipe;
+}
+
+const props = defineProps<Props>();
+const router = useRouter();
+
+function goToDetail(): void {
+    router.push(`/recipe/${props.recipe.id}`);
+}
+</script>
+
 <template>
     <div class="card-interactive" @click="goToDetail">
         <div class="flex gap-2 justify-between items-start mb-1">
@@ -28,19 +44,3 @@
         </button>
     </div>
 </template>
-
-<script setup lang="ts">
-import { useRouter } from 'vue-router';
-import type { Recipe } from '@/types';
-
-interface Props {
-    recipe: Recipe;
-}
-
-const props = defineProps<Props>();
-const router = useRouter();
-
-function goToDetail(): void {
-    router.push(`/recipe/${props.recipe.id}`);
-}
-</script>

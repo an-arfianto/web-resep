@@ -1,3 +1,33 @@
+<script setup lang="ts">
+import { reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore';
+import type { RegisterData } from '@/types';
+
+const router = useRouter();
+const authStore = useAuthStore();
+
+const formData = reactive<RegisterData>({
+    username: '',
+    password: '',
+    role_id: 3,
+});
+
+const confirmPassword = ref<string>('');
+
+async function handleRegister(): Promise<void> {
+    if (formData.password !== confirmPassword.value) {
+        authStore.error = 'Password tidak sama';
+        return;
+    }
+
+    const success = await authStore.register(formData);
+    if (success) {
+        router.push('/');
+    }
+}
+</script>
+
 <template>
     <div class="flex flex-col gap-5 p-4 mx-auto w-full max-w-xl lg:px-6">
         <div class="card">
@@ -60,33 +90,3 @@
         </div>
     </div>
 </template>
-
-<script setup lang="ts">
-import { reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/authStore';
-import type { RegisterData } from '@/types';
-
-const router = useRouter();
-const authStore = useAuthStore();
-
-const formData = reactive<RegisterData>({
-    username: '',
-    password: '',
-    role_id: 3,
-});
-
-const confirmPassword = ref<string>('');
-
-async function handleRegister(): Promise<void> {
-    if (formData.password !== confirmPassword.value) {
-        authStore.error = 'Password tidak sama';
-        return;
-    }
-
-    const success = await authStore.register(formData);
-    if (success) {
-        router.push('/');
-    }
-}
-</script>

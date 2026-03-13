@@ -94,13 +94,11 @@ export const useModerationStore = defineStore('moderation', () => {
         try {
             await api.moderation.approve(id);
 
-            // update state
             pendingRecipes.value = pendingRecipes.value.filter((r) => r.id !== id);
             if (currentRecipe.value?.id === id) {
                 currentRecipe.value.status = 'approved';
             }
 
-            // refresh stats
             await fetchStats();
 
             return true;
@@ -116,14 +114,12 @@ export const useModerationStore = defineStore('moderation', () => {
         try {
             await api.moderation.reject(id, reason);
 
-            // update state
             pendingRecipes.value = pendingRecipes.value.filter((r) => r.id !== id);
             if (currentRecipe.value?.id === id) {
                 currentRecipe.value.status = 'rejected';
                 currentRecipe.value.rejection_reason = reason || null;
             }
 
-            // refresh stats
             await fetchStats();
 
             return true;

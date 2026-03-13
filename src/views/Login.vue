@@ -1,3 +1,33 @@
+<script setup lang="ts">
+import { reactive } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore';
+import type { LoginCredentials } from '@/types';
+
+const router = useRouter();
+const authStore = useAuthStore();
+
+const formData = reactive<LoginCredentials>({
+    username: '',
+    password: '',
+});
+
+async function handleLogin(): Promise<void> {
+    const success = await authStore.login(formData);
+    if (success) {
+        const userRole = authStore.user?.role_id;
+
+        if (userRole === 1) {
+            router.push('/admin');
+        } else if (userRole === 2) {
+            router.push('/moderation');
+        } else {
+            router.push('/');
+        }
+    }
+}
+</script>
+
 <template>
     <div class="flex flex-col gap-5 p-4 mx-auto w-full max-w-xl lg:px-6">
         <div class="card">
@@ -48,33 +78,3 @@
         </div>
     </div>
 </template>
-
-<script setup lang="ts">
-import { reactive } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/authStore';
-import type { LoginCredentials } from '@/types';
-
-const router = useRouter();
-const authStore = useAuthStore();
-
-const formData = reactive<LoginCredentials>({
-    username: '',
-    password: '',
-});
-
-async function handleLogin(): Promise<void> {
-    const success = await authStore.login(formData);
-    if (success) {
-        const userRole = authStore.user?.role_id;
-
-        if (userRole === 1) {
-            router.push('/admin');
-        } else if (userRole === 2) {
-            router.push('/moderation');
-        } else {
-            router.push('/');
-        }
-    }
-}
-</script>

@@ -1,3 +1,76 @@
+<script setup lang="ts">
+import { ref, reactive, onActivated } from 'vue';
+import { useRecipeStore } from '@/stores/recipeStore';
+import RecipeCard from '@/components/RecipeCard.vue';
+import type { SearchCriteria, SearchResponse } from '@/types';
+
+const recipeStore = useRecipeStore();
+
+const ingredientsInput = ref<string>('');
+const excludedInput = ref<string>('');
+const searched = ref<boolean>(false);
+const searchResult = ref<SearchResponse | null>(null);
+
+const errors = reactive({
+    ingredients: '',
+    excluded: '',
+});
+
+const searchData = reactive<SearchCriteria>({
+    operator: 'OR',
+    ingredients: [],
+    excludedIngredients: [],
+});
+
+onActivated(() => {
+    console.log('Search page reactivated - state preserved');
+});
+
+function clearError(field: 'ingredients' | 'excluded') {
+    errors[field] = '';
+}
+
+function clearErrors() {
+    errors.ingredients = '';
+    errors.excluded = '';
+}
+
+async function handleSearch(): Promise<void> {
+    clearErrors();
+
+    const ingredients = ingredientsInput.value
+        .split(',')
+        .map((i) => i.trim())
+        .filter(Boolean);
+
+    if (ingredients.length === 0) {
+        errors.ingredients = 'Masukan setidaknya 1 bahan untuk pencarian';
+        return;
+    }
+
+    searchData.ingredients = ingredients;
+
+    if (searchData.operator === 'NOT') {
+        const excluded = excludedInput.value
+            .split(',')
+            .map((i) => i.trim())
+            .filter(Boolean);
+
+        if (excluded.length === 0) {
+            errors.excluded = 'Masukan bahan pengecualian jika ingin menggunakan operator NOT';
+            return;
+        }
+        searchData.excludedIngredients = excluded;
+    } else {
+        searchData.excludedIngredients = [];
+    }
+
+    const result = await recipeStore.searchRecipes(searchData);
+    searched.value = true;
+    searchResult.value = result;
+}
+</script>
+
 <template>
     <div class="flex flex-col gap-5 p-4 mx-auto w-full max-w-6xl lg:px-6">
         <div class="card">
@@ -130,76 +203,3 @@
         </template>
     </div>
 </template>
-
-<script setup lang="ts">
-import { ref, reactive, onActivated } from 'vue';
-import { useRecipeStore } from '@/stores/recipeStore';
-import RecipeCard from '@/components/RecipeCard.vue';
-import type { SearchCriteria, SearchResponse } from '@/types';
-
-const recipeStore = useRecipeStore();
-
-const ingredientsInput = ref<string>('');
-const excludedInput = ref<string>('');
-const searched = ref<boolean>(false);
-const searchResult = ref<SearchResponse | null>(null);
-
-const errors = reactive({
-    ingredients: '',
-    excluded: '',
-});
-
-const searchData = reactive<SearchCriteria>({
-    operator: 'OR',
-    ingredients: [],
-    excludedIngredients: [],
-});
-
-onActivated(() => {
-    console.log('Search page reactivated - state preserved');
-});
-
-function clearError(field: 'ingredients' | 'excluded') {
-    errors[field] = '';
-}
-
-function clearErrors() {
-    errors.ingredients = '';
-    errors.excluded = '';
-}
-
-async function handleSearch(): Promise<void> {
-    clearErrors();
-
-    const ingredients = ingredientsInput.value
-        .split(',')
-        .map((i) => i.trim())
-        .filter(Boolean);
-
-    if (ingredients.length === 0) {
-        errors.ingredients = 'Masukan setidaknya 1 bahan untuk pencarian';
-        return;
-    }
-
-    searchData.ingredients = ingredients;
-
-    if (searchData.operator === 'NOT') {
-        const excluded = excludedInput.value
-            .split(',')
-            .map((i) => i.trim())
-            .filter(Boolean);
-
-        if (excluded.length === 0) {
-            errors.excluded = 'Masukan bahan pengecualian jika ingin menggunakan operator NOT';
-            return;
-        }
-        searchData.excludedIngredients = excluded;
-    } else {
-        searchData.excludedIngredients = [];
-    }
-
-    const result = await recipeStore.searchRecipes(searchData);
-    searched.value = true;
-    searchResult.value = result;
-}
-</script>

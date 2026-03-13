@@ -1,3 +1,54 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import { useRecipeStore } from '@/stores/recipeStore';
+import RecipeCardWithStatus from '@/components/RecipeCardWithStatus.vue';
+import type { Recipe } from '@/types';
+
+const recipeStore = useRecipeStore();
+
+const filterStatus = ref<'all' | 'approved' | 'pending' | 'rejected'>('all');
+
+const showSuccessToast = ref(false);
+const successMessage = ref('');
+
+const myRecipes = computed<Recipe[]>(() => recipeStore.myRecipes);
+
+const filteredRecipes = computed(() => {
+    if (filterStatus.value === 'all') return myRecipes.value;
+    return myRecipes.value.filter((r) => r.status === filterStatus.value);
+});
+
+const approvedCount = computed(() => myRecipes.value.filter((r) => r.status === 'approved').length);
+const pendingCount = computed(() => myRecipes.value.filter((r) => r.status === 'pending').length);
+const rejectedCount = computed(() => myRecipes.value.filter((r) => r.status === 'rejected').length);
+
+function showSuccess(msg: string) {
+    successMessage.value = msg;
+    showSuccessToast.value = true;
+    setTimeout(() => {
+        showSuccessToast.value = false;
+    }, 4000);
+}
+
+function handleRecipeDeleted(recipeName: string) {
+    showSuccess(`Resep "${recipeName}" berhasil dihapus!`);
+}
+
+function getStatusText(status: string): string {
+    const statusMap: Record<string, string> = {
+        all: '',
+        approved: 'yang disetujui',
+        pending: 'yang pending',
+        rejected: 'yang ditolak',
+    };
+    return statusMap[status] || '';
+}
+
+onMounted(async () => {
+    await recipeStore.fetchMyRecipes();
+});
+</script>
+
 <template>
     <div class="flex flex-col gap-5 p-4 mx-auto w-full max-w-6xl lg:px-6">
         <div class="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
@@ -142,54 +193,3 @@
         </teleport>
     </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useRecipeStore } from '@/stores/recipeStore';
-import RecipeCardWithStatus from '@/components/RecipeCardWithStatus.vue';
-import type { Recipe } from '@/types';
-
-const recipeStore = useRecipeStore();
-
-const filterStatus = ref<'all' | 'approved' | 'pending' | 'rejected'>('all');
-
-const showSuccessToast = ref(false);
-const successMessage = ref('');
-
-const myRecipes = computed<Recipe[]>(() => recipeStore.myRecipes);
-
-const filteredRecipes = computed(() => {
-    if (filterStatus.value === 'all') return myRecipes.value;
-    return myRecipes.value.filter((r) => r.status === filterStatus.value);
-});
-
-const approvedCount = computed(() => myRecipes.value.filter((r) => r.status === 'approved').length);
-const pendingCount = computed(() => myRecipes.value.filter((r) => r.status === 'pending').length);
-const rejectedCount = computed(() => myRecipes.value.filter((r) => r.status === 'rejected').length);
-
-function showSuccess(msg: string) {
-    successMessage.value = msg;
-    showSuccessToast.value = true;
-    setTimeout(() => {
-        showSuccessToast.value = false;
-    }, 4000);
-}
-
-function handleRecipeDeleted(recipeName: string) {
-    showSuccess(`Resep "${recipeName}" berhasil dihapus!`);
-}
-
-function getStatusText(status: string): string {
-    const statusMap: Record<string, string> = {
-        all: '',
-        approved: 'yang disetujui',
-        pending: 'yang pending',
-        rejected: 'yang ditolak',
-    };
-    return statusMap[status] || '';
-}
-
-onMounted(async () => {
-    await recipeStore.fetchMyRecipes();
-});
-</script>
