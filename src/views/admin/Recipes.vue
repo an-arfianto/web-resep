@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import axios from 'axios';
+import api from '@/services/api';
 import Pagination from '@/components/Pagination.vue';
 
 const recipes = ref<any[]>([]);
@@ -39,12 +39,8 @@ function showSuccess(msg: string) {
 
 async function fetchRecipes() {
     try {
-        loading.value = true;
-        const token = localStorage.getItem('token');
-        const response = await axios.get('/api/admin/recipes', {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        recipes.value = response.data.data;
+        const response = await api.admin.getAllRecipes();
+        recipes.value = response.data;
     } catch (err) {
         console.error(err);
     } finally {
@@ -58,13 +54,9 @@ async function openDetailModal(recipeId: number) {
     selectedRecipe.value = null;
 
     try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`/api/recipes/${recipeId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        selectedRecipe.value = response.data.data;
+        const response = await api.recipes.getById(recipeId);
+        selectedRecipe.value = response.data;
     } catch (err) {
-        console.error('Failed to fetch recipe details:', err);
         alert('Gagal memuat detail resep');
         closeDetailModal();
     } finally {
@@ -108,10 +100,7 @@ async function confirmDelete() {
     const recipeName = pendingDeleteName.value;
 
     try {
-        const token = localStorage.getItem('token');
-        await axios.delete(`/api/admin/recipes/${pendingDeleteId.value}`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
+        await api.admin.deleteRecipe(pendingDeleteId.value);
         recipes.value = recipes.value.filter((r) => r.id !== pendingDeleteId.value);
         if (paginatedRecipes.value.length === 0 && currentPage.value > 1) {
             currentPage.value--;

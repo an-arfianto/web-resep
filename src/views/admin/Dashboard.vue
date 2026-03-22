@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import axios from 'axios';
+import api from '@/services/api';
 
 const stats = ref<any>(null);
 const loading = ref(true);
@@ -47,11 +47,8 @@ function getRoleBarClass(roleName: string): string {
 
 onMounted(async () => {
     try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get('/api/admin/stats', {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        stats.value = response.data.data;
+        const response = await api.admin.getStats();
+        stats.value = response.data;
     } catch (err) {
         console.error(err);
     } finally {

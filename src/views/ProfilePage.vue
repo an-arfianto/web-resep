@@ -153,8 +153,8 @@ async function handleUpdatePassword() {
                 <template v-if="isModerator">
                     <div class="card">
                         <h3 class="mb-4 text-lg font-bold text-textPrimary">Aktivitas Moderasi</h3>
-                        <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
-                            <div class="p-6 text-center rounded-xl bg-overlay">
+                        <div class="grid grid-cols-2 gap-4 md:grid-cols-3">
+                            <div class="p-6 text-center rounded-xl bg-overlay max-md:col-span-2">
                                 <div class="text-3xl font-bold text-primary">{{ profile.reviewed_count || 0 }}</div>
                                 <div class="mt-2 text-sm font-medium text-textSecondary">Total Review</div>
                             </div>
@@ -165,10 +165,6 @@ async function handleUpdatePassword() {
                             <div class="p-6 text-center rounded-xl bg-overlay">
                                 <div class="text-3xl font-bold text-error">{{ profile.rejected_count || 0 }}</div>
                                 <div class="mt-2 text-sm font-medium text-textSecondary">Saya Tolak</div>
-                            </div>
-                            <div class="p-6 text-center rounded-xl bg-overlay">
-                                <div class="text-3xl font-bold text-warning">{{ profile.pending_count || 0 }}</div>
-                                <div class="mt-2 text-sm font-medium text-textSecondary">Pending Review</div>
                             </div>
                         </div>
                     </div>

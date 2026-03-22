@@ -9,10 +9,13 @@ import type {
     CreateRecipeData,
     ModerationStatsResponse,
     ModerationRecipesResponse,
+    UserResponse,
 } from '@/types';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const api: AxiosInstance = axios.create({
-    baseURL: '/api',
+    baseURL: API_URL,
     timeout: 10000,
     headers: {
         'Content-Type': 'application/json',
@@ -83,11 +86,16 @@ export default {
     },
 
     admin: {
+        getAllUsers: (params?: Record<string, any>): Promise<UserResponse> => api.get('/admin/users', { params }),
+        getAllRecipes: (params?: Record<string, any>): Promise<RecipeResponse> => api.get('/admin/recipes', { params }),
+        getStats: (params?: Record<string, any>): Promise<RecipeResponse> => api.get('/admin/stats', { params }),
         promoteUser: (userId: number): Promise<{ success: boolean; message: string }> =>
             api.put(`/admin/users/${userId}/promote`),
         demoteUser: (userId: number): Promise<{ success: boolean; message: string }> =>
             api.put(`/admin/users/${userId}/demote`),
         deleteUser: (userId: number): Promise<{ success: boolean; message: string }> =>
             api.delete(`/admin/users/${userId}`),
+        deleteRecipe: (id: number): Promise<{ success: boolean; message: string }> =>
+            api.delete(`/admin/recipes/${id}`),
     },
 };

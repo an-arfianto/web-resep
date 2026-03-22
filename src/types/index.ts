@@ -48,6 +48,13 @@ export interface AuthResponse {
     };
 }
 
+export interface UserResponse {
+    success: boolean;
+    message: string;
+    data: User | User[];
+    count?: number;
+}
+
 export interface RecipeResponse {
     success: boolean;
     message: string;

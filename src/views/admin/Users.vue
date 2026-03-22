@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import axios from 'axios';
+import api from '@/services/api';
 import Pagination from '@/components/Pagination.vue';
 
 const users = ref<any[]>([]);
@@ -100,9 +100,8 @@ onMounted(() => {
 async function fetchUsers() {
     try {
         loading.value = true;
-        const token = localStorage.getItem('token');
-        const response = await axios.get('/api/admin/users', { headers: { Authorization: `Bearer ${token}` } });
-        users.value = response.data.data;
+        const response = await api.admin.getAllUsers();
+        users.value = response.data;
     } catch (err) {
         console.error(err);
         alert('Failed to load users');
@@ -115,16 +114,11 @@ async function confirmPromote() {
     if (!pendingUser.value) return;
     actionLoading.value = true;
     try {
-        const token = localStorage.getItem('token');
-        await axios.put(
-            `/api/admin/users/${pendingUser.value.id}/promote`,
-            {},
-            { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await api.admin.promoteUser(pendingUser.value.id);
         await fetchUsers();
         showSuccess(`${pendingUser.value.username} berhasil dipromosikan ke MODERATOR!`);
     } catch (err: any) {
-        alert('Gagal mempromosikan user: ' + (err.response?.data?.message || err.message));
+        alert('Gagal mempromosikan user: ' + err.message);
     } finally {
         actionLoading.value = false;
         cancelPromote();
@@ -135,16 +129,11 @@ async function confirmDemote() {
     if (!pendingUser.value) return;
     actionLoading.value = true;
     try {
-        const token = localStorage.getItem('token');
-        await axios.put(
-            `/api/admin/users/${pendingUser.value.id}/demote`,
-            {},
-            { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await api.admin.demoteUser(pendingUser.value.id);
         await fetchUsers();
         showSuccess(`${pendingUser.value.username} berhasil diturunkan ke user.`);
     } catch (err: any) {
-        alert('Gagal menurunkan user: ' + (err.response?.data?.message || err.message));
+        alert('Gagal menurunkan user: ' + err.message);
     } finally {
         actionLoading.value = false;
         cancelDemote();
@@ -155,15 +144,12 @@ async function confirmDelete() {
     if (!pendingUser.value) return;
     actionLoading.value = true;
     try {
-        const token = localStorage.getItem('token');
-        await axios.delete(`/api/admin/users/${pendingUser.value.id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
+        await api.admin.deleteUser(pendingUser.value.id);
         users.value = users.value.filter((u) => u.id !== pendingUser.value.id);
         if (paginatedUsers.value.length === 0 && currentPage.value > 1) currentPage.value--;
         showSuccess(`User "${pendingUser.value.username}" berhasil dihapus.`);
     } catch (err: any) {
-        alert('Gagal menghapus user: ' + (err.response?.data?.message || err.message));
+        alert('Gagal menghapus user: ' + err.message);
     } finally {
         actionLoading.value = false;
         cancelDelete();
