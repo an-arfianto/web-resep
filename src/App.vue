@@ -4,12 +4,11 @@ import { useAuthStore } from '@/stores/authStore';
 import Navbar from '@/components/Navbar.vue';
 
 const authStore = useAuthStore();
+const cachedRoutes = computed(() => ['Search']);
 
 onMounted(() => {
     authStore.checkAuth();
 });
-
-const cachedRoutes = computed(() => ['Search']);
 </script>
 
 <template>
