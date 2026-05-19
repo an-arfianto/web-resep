@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import api from '@/services/api';
+import { useAuthStore } from '@/stores/authStore';
+import { formatDate } from '@/utils/recipeUtils';
+
+const authStore = useAuthStore();
 
 const tabs = [
     { id: 'info', name: 'Info Profil' },
@@ -21,32 +25,11 @@ const passwordLoading = ref(false);
 const showSuccessToast = ref(false);
 const successMessage = ref('');
 
-const isAdmin = computed(() => profile.value?.role_id === 1);
-const isModerator = computed(() => profile.value?.role_id === 2);
-const isRegularUser = computed(() => profile.value?.role_id === 3);
-
-onMounted(async () => {
-    await loadProfile();
-});
-
-async function loadProfile() {
-    try {
-        const response = await api.profile.getProfile();
-        profile.value = response.data;
-        newUsername.value = profile.value.username;
-    } catch (error: any) {
-        alert(error.message || 'Gagal mendapatkan data profil');
-    }
-}
+const isAdmin = computed(() => authStore.isAdmin);
 
 function getRoleBadgeClass(roleId: number) {
     if (roleId === 1) return 'bg-errorSoft text-error';
-    if (roleId === 2) return 'bg-secondarySoft text-secondary';
     return 'bg-primarySoft text-primary';
-}
-
-function formatDate(date: string) {
-    return new Date(date).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 function showSuccess(msg: string) {
@@ -55,6 +38,20 @@ function showSuccess(msg: string) {
     setTimeout(() => {
         showSuccessToast.value = false;
     }, 4000);
+}
+
+onMounted(async () => {
+    await loadProfile();
+});
+
+async function loadProfile() {
+    try {
+        const response = await api.profile.showProfile();
+        profile.value = response.data;
+        newUsername.value = profile.value.username;
+    } catch (error: any) {
+        alert(error.message || 'Gagal mendapatkan data profil');
+    }
 }
 
 async function handleUpdateUsername() {
@@ -130,88 +127,66 @@ async function handleUpdatePassword() {
         <template v-else>
             <div v-show="activeTab === 'info'" class="flex flex-col gap-5">
                 <div class="flex gap-6 items-start card max-sm:flex-col max-sm:items-center">
-                    <div class="flex justify-center items-center w-24 h-24 rounded-full bg-primary shrink-0">
+                    <div
+                        class="flex justify-center items-center w-24 h-24 rounded-full bg-primary shrink-0"
+                    >
                         <span class="text-4xl font-bold text-textInverse">
                             {{ profile.username?.charAt(0).toUpperCase() }}
                         </span>
                     </div>
                     <div class="flex-1 max-sm:text-center">
-                        <h2 class="mb-2 text-3xl font-bold text-textPrimary">{{ profile.username }}</h2>
+                        <h2 class="mb-2 text-3xl font-bold text-textPrimary">
+                            {{ profile.username }}
+                        </h2>
                         <span :class="['role-badges text-sm', getRoleBadgeClass(profile.role_id)]">
                             {{ profile.role_name }}
                         </span>
-                        <p class="mt-4 text-sm text-textSecondary">Bergabung: {{ formatDate(profile.created_at) }}</p>
+                        <p class="mt-4 text-sm text-textSecondary">
+                            Bergabung: {{ formatDate(profile.created_at) }}
+                        </p>
                     </div>
                 </div>
 
-                <div v-if="isAdmin" class="py-3 px-4 rounded-xl border border-warning/30 bg-warningSoft">
+                <div
+                    v-if="isAdmin"
+                    class="py-3 px-4 rounded-xl border border-warning/30 bg-warningSoft"
+                >
                     <p class="text-sm font-semibold text-center text-warning">
-                        Anda adalah admin dengan akses penuh ke sistem
+                        Anda adalah admin dengan akses penuh ke sistem. Lihat statistik lengkap di
+                        <RouterLink to="/admin" class="underline">Dashboard</RouterLink>.
                     </p>
                 </div>
 
-                <template v-if="isModerator">
-                    <div class="card">
-                        <h3 class="mb-4 text-lg font-bold text-textPrimary">Aktivitas Moderasi</h3>
-                        <div class="grid grid-cols-2 gap-4 md:grid-cols-3">
-                            <div class="p-6 text-center rounded-xl bg-overlay max-md:col-span-2">
-                                <div class="text-3xl font-bold text-primary">{{ profile.reviewed_count || 0 }}</div>
-                                <div class="mt-2 text-sm font-medium text-textSecondary">Total Review</div>
-                            </div>
-                            <div class="p-6 text-center rounded-xl bg-overlay">
-                                <div class="text-3xl font-bold text-success">{{ profile.approved_count || 0 }}</div>
-                                <div class="mt-2 text-sm font-medium text-textSecondary">Saya Setujui</div>
-                            </div>
-                            <div class="p-6 text-center rounded-xl bg-overlay">
-                                <div class="text-3xl font-bold text-error">{{ profile.rejected_count || 0 }}</div>
-                                <div class="mt-2 text-sm font-medium text-textSecondary">Saya Tolak</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <h3 class="mb-4 text-lg font-bold text-textPrimary">Resep Saya</h3>
-                        <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
-                            <div class="p-6 text-center rounded-xl bg-overlay">
-                                <div class="text-3xl font-bold text-textPrimary">
-                                    {{ profile.my_recipe_count || 0 }}
-                                </div>
-                                <div class="mt-2 text-sm font-medium text-textSecondary">Total Dibuat</div>
-                            </div>
-                            <div class="p-6 text-center rounded-xl bg-overlay">
-                                <div class="text-3xl font-bold text-success">{{ profile.my_approved_count || 0 }}</div>
-                                <div class="mt-2 text-sm font-medium text-textSecondary">Disetujui</div>
-                            </div>
-                            <div class="p-6 text-center rounded-xl bg-overlay">
-                                <div class="text-3xl font-bold text-error">{{ profile.my_rejected_count || 0 }}</div>
-                                <div class="mt-2 text-sm font-medium text-textSecondary">Ditolak</div>
-                            </div>
-                            <div class="p-6 text-center rounded-xl bg-overlay">
-                                <div class="text-3xl font-bold text-warning">{{ profile.my_pending_count || 0 }}</div>
-                                <div class="mt-2 text-sm font-medium text-textSecondary">Menunggu Review</div>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-
-                <div v-if="isRegularUser" class="card">
+                <div v-else class="card">
                     <h3 class="mb-4 text-lg font-bold text-textPrimary">Statistik Resep</h3>
                     <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
                         <div class="p-6 text-center rounded-xl bg-overlay">
-                            <div class="text-3xl font-bold text-textPrimary">{{ profile.recipe_count || 0 }}</div>
-                            <div class="mt-2 text-sm font-medium text-textSecondary">Total Resep</div>
+                            <div class="text-3xl font-bold text-textPrimary">
+                                {{ profile.recipe_count || 0 }}
+                            </div>
+                            <div class="mt-2 text-sm font-medium text-textSecondary">
+                                Total Resep
+                            </div>
                         </div>
                         <div class="p-6 text-center rounded-xl bg-overlay">
-                            <div class="text-3xl font-bold text-success">{{ profile.approved_count || 0 }}</div>
+                            <div class="text-3xl font-bold text-success">
+                                {{ profile.approved_count || 0 }}
+                            </div>
                             <div class="mt-2 text-sm font-medium text-textSecondary">Disetujui</div>
                         </div>
                         <div class="p-6 text-center rounded-xl bg-overlay">
-                            <div class="text-3xl font-bold text-error">{{ profile.rejected_count || 0 }}</div>
+                            <div class="text-3xl font-bold text-error">
+                                {{ profile.rejected_count || 0 }}
+                            </div>
                             <div class="mt-2 text-sm font-medium text-textSecondary">Ditolak</div>
                         </div>
                         <div class="p-6 text-center rounded-xl bg-overlay">
-                            <div class="text-3xl font-bold text-warning">{{ profile.pending_count || 0 }}</div>
-                            <div class="mt-2 text-sm font-medium text-textSecondary">Menunggu Review</div>
+                            <div class="text-3xl font-bold text-warning">
+                                {{ profile.pending_count || 0 }}
+                            </div>
+                            <div class="mt-2 text-sm font-medium text-textSecondary">
+                                Menunggu Review
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -221,7 +196,9 @@ async function handleUpdatePassword() {
                 <div class="card">
                     <h3 class="mb-4 text-lg font-bold text-textPrimary">Ubah Username</h3>
                     <div class="max-w-md">
-                        <label class="block mb-2 text-sm font-medium text-textPrimary">Username</label>
+                        <label class="block mb-2 text-sm font-medium text-textPrimary"
+                            >Username</label
+                        >
                         <input
                             v-model="newUsername"
                             type="text"
@@ -242,7 +219,9 @@ async function handleUpdatePassword() {
                     <h3 class="mb-4 text-lg font-bold text-textPrimary">Ubah Password</h3>
                     <div class="space-y-4 max-w-md">
                         <div>
-                            <label class="block mb-2 text-sm font-medium text-textPrimary">Password Sekarang</label>
+                            <label class="block mb-2 text-sm font-medium text-textPrimary"
+                                >Password Sekarang</label
+                            >
                             <input
                                 v-model="currentPassword"
                                 type="password"
@@ -251,7 +230,9 @@ async function handleUpdatePassword() {
                             />
                         </div>
                         <div>
-                            <label class="block mb-2 text-sm font-medium text-textPrimary">Password Baru</label>
+                            <label class="block mb-2 text-sm font-medium text-textPrimary"
+                                >Password Baru</label
+                            >
                             <input
                                 v-model="newPassword"
                                 type="password"
@@ -283,7 +264,7 @@ async function handleUpdatePassword() {
         </template>
 
         <teleport to="body">
-            <div v-if="showSuccessToast" class="fixed right-5 bottom-5 toast toast-success z-60">
+            <div v-if="showSuccessToast" class="fixed top-5 right-5 toast toast-success z-60">
                 <p class="flex-1 text-sm font-medium leading-snug">{{ successMessage }}</p>
                 <button
                     @click="showSuccessToast = false"

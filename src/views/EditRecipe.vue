@@ -50,7 +50,8 @@ function populateForm(recipe: Recipe) {
             quantity: null,
             unit: '',
         }));
-        formData.ingredients = parsed.length > 0 ? parsed : [{ name: '', quantity: null, unit: '' }];
+        formData.ingredients =
+            parsed.length > 0 ? parsed : [{ name: '', quantity: null, unit: '' }];
     }
 }
 
@@ -85,7 +86,7 @@ async function handleSubmit() {
     if (result) {
         showSuccess(`Resep "${formData.name}" berhasil diperbarui!`);
         setTimeout(() => {
-            router.push(`/recipe/${recipeId}`);
+            router.push('/my-recipes');
         }, 1000);
     } else {
         error.value = recipeStore.error || 'Gagal Memperbarui Resep';
@@ -94,7 +95,7 @@ async function handleSubmit() {
 
 onMounted(async () => {
     const id = Number(route.params.id);
-    await recipeStore.fetchRecipeById(id);
+    await recipeStore.showMyRecipe(id);
     if (recipe.value) {
         populateForm(recipe.value);
     }
@@ -112,7 +113,9 @@ onMounted(async () => {
 
             <form v-else-if="recipe" @submit.prevent="handleSubmit" class="flex flex-col gap-5">
                 <div>
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary">Nama Resep *</label>
+                    <label class="block mb-2 text-sm font-semibold text-textSecondary"
+                        >Nama Resep *</label
+                    >
                     <input
                         v-model="formData.name"
                         type="text"
@@ -123,7 +126,9 @@ onMounted(async () => {
                 </div>
 
                 <div>
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary">Kategori *</label>
+                    <label class="block mb-2 text-sm font-semibold text-textSecondary"
+                        >Kategori *</label
+                    >
                     <select v-model="formData.category" required class="input-field">
                         <option value="" disabled>Pilih Kategori</option>
                         <option value="Masakan Utama">Masakan Utama</option>
@@ -138,7 +143,9 @@ onMounted(async () => {
                 </div>
 
                 <div>
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary">Deskripsi</label>
+                    <label class="block mb-2 text-sm font-semibold text-textSecondary"
+                        >Deskripsi</label
+                    >
                     <textarea
                         v-model="formData.description"
                         rows="3"
@@ -148,7 +155,9 @@ onMounted(async () => {
                 </div>
 
                 <div>
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary">Bahan-bahan *</label>
+                    <label class="block mb-2 text-sm font-semibold text-textSecondary"
+                        >Bahan-bahan *</label
+                    >
 
                     <div class="flex flex-col gap-3">
                         <div
@@ -219,7 +228,9 @@ onMounted(async () => {
                 </div>
 
                 <div>
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary">Instruksi *</label>
+                    <label class="block mb-2 text-sm font-semibold text-textSecondary"
+                        >Instruksi *</label
+                    >
                     <textarea
                         v-model="formData.instructions"
                         rows="8"
@@ -255,7 +266,7 @@ onMounted(async () => {
         <teleport to="body">
             <div
                 v-if="showSuccessToast"
-                class="flex fixed right-5 bottom-5 gap-3 items-start py-3 px-4 w-80 rounded-xl border shadow-lg border-success/30 bg-successSoft text-success z-60 max-w-[calc(100vw-40px)]"
+                class="flex fixed top-5 right-5 gap-3 items-start py-3 px-4 w-80 rounded-xl border shadow-lg border-success/30 bg-successSoft text-success z-60 max-w-[calc(100vw-40px)]"
             >
                 <p class="flex-1 text-sm font-medium leading-snug">{{ successMessage }}</p>
                 <button

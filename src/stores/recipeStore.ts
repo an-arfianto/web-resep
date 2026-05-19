@@ -1,131 +1,116 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import api from '@/services/api';
-import type { Recipe, SearchCriteria, SearchResponse, CreateRecipeData, ApiError } from '@/types';
+import type {
+    Recipe,
+    SearchCriteria,
+    SearchResponse,
+    CreateRecipeData,
+    RecipeResponse,
+} from '@/types';
 
 export const useRecipeStore = defineStore('recipe', () => {
     const recipes = ref<Recipe[]>([]);
     const myRecipes = ref<Recipe[]>([]);
     const currentRecipe = ref<Recipe | null>(null);
-    const searchResults = ref<Recipe[]>([]);
     const loading = ref<boolean>(false);
     const error = ref<string | null>(null);
 
-    async function fetchAllRecipes(filters: Record<string, any> = {}): Promise<void> {
+    function extractErrorMessage(err: unknown): string {
+        if (typeof err === 'object' && err !== null) {
+            const axiosErr = err as any;
+            if (axiosErr.response?.data?.message) return axiosErr.response.data.message;
+            if (axiosErr.message) return axiosErr.message;
+        }
+        return 'Terjadi kesalahan';
+    }
+
+    async function withLoading<T>(fn: () => Promise<T>): Promise<T | null> {
         loading.value = true;
         error.value = null;
         try {
-            const response = await api.recipes.getAll(filters);
+            return await fn();
+        } catch (err) {
+            error.value = extractErrorMessage(err);
+            return null;
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function showAllRecipes(filters: Record<string, string> = {}): Promise<void> {
+        await withLoading(async () => {
+            const response = await api.recipes.showAll(filters);
             recipes.value = Array.isArray(response.data) ? response.data : [response.data];
-        } catch (err) {
-            const apiError = err as ApiError;
-            error.value = apiError.message;
-        } finally {
-            loading.value = false;
-        }
+        });
     }
 
-    async function fetchMyRecipes(): Promise<void> {
-        loading.value = true;
-        error.value = null;
-        try {
-            const response = await api.recipes.getMy();
+    async function showMyRecipes(): Promise<void> {
+        await withLoading(async () => {
+            const response = await api.recipes.showMine();
             myRecipes.value = Array.isArray(response.data) ? response.data : [response.data];
-        } catch (err) {
-            const apiError = err as ApiError;
-            error.value = apiError.message;
-        } finally {
-            loading.value = false;
-        }
+        });
     }
 
-    async function fetchRecipeById(id: number): Promise<void> {
-        loading.value = true;
-        error.value = null;
-        try {
-            const response = await api.recipes.getById(id);
+    async function showRecipe(id: number): Promise<void> {
+        await withLoading(async () => {
+            const response = await api.recipes.showRecipe(id);
             currentRecipe.value = response.data as Recipe;
-        } catch (err) {
-            const apiError = err as ApiError;
-            error.value = apiError.message;
-        } finally {
-            loading.value = false;
-        }
+        });
+    }
+
+    async function showMyRecipe(id: number): Promise<void> {
+        await withLoading(async () => {
+            const response = await api.recipes.showMyRecipeById(id);
+            currentRecipe.value = response.data as Recipe;
+        });
     }
 
     async function searchRecipes(searchData: SearchCriteria): Promise<SearchResponse | null> {
-        loading.value = true;
-        error.value = null;
-        try {
-            const response = await api.recipes.search(searchData);
-            searchResults.value = response.data;
+        return withLoading(async () => {
+            const response = await api.search.query(searchData);
             return response;
-        } catch (err) {
-            const apiError = err as ApiError;
-            error.value = apiError.message;
-            return null;
-        } finally {
-            loading.value = false;
-        }
+        });
     }
 
-    async function createRecipe(recipeData: CreateRecipeData): Promise<any> {
-        loading.value = true;
-        error.value = null;
-        try {
-            const response = await api.recipes.create(recipeData);
-            return response;
-        } catch (err) {
-            const apiError = err as ApiError;
-            error.value = apiError.message;
-            return null;
-        } finally {
-            loading.value = false;
-        }
+    async function createRecipe(recipeData: CreateRecipeData): Promise<RecipeResponse | null> {
+        return withLoading(() => api.recipes.create(recipeData));
     }
 
-    async function updateRecipe(id: number, recipeData: CreateRecipeData): Promise<any> {
-        loading.value = true;
-        error.value = null;
-        try {
-            const response = await api.recipes.update(id, recipeData);
-            return response;
-        } catch (err) {
-            const apiError = err as ApiError;
-            error.value = apiError.message;
-            return null;
-        } finally {
-            loading.value = false;
-        }
+    async function updateRecipe(
+        id: number,
+        recipeData: CreateRecipeData
+    ): Promise<RecipeResponse | null> {
+        return withLoading(() => api.recipes.update(id, recipeData));
     }
 
     async function deleteRecipe(id: number): Promise<boolean> {
-        loading.value = true;
-        error.value = null;
-        try {
+        const result = await withLoading(async () => {
             await api.recipes.delete(id);
+            return true;
+        });
+
+        if (result) {
             recipes.value = recipes.value.filter((r) => r.id !== id);
             myRecipes.value = myRecipes.value.filter((r) => r.id !== id);
-            return true;
-        } catch (err) {
-            const apiError = err as ApiError;
-            error.value = apiError.message;
-            return false;
-        } finally {
-            loading.value = false;
+            if (currentRecipe.value?.id === id) {
+                currentRecipe.value = null;
+            }
         }
+
+        return result ?? false;
     }
 
     return {
         recipes,
         myRecipes,
         currentRecipe,
-        searchResults,
         loading,
         error,
-        fetchAllRecipes,
-        fetchMyRecipes,
-        fetchRecipeById,
+        showAllRecipes,
+        showMyRecipes,
+        showRecipe,
+        showMyRecipe,
         searchRecipes,
         createRecipe,
         updateRecipe,

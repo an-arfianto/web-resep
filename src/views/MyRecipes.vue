@@ -2,14 +2,17 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRecipeStore } from '@/stores/recipeStore';
 import RecipeCardWithStatus from '@/components/RecipeCardWithStatus.vue';
-import type { Recipe } from '@/types';
+import type { Recipe, Ingredient } from '@/types';
+import { formatDate } from '@/utils/recipeUtils';
 
 const recipeStore = useRecipeStore();
 
 const filterStatus = ref<'all' | 'approved' | 'pending' | 'rejected'>('all');
-
 const showSuccessToast = ref(false);
 const successMessage = ref('');
+
+const showDetailModal = ref(false);
+const selectedRecipe = ref<Recipe | null>(null);
 
 const myRecipes = computed<Recipe[]>(() => recipeStore.myRecipes);
 
@@ -21,6 +24,29 @@ const filteredRecipes = computed(() => {
 const approvedCount = computed(() => myRecipes.value.filter((r) => r.status === 'approved').length);
 const pendingCount = computed(() => myRecipes.value.filter((r) => r.status === 'pending').length);
 const rejectedCount = computed(() => myRecipes.value.filter((r) => r.status === 'rejected').length);
+
+const ingredientsList = computed<Ingredient[]>(() => {
+    if (!selectedRecipe.value) return [];
+    if (Array.isArray(selectedRecipe.value.ingredients)) return selectedRecipe.value.ingredients;
+    if (typeof selectedRecipe.value.ingredients === 'string') {
+        return selectedRecipe.value.ingredients.split(',').map((i) => ({
+            name: i.trim(),
+            quantity: null,
+            unit: null,
+        }));
+    }
+    return [];
+});
+
+function openDetailModal(recipe: Recipe) {
+    selectedRecipe.value = recipe;
+    showDetailModal.value = true;
+}
+
+function closeDetailModal() {
+    showDetailModal.value = false;
+    selectedRecipe.value = null;
+}
 
 function showSuccess(msg: string) {
     successMessage.value = msg;
@@ -35,17 +61,15 @@ function handleRecipeDeleted(recipeName: string) {
 }
 
 function getStatusText(status: string): string {
-    const statusMap: Record<string, string> = {
-        all: '',
-        approved: 'yang disetujui',
-        pending: 'yang pending',
-        rejected: 'yang ditolak',
-    };
-    return statusMap[status] || '';
+    return (
+        { all: '', approved: 'yang disetujui', pending: 'yang pending', rejected: 'yang ditolak' }[
+            status
+        ] || ''
+    );
 }
 
 onMounted(async () => {
-    await recipeStore.fetchMyRecipes();
+    await recipeStore.showMyRecipes();
 });
 </script>
 
@@ -86,9 +110,8 @@ onMounted(async () => {
                         :class="['ml-1.5 rounded px-1.5 py-0.5 text-xs font-bold',
                             filterStatus === 'all' ? 'bg-white/20' : 'bg-overlay',
                         ]"
+                        >{{ myRecipes.length }}</span
                     >
-                        {{ myRecipes.length }}
-                    </span>
                 </button>
                 <button
                     @click="filterStatus = 'approved'"
@@ -101,11 +124,12 @@ onMounted(async () => {
                     Disetujui
                     <span
                         :class="['ml-1.5 rounded px-1.5 py-0.5 text-xs font-bold',
-                            filterStatus === 'approved' ? 'bg-white/20' : 'bg-successSoft text-success',
+                            filterStatus === 'approved'
+                                ? 'bg-white/20'
+                                : 'bg-successSoft text-success',
                         ]"
+                        >{{ approvedCount }}</span
                     >
-                        {{ approvedCount }}
-                    </span>
                 </button>
                 <button
                     @click="filterStatus = 'pending'"
@@ -118,11 +142,12 @@ onMounted(async () => {
                     Pending
                     <span
                         :class="['ml-1.5 rounded px-1.5 py-0.5 text-xs font-bold',
-                            filterStatus === 'pending' ? 'bg-white/20' : 'bg-warningSoft text-warning',
+                            filterStatus === 'pending'
+                                ? 'bg-white/20'
+                                : 'bg-warningSoft text-warning',
                         ]"
+                        >{{ pendingCount }}</span
                     >
-                        {{ pendingCount }}
-                    </span>
                 </button>
                 <button
                     @click="filterStatus = 'rejected'"
@@ -137,41 +162,184 @@ onMounted(async () => {
                         :class="['ml-1.5 rounded px-1.5 py-0.5 text-xs font-bold',
                             filterStatus === 'rejected' ? 'bg-white/20' : 'bg-errorSoft text-error',
                         ]"
+                        >{{ rejectedCount }}</span
                     >
-                        {{ rejectedCount }}
-                    </span>
                 </button>
             </div>
 
-            <div v-if="filteredRecipes.length > 0" class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div
+                v-if="filteredRecipes.length > 0"
+                class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+            >
                 <RecipeCardWithStatus
                     v-for="recipe in filteredRecipes"
                     :key="recipe.id"
                     :recipe="recipe"
                     @recipe-deleted="handleRecipeDeleted"
+                    @view-detail="openDetailModal"
                 />
             </div>
 
             <div v-else class="flex flex-col gap-3 items-center py-20 card">
-                <div class="text-center">
-                    <p class="text-lg font-bold text-textPrimary">Tidak ada resep {{ getStatusText(filterStatus) }}</p>
-                    <p class="mt-1 text-sm text-textSecondary">Coba pilih filter lain atau buat resep baru</p>
-                </div>
+                <p class="text-lg font-bold text-textPrimary">
+                    Tidak ada resep {{ getStatusText(filterStatus) }}
+                </p>
+                <p class="mt-1 text-sm text-textSecondary">
+                    Coba pilih filter lain atau buat resep baru
+                </p>
             </div>
         </template>
 
         <div v-else class="flex flex-col gap-4 items-center py-20 card">
-            <div class="text-center">
-                <p class="text-xl font-bold text-textPrimary">Anda belum membuat resep</p>
-                <p class="mt-1 text-sm text-textSecondary">Mulai dengan membuat resep pertama Anda</p>
-            </div>
-            <RouterLink to="/create-recipe" class="mt-2 button bg-primary text-textInverse hover:opacity-85">
+            <p class="text-xl font-bold text-textPrimary">Anda belum membuat resep</p>
+            <p class="mt-1 text-sm text-textSecondary">Mulai dengan membuat resep pertama Anda</p>
+            <RouterLink
+                to="/create-recipe"
+                class="mt-2 button bg-primary text-textInverse hover:opacity-85"
+            >
                 Buat Resep Pertama
             </RouterLink>
         </div>
 
         <teleport to="body">
-            <div v-if="showSuccessToast" class="fixed right-5 bottom-5 toast toast-success">
+            <div
+                v-if="showDetailModal && selectedRecipe"
+                class="modal-backdrop"
+                @click.self="closeDetailModal"
+            >
+                <div
+                    class="flex overflow-hidden flex-col w-full max-w-2xl rounded-2xl shadow-2xl bg-surface max-h-[85vh]"
+                >
+                    <div class="modal-header">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex flex-wrap gap-2 items-center mb-1">
+                                <h2 class="text-base font-bold text-textPrimary">
+                                    {{ selectedRecipe.name }}
+                                </h2>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5">
+                                <span class="category-badges">{{ selectedRecipe.category }}</span>
+                                <span
+                                    :class="['status-badges',
+                                        selectedRecipe.status === 'pending'
+                                            ? 'bg-warningSoft text-warning'
+                                            : 'bg-errorSoft text-error',
+                                    ]"
+                                >
+                                    {{
+                                        selectedRecipe.status === 'pending' ? 'Pending' : 'Ditolak'
+                                    }}
+                                </span>
+                            </div>
+                        </div>
+                        <button @click="closeDetailModal" class="modal-close-btn">
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                width="17"
+                                height="17"
+                            >
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="flex overflow-y-auto flex-col flex-1 gap-4 p-5">
+                        <div
+                            v-if="selectedRecipe.status === 'pending'"
+                            class="py-3 px-4 rounded-lg border-l-4 border-warning bg-warningSoft"
+                        >
+                            <p class="text-sm font-bold text-warning">Menunggu Review</p>
+                            <p class="text-sm text-warning/80">
+                                Resep ini sedang menunggu persetujuan admin dan belum tampil ke
+                                publik.
+                            </p>
+                        </div>
+                        <div
+                            v-else-if="selectedRecipe.status === 'rejected'"
+                            class="py-3 px-4 rounded-lg border-l-4 border-error bg-errorSoft"
+                        >
+                            <p class="text-sm font-bold text-error">Resep Ditolak</p>
+                            <p
+                                v-if="selectedRecipe.rejection_reason"
+                                class="mt-0.5 text-sm text-error/80"
+                            >
+                                Alasan: {{ selectedRecipe.rejection_reason }}
+                            </p>
+                            <p v-else class="mt-0.5 text-sm text-error/80">
+                                Resep ini ditolak oleh admin. Silakan edit dan kirim ulang.
+                            </p>
+                        </div>
+
+                        <div
+                            class="flex gap-2 items-center py-2 px-3 text-sm rounded-lg bg-background"
+                        >
+                            <span class="text-textSecondary">Dibuat:</span>
+                            <span class="font-medium text-textPrimary">{{
+                                formatDate(selectedRecipe.created_at)
+                            }}</span>
+                        </div>
+
+                        <div v-if="selectedRecipe.description">
+                            <p class="mb-1.5 text-sm font-bold text-textPrimary">Deskripsi</p>
+                            <p class="text-sm leading-relaxed text-textSecondary">
+                                {{ selectedRecipe.description }}
+                            </p>
+                        </div>
+
+                        <div v-if="ingredientsList.length">
+                            <p class="mb-1.5 text-sm font-bold text-textPrimary">Bahan-bahan</p>
+                            <div class="flex flex-col gap-1 p-3 rounded-lg bg-background">
+                                <div
+                                    v-for="(ing, idx) in ingredientsList"
+                                    :key="idx"
+                                    class="flex gap-1 items-start text-sm"
+                                >
+                                    <span class="text-primary shrink-0">•</span>
+                                    <span class="text-textPrimary">
+                                        <span v-if="ing.quantity" class="font-semibold"
+                                            >{{ ing.quantity }}{{ ing.unit ? ' ' + ing.unit : '' }}
+                                        </span>
+                                        {{ ing.name }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="selectedRecipe.instructions">
+                            <p class="mb-1.5 text-sm font-bold text-textPrimary">Instruksi</p>
+                            <p
+                                class="p-3 text-sm leading-relaxed whitespace-pre-line rounded-lg text-textSecondary bg-background"
+                            >
+                                {{ selectedRecipe.instructions }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <RouterLink
+                            :to="`/edit-recipe/${selectedRecipe.id}`"
+                            @click="closeDetailModal"
+                            class="button bg-primarySoft text-primary hover:bg-primary hover:text-textInverse"
+                        >
+                            Edit Resep
+                        </RouterLink>
+                        <button
+                            @click="closeDetailModal"
+                            class="button bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
+                        >
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </teleport>
+
+        <teleport to="body">
+            <div v-if="showSuccessToast" class="fixed top-5 right-5 toast toast-success">
                 <p class="flex-1 font-medium">{{ successMessage }}</p>
                 <button
                     @click="showSuccessToast = false"

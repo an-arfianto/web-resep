@@ -2,10 +2,12 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useRecipeStore } from '@/stores/recipeStore';
+import { formatDate } from '@/utils/recipeUtils';
 import type { Recipe } from '@/types';
 
 const emit = defineEmits<{
     (e: 'recipe-deleted', recipeName: string): void;
+    (e: 'view-detail', recipe: Recipe): void;
 }>();
 
 interface Props {
@@ -31,17 +33,12 @@ const statusText = {
     rejected: 'Ditolak',
 };
 
-function formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('id-ID', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
-}
-
-function goToDetail() {
-    router.push(`/recipe/${props.recipe.id}`);
+function handleCardClick() {
+    if (props.recipe.status === 'approved') {
+        router.push(`/recipe/${props.recipe.id}`);
+    } else {
+        emit('view-detail', props.recipe);
+    }
 }
 
 function goToEdit() {
@@ -51,7 +48,6 @@ function goToEdit() {
 function openDeleteModal() {
     showDeleteModal.value = true;
 }
-
 function closeDeleteModal() {
     if (deleteLoading.value) return;
     showDeleteModal.value = false;
@@ -60,12 +56,11 @@ function closeDeleteModal() {
 async function confirmDelete() {
     deleteLoading.value = true;
     const recipeName = props.recipe.name;
-
     try {
         const success = await recipeStore.deleteRecipe(props.recipe.id);
         if (success) {
+            showDeleteModal.value = false;
             emit('recipe-deleted', recipeName);
-            closeDeleteModal();
         }
     } finally {
         deleteLoading.value = false;
@@ -74,7 +69,7 @@ async function confirmDelete() {
 </script>
 
 <template>
-    <div class="card-interactive" @click="goToDetail">
+    <div class="card-interactive" @click="handleCardClick">
         <div class="flex gap-3 justify-between items-start">
             <h3 class="flex-1 text-lg font-bold leading-snug text-textPrimary line-clamp-2">
                 {{ recipe.name }}
@@ -85,24 +80,21 @@ async function confirmDelete() {
         </div>
 
         <div>
-            <span class="category-badges">
-                {{ recipe.category }}
-            </span>
+            <span class="category-badges">{{ recipe.category }}</span>
         </div>
 
         <p class="text-sm leading-relaxed text-textSecondary line-clamp-2">
             {{ recipe.ingredients }}
         </p>
 
-        <p class="text-xs text-textMuted">
-            {{ formatDate(recipe.created_at) }}
-        </p>
+        <p class="text-xs text-textMuted">{{ formatDate(recipe.created_at) }}</p>
 
-        <div v-if="recipe.status === 'rejected' && recipe.rejection_reason" class="alert-box alert-error">
+        <div
+            v-if="recipe.status === 'rejected' && recipe.rejection_reason"
+            class="alert-box alert-error"
+        >
             <p class="flex gap-1.5 items-center mb-1 text-xs font-bold">Alasan Penolakan</p>
-            <p class="text-xs leading-relaxed">
-                {{ recipe.rejection_reason }}
-            </p>
+            <p class="text-xs leading-relaxed">{{ recipe.rejection_reason }}</p>
         </div>
 
         <div class="flex gap-2 pt-3 mt-auto border-t border-divider">
@@ -125,7 +117,11 @@ async function confirmDelete() {
                 <div class="max-w-md modal-panel">
                     <div class="modal-header">
                         <h2 class="modal-title">Hapus Resep</h2>
-                        <button @click="closeDeleteModal" aria-label="Tutup" class="modal-close-btn">
+                        <button
+                            @click="closeDeleteModal"
+                            aria-label="Tutup"
+                            class="modal-close-btn"
+                        >
                             <svg
                                 viewBox="0 0 24 24"
                                 fill="none"
@@ -142,22 +138,22 @@ async function confirmDelete() {
                     <div class="modal-body">
                         <p class="text-sm leading-relaxed text-textSecondary">
                             Anda yakin ingin menghapus
-                            <strong class="text-textPrimary">{{ recipe.name }}</strong>
-                            ?
+                            <strong class="text-textPrimary">{{ recipe.name }}</strong
+                            >?
                         </p>
                     </div>
                     <div class="modal-footer">
                         <button
                             @click="closeDeleteModal"
                             :disabled="deleteLoading"
-                            class="py-2 px-5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
+                            class="disabled:opacity-50 button bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
                         >
                             Batal
                         </button>
                         <button
                             @click="confirmDelete"
                             :disabled="deleteLoading"
-                            class="py-2 px-5 text-sm font-semibold rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed bg-error text-textInverse hover:opacity-85"
+                            class="disabled:opacity-50 disabled:cursor-not-allowed button bg-error text-textInverse hover:opacity-85"
                         >
                             {{ deleteLoading ? 'Menghapus...' : 'Ya, Hapus' }}
                         </button>

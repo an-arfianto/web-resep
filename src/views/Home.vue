@@ -15,7 +15,7 @@ const paginatedRecipes = computed(() => {
 });
 
 onMounted(() => {
-    recipeStore.fetchAllRecipes();
+    recipeStore.showAllRecipes();
 });
 
 function handlePageChange(page: number) {

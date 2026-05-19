@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, onActivated } from 'vue';
+import { ref, reactive } from 'vue';
 import { useRecipeStore } from '@/stores/recipeStore';
 import RecipeCard from '@/components/RecipeCard.vue';
 import type { SearchCriteria, SearchResponse } from '@/types';
@@ -22,10 +22,6 @@ const searchData = reactive<SearchCriteria>({
     excludedIngredients: [],
 });
 
-onActivated(() => {
-    console.log('Search page reactivated - state preserved');
-});
-
 function clearError(field: 'ingredients' | 'excluded') {
     errors[field] = '';
 }
@@ -33,6 +29,13 @@ function clearError(field: 'ingredients' | 'excluded') {
 function clearErrors() {
     errors.ingredients = '';
     errors.excluded = '';
+}
+
+function handleOperatorChange() {
+    clearErrors();
+    if (searchData.operator !== 'NOT') {
+        excludedInput.value = '';
+    }
 }
 
 async function handleSearch(): Promise<void> {
@@ -78,8 +81,8 @@ async function handleSearch(): Promise<void> {
 
             <div class="flex flex-col gap-4">
                 <div>
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary">Operator Pencarian</label>
-                    <select v-model="searchData.operator" class="input-field" @change="clearErrors">
+                    <label class="block mb-2 text-sm font-semibold text-textSecondary"> Operator Pencarian </label>
+                    <select v-model="searchData.operator" class="input-field" @change="handleOperatorChange">
                         <option value="OR">OR - Cari resep yang terdapat beberapa bahan tersebut</option>
                         <option value="AND">AND - Cari resep yang terdapat semua bahan tersebut</option>
                         <option value="NOT">NOT - Cari resep yang terdapat bahan dengan pengecualian</option>
@@ -99,9 +102,7 @@ async function handleSearch(): Promise<void> {
                     <p v-if="!errors.ingredients" class="mt-1 text-xs text-textMuted">
                         Gunakan koma sebagai pemisah antar bahan
                     </p>
-                    <p v-else class="mt-1 text-xs text-error">
-                        {{ errors.ingredients }}
-                    </p>
+                    <p v-else class="mt-1 text-xs text-error">{{ errors.ingredients }}</p>
                 </div>
 
                 <div v-if="searchData.operator === 'NOT'">
@@ -119,9 +120,7 @@ async function handleSearch(): Promise<void> {
                     <p v-if="!errors.excluded" class="mt-1 text-xs text-textMuted">
                         Resep yang mengandung bahan ini akan dikecualikan
                     </p>
-                    <p v-else class="mt-1 text-xs text-error">
-                        {{ errors.excluded }}
-                    </p>
+                    <p v-else class="mt-1 text-xs text-error">{{ errors.excluded }}</p>
                 </div>
 
                 <button
@@ -134,9 +133,13 @@ async function handleSearch(): Promise<void> {
             </div>
         </div>
 
-        <template v-if="searched">
-            <div v-if="recipeStore.loading" class="flex justify-center py-20">
-                <div class="loading-spin"></div>
+        <div v-if="recipeStore.loading" class="flex justify-center py-20">
+            <div class="loading-spin"></div>
+        </div>
+
+        <template v-else-if="searched">
+            <div v-if="recipeStore.error" class="card bg-errorSoft">
+                <p class="text-sm font-semibold text-error">{{ recipeStore.error }}</p>
             </div>
 
             <template v-else>
@@ -188,7 +191,7 @@ async function handleSearch(): Promise<void> {
                     v-if="searchResult && searchResult.count > 0"
                     class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
                 >
-                    <RecipeCard v-for="recipe in recipeStore.searchResults" :key="recipe.id" :recipe="recipe" />
+                    <RecipeCard v-for="recipe in searchResult.data" :key="recipe.id" :recipe="recipe" />
                 </div>
 
                 <div v-else class="flex flex-col gap-3 items-center py-20 card">
