@@ -10,7 +10,6 @@ const authStore = useAuthStore();
 const formData = reactive<RegisterData>({
     username: '',
     password: '',
-    role_id: 3,
 });
 
 const confirmPassword = ref<string>('');
@@ -35,7 +34,9 @@ async function handleRegister(): Promise<void> {
 
             <form @submit.prevent="handleRegister" class="flex flex-col gap-4">
                 <div>
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary"> Username </label>
+                    <label class="block mb-2 text-sm font-semibold text-textSecondary">
+                        Username
+                    </label>
                     <input
                         v-model="formData.username"
                         type="text"
@@ -46,7 +47,9 @@ async function handleRegister(): Promise<void> {
                 </div>
 
                 <div>
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary"> Password </label>
+                    <label class="block mb-2 text-sm font-semibold text-textSecondary">
+                        Password
+                    </label>
                     <input
                         v-model="formData.password"
                         type="password"
@@ -58,7 +61,9 @@ async function handleRegister(): Promise<void> {
                 </div>
 
                 <div>
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary"> Konfirmasi Password </label>
+                    <label class="block mb-2 text-sm font-semibold text-textSecondary">
+                        Konfirmasi Password
+                    </label>
                     <input
                         v-model="confirmPassword"
                         type="password"
@@ -82,7 +87,10 @@ async function handleRegister(): Promise<void> {
 
                 <p class="text-sm text-center text-textSecondary">
                     Sudah memiliki akun?
-                    <RouterLink to="/login" class="font-semibold text-primary hover:text-primaryPressed">
+                    <RouterLink
+                        to="/login"
+                        class="font-semibold text-primary hover:text-primaryPressed"
+                    >
                         Login!
                     </RouterLink>
                 </p>

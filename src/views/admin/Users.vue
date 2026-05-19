@@ -2,8 +2,10 @@
 import { ref, computed, onMounted } from 'vue';
 import api from '@/services/api';
 import Pagination from '@/components/Pagination.vue';
+import type { User } from '@/types';
+import { formatDate } from '@/utils/recipeUtils';
 
-const users = ref<any[]>([]);
+const users = ref<User[]>([]);
 const loading = ref(true);
 const currentPage = ref(1);
 const itemsPerPage = 10;
@@ -14,8 +16,8 @@ const sortDirection = ref<'asc' | 'desc'>('desc');
 const sortedUsers = computed(() => {
     const sorted = [...users.value];
     sorted.sort((a, b) => {
-        let aVal = a[sortColumn.value];
-        let bVal = b[sortColumn.value];
+        let aVal = (a as any)[sortColumn.value];
+        let bVal = (b as any)[sortColumn.value];
         if (aVal === null || aVal === undefined) aVal = 0;
         if (bVal === null || bVal === undefined) bVal = 0;
         if (sortColumn.value === 'created_at') {
@@ -47,10 +49,10 @@ function sortBy(column: string) {
     currentPage.value = 1;
 }
 
-const showPromoteModal = ref(false);
-const showDemoteModal = ref(false);
+const showSuspendModal = ref(false);
+const showUnsuspendModal = ref(false);
 const showDeleteModal = ref(false);
-const pendingUser = ref<any>(null);
+const pendingUser = ref<User | null>(null);
 const actionLoading = ref(false);
 const deleteConfirmed = ref(false);
 
@@ -65,26 +67,26 @@ function showSuccess(msg: string) {
     }, 4000);
 }
 
-function openPromoteModal(user: any) {
+function openSuspendModal(user: User) {
     pendingUser.value = user;
-    showPromoteModal.value = true;
+    showSuspendModal.value = true;
 }
-function openDemoteModal(user: any) {
+function openUnsuspendModal(user: User) {
     pendingUser.value = user;
-    showDemoteModal.value = true;
+    showUnsuspendModal.value = true;
 }
-function openDeleteModal(user: any) {
+function openDeleteModal(user: User) {
     pendingUser.value = user;
     deleteConfirmed.value = false;
     showDeleteModal.value = true;
 }
 
-function cancelPromote() {
-    showPromoteModal.value = false;
+function cancelSuspend() {
+    showSuspendModal.value = false;
     pendingUser.value = null;
 }
-function cancelDemote() {
-    showDemoteModal.value = false;
+function cancelUnsuspend() {
+    showUnsuspendModal.value = false;
     pendingUser.value = null;
 }
 function cancelDelete() {
@@ -94,49 +96,51 @@ function cancelDelete() {
 }
 
 onMounted(() => {
-    fetchUsers();
+    showUsers();
 });
 
-async function fetchUsers() {
+async function showUsers() {
     try {
         loading.value = true;
-        const response = await api.admin.getAllUsers();
-        users.value = response.data;
+        const response = await api.admin.showAllUsers();
+        users.value = response.data as User[];
     } catch (err) {
         console.error(err);
-        alert('Failed to load users');
+        alert('Gagal memuat data user');
     } finally {
         loading.value = false;
     }
 }
 
-async function confirmPromote() {
+async function confirmSuspend() {
     if (!pendingUser.value) return;
     actionLoading.value = true;
     try {
-        await api.admin.promoteUser(pendingUser.value.id);
-        await fetchUsers();
-        showSuccess(`${pendingUser.value.username} berhasil dipromosikan ke MODERATOR!`);
+        await api.admin.suspendUser(pendingUser.value.id);
+        const target = users.value.find((u) => u.id === pendingUser.value!.id);
+        if (target) target.is_suspended = true;
+        showSuccess(`${pendingUser.value.username} berhasil disuspend.`);
     } catch (err: any) {
-        alert('Gagal mempromosikan user: ' + err.message);
+        alert('Gagal suspend user: ' + err.message);
     } finally {
         actionLoading.value = false;
-        cancelPromote();
+        cancelSuspend();
     }
 }
 
-async function confirmDemote() {
+async function confirmUnsuspend() {
     if (!pendingUser.value) return;
     actionLoading.value = true;
     try {
-        await api.admin.demoteUser(pendingUser.value.id);
-        await fetchUsers();
-        showSuccess(`${pendingUser.value.username} berhasil diturunkan ke user.`);
+        await api.admin.unsuspendUser(pendingUser.value.id);
+        const target = users.value.find((u) => u.id === pendingUser.value!.id);
+        if (target) target.is_suspended = false;
+        showSuccess(`${pendingUser.value.username} berhasil di-unsuspend.`);
     } catch (err: any) {
-        alert('Gagal menurunkan user: ' + err.message);
+        alert('Gagal unsuspend user: ' + err.message);
     } finally {
         actionLoading.value = false;
-        cancelDemote();
+        cancelUnsuspend();
     }
 }
 
@@ -145,7 +149,7 @@ async function confirmDelete() {
     actionLoading.value = true;
     try {
         await api.admin.deleteUser(pendingUser.value.id);
-        users.value = users.value.filter((u) => u.id !== pendingUser.value.id);
+        users.value = users.value.filter((u) => u.id !== pendingUser.value!.id);
         if (paginatedUsers.value.length === 0 && currentPage.value > 1) currentPage.value--;
         showSuccess(`User "${pendingUser.value.username}" berhasil dihapus.`);
     } catch (err: any) {
@@ -154,10 +158,6 @@ async function confirmDelete() {
         actionLoading.value = false;
         cancelDelete();
     }
-}
-
-function formatDate(dateString: string) {
-    return new Date(dateString).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 function handlePageChange(page: number) {
@@ -177,7 +177,14 @@ function handlePageChange(page: number) {
                 to="/admin"
                 class="inline-flex border button border-border bg-surface text-textSecondary hover:bg-overlay hover:text-textPrimary"
             >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    width="15"
+                    height="15"
+                >
                     <line x1="19" y1="12" x2="5" y2="12" />
                     <polyline points="12 19 5 12 12 5" />
                 </svg>
@@ -194,107 +201,119 @@ function handlePageChange(page: number) {
                 <p class="text-base font-bold text-textPrimary">Tidak ada user</p>
             </div>
 
-            <div v-else class="overflow-hidden card">
+            <div v-else class="overflow-hidden rounded-2xl border border-border bg-surface">
                 <div class="overflow-x-auto">
-                    <table class="w-full">
+                    <table class="w-full text-sm">
                         <thead>
-                            <tr class="border-b-2 border-divider">
-                                <th class="p-4 text-sm font-semibold text-left text-textPrimary">No</th>
-                                <th class="p-4 text-sm font-semibold text-left text-textPrimary">Username</th>
+                            <tr class="border-b border-divider bg-background">
                                 <th
-                                    @click="sortBy('role_id')"
-                                    class="p-4 text-sm font-semibold text-left cursor-pointer select-none text-textPrimary"
+                                    class="py-3 px-4 font-semibold text-left cursor-pointer text-textSecondary hover:text-textPrimary"
+                                    @click="sortBy('username')"
                                 >
-                                    <div class="flex gap-2 items-center">
-                                        Role
-                                        <span class="text-textMuted">
-                                            <span v-if="sortColumn === 'role_id'">{{
-                                                sortDirection === 'asc' ? '↑' : '↓'
-                                            }}</span>
-                                            <span v-else class="opacity-30">↕</span>
-                                        </span>
-                                    </div>
+                                    Username
+                                    <span v-if="sortColumn === 'username'">{{
+                                        sortDirection === 'asc' ? '↑' : '↓'
+                                    }}</span>
                                 </th>
-                                <th class="p-4 text-sm font-semibold text-left text-textPrimary">Resep</th>
                                 <th
+                                    class="py-3 px-4 font-semibold text-left cursor-pointer text-textSecondary hover:text-textPrimary"
+                                    @click="sortBy('role_name')"
+                                >
+                                    Role
+                                    <span v-if="sortColumn === 'role_name'">{{
+                                        sortDirection === 'asc' ? '↑' : '↓'
+                                    }}</span>
+                                </th>
+                                <th class="py-3 px-4 font-semibold text-left text-textSecondary">
+                                    Status
+                                </th>
+                                <th
+                                    class="py-3 px-4 font-semibold text-left cursor-pointer text-textSecondary hover:text-textPrimary"
+                                    @click="sortBy('recipe_count')"
+                                >
+                                    Resep
+                                    <span v-if="sortColumn === 'recipe_count'">{{
+                                        sortDirection === 'asc' ? '↑' : '↓'
+                                    }}</span>
+                                </th>
+                                <th
+                                    class="py-3 px-4 font-semibold text-left cursor-pointer text-textSecondary hover:text-textPrimary"
                                     @click="sortBy('created_at')"
-                                    class="p-4 text-sm font-semibold text-left cursor-pointer select-none text-textPrimary"
                                 >
-                                    <div class="flex gap-2 items-center">
-                                        Bergabung
-                                        <span class="text-textMuted">
-                                            <span v-if="sortColumn === 'created_at'">{{
-                                                sortDirection === 'asc' ? '↑' : '↓'
-                                            }}</span>
-                                            <span v-else class="opacity-30">↕</span>
-                                        </span>
-                                    </div>
+                                    Bergabung
+                                    <span v-if="sortColumn === 'created_at'">{{
+                                        sortDirection === 'asc' ? '↑' : '↓'
+                                    }}</span>
                                 </th>
-                                <th class="p-4 text-sm font-semibold text-left text-textPrimary">Actions</th>
+                                <th class="py-3 px-4 font-semibold text-right text-textSecondary">
+                                    Action
+                                </th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="divide-y divide-divider">
                             <tr
-                                v-for="(user, index) in paginatedUsers"
+                                v-for="user in paginatedUsers"
                                 :key="user.id"
-                                class="border-b transition-colors border-divider hover:bg-overlay/50"
+                                class="transition-colors hover:bg-overlay/40"
                             >
-                                <td class="p-4 text-sm text-textSecondary">
-                                    {{ (currentPage - 1) * itemsPerPage + index + 1 }}
+                                <td class="py-3 px-4 font-medium text-textPrimary">
+                                    {{ user.username }}
                                 </td>
-                                <td class="p-4 font-medium text-textPrimary">{{ user.username }}</td>
-                                <td class="p-4">
+                                <td class="py-3 px-4">
                                     <span
-                                        :class="['role-badges',
-                                            user.role_id === 1 && 'bg-errorSoft text-error',
-                                            user.role_id === 2 && 'bg-secondarySoft text-secondary',
-                                            user.role_id === 3 && 'bg-primarySoft text-primary',
+                                        :class="['status-badges',
+                                            user.role_id === 1
+                                                ? 'bg-errorSoft text-error'
+                                                : 'bg-primarySoft text-primary',
                                         ]"
                                     >
-                                        {{ user.role_name }}
+                                        {{
+                                            user.role_name ??
+                                            (user.role_id === 1 ? 'admin' : 'user')
+                                        }}
                                     </span>
                                 </td>
-                                <td class="p-4">
+                                <td class="py-3 px-4">
                                     <span
-                                        class="inline-flex items-center py-1 px-3 text-xs font-semibold rounded-full bg-secondarySoft text-secondary"
+                                        :class="['status-badges',
+                                            user.is_suspended
+                                                ? 'bg-errorSoft text-error'
+                                                : 'bg-successSoft text-success',
+                                        ]"
                                     >
-                                        {{ user.recipe_count || 0 }}
+                                        {{ user.is_suspended ? 'Disuspend' : 'Aktif' }}
                                     </span>
                                 </td>
-                                <td class="p-4 text-sm text-textSecondary">{{ formatDate(user.created_at) }}</td>
-                                <td class="p-4">
-                                    <div class="flex flex-wrap gap-2">
+                                <td class="py-3 px-4 text-textSecondary">
+                                    {{ user.recipe_count ?? 0 }}
+                                </td>
+                                <td class="py-3 px-4 text-textSecondary">
+                                    {{ user.created_at ? formatDate(user.created_at) : '-' }}
+                                </td>
+                                <td class="py-3 px-4">
+                                    <div class="flex gap-2 justify-end" v-if="user.role_id !== 1">
                                         <button
-                                            v-if="user.role_id === 3"
-                                            @click="openPromoteModal(user)"
-                                            class="py-1.5 px-3 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg transition-colors hover:bg-blue-100"
-                                            title="Promote to Moderator"
+                                            v-if="!user.is_suspended"
+                                            @click="openSuspendModal(user)"
+                                            class="py-1.5 px-3 text-xs font-semibold rounded-lg transition-colors hover:opacity-80 bg-warningSoft text-warning"
                                         >
-                                            Promosi
+                                            Suspend
                                         </button>
                                         <button
-                                            v-if="user.role_id === 2"
-                                            @click="openDemoteModal(user)"
-                                            class="py-1.5 px-3 text-sm font-medium text-orange-700 bg-orange-50 rounded-lg transition-colors hover:bg-orange-100"
-                                            title="Demote to User"
+                                            v-else
+                                            @click="openUnsuspendModal(user)"
+                                            class="py-1.5 px-3 text-xs font-semibold rounded-lg transition-colors hover:opacity-80 bg-successSoft text-success"
                                         >
-                                            Turun
+                                            Aktifkan
                                         </button>
                                         <button
-                                            v-if="user.role_id !== 1"
                                             @click="openDeleteModal(user)"
-                                            class="py-1.5 px-3 text-sm font-medium text-red-700 bg-red-50 rounded-lg transition-colors hover:bg-red-100"
-                                            title="Delete User"
+                                            class="py-1.5 px-3 text-xs font-semibold rounded-lg transition-colors hover:opacity-80 bg-errorSoft text-error"
                                         >
                                             Hapus
                                         </button>
-                                        <span
-                                            v-if="user.role_id === 1"
-                                            class="py-1.5 px-3 text-sm italic text-textMuted"
-                                        >
-                                            Protected
-                                        </span>
                                     </div>
+                                    <span v-else class="text-xs text-textMuted">—</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -304,29 +323,31 @@ function handlePageChange(page: number) {
 
             <Pagination
                 v-if="users.length > itemsPerPage"
+                :total="sortedUsers.length"
+                :per-page="itemsPerPage"
                 :current-page="currentPage"
-                :total-items="sortedUsers.length"
-                :items-per-page="itemsPerPage"
                 @page-change="handlePageChange"
             />
         </template>
 
+        <!-- Suspend Modal -->
         <teleport to="body">
             <div
-                v-if="showPromoteModal && pendingUser"
+                v-if="showSuspendModal && pendingUser"
                 class="flex fixed inset-0 z-50 justify-center items-center p-5 backdrop-blur-sm"
                 style="background: rgba(0, 0, 0, 0.45)"
-                @click.self="cancelPromote"
+                @click.self="cancelSuspend"
             >
-                <div class="flex overflow-hidden flex-col w-full rounded-2xl shadow-2xl mpanel bg-surface max-w-105">
+                <div
+                    class="flex overflow-hidden flex-col w-full max-w-md rounded-2xl shadow-2xl bg-surface"
+                >
                     <div
                         class="flex gap-3 justify-between items-center py-4 px-6 border-b border-divider bg-background"
                     >
-                        <h2 class="text-base font-bold text-textPrimary">Promosikan User</h2>
+                        <h2 class="text-base font-bold text-textPrimary">Suspend User</h2>
                         <button
-                            @click="cancelPromote"
-                            aria-label="Tutup"
-                            class="flex justify-center items-center w-8 h-8 rounded-lg transition-colors text-textSecondary shrink-0 hover:bg-overlay hover:text-textPrimary"
+                            @click="cancelSuspend"
+                            class="flex justify-center items-center w-8 h-8 rounded-lg transition-colors text-textSecondary hover:bg-overlay hover:text-textPrimary"
                         >
                             <svg
                                 viewBox="0 0 24 24"
@@ -343,46 +364,51 @@ function handlePageChange(page: number) {
                     </div>
                     <div class="py-5 px-6">
                         <p class="text-sm leading-relaxed text-textSecondary">
-                            Promosikan <strong class="text-textPrimary">{{ pendingUser.username }}</strong> ke role
-                            <strong class="text-textPrimary">Moderator</strong>?
+                            Suspend
+                            <strong class="text-textPrimary">{{ pendingUser.username }}</strong
+                            >? User tidak akan bisa login sampai di-unsuspend.
                         </p>
                     </div>
-                    <div class="flex gap-2.5 justify-end py-4 px-6 border-t border-divider bg-background">
+                    <div
+                        class="flex gap-2.5 justify-end py-4 px-6 border-t border-divider bg-background"
+                    >
                         <button
-                            @click="cancelPromote"
+                            @click="cancelSuspend"
                             :disabled="actionLoading"
                             class="py-2 px-5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
                         >
                             Batal
                         </button>
                         <button
-                            @click="confirmPromote"
+                            @click="confirmSuspend"
                             :disabled="actionLoading"
-                            class="py-2 px-5 text-sm font-semibold text-white bg-blue-600 rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-85"
+                            class="py-2 px-5 text-sm font-semibold text-white rounded-lg transition-opacity disabled:opacity-50 bg-warning hover:opacity-85"
                         >
-                            {{ actionLoading ? 'Memproses...' : 'Ya, Promosikan' }}
+                            {{ actionLoading ? 'Memproses...' : 'Ya, Suspend' }}
                         </button>
                     </div>
                 </div>
             </div>
         </teleport>
 
+        <!-- Unsuspend Modal -->
         <teleport to="body">
             <div
-                v-if="showDemoteModal && pendingUser"
+                v-if="showUnsuspendModal && pendingUser"
                 class="flex fixed inset-0 z-50 justify-center items-center p-5 backdrop-blur-sm"
                 style="background: rgba(0, 0, 0, 0.45)"
-                @click.self="cancelDemote"
+                @click.self="cancelUnsuspend"
             >
-                <div class="flex overflow-hidden flex-col w-full rounded-2xl shadow-2xl mpanel bg-surface max-w-105">
+                <div
+                    class="flex overflow-hidden flex-col w-full max-w-md rounded-2xl shadow-2xl bg-surface"
+                >
                     <div
                         class="flex gap-3 justify-between items-center py-4 px-6 border-b border-divider bg-background"
                     >
-                        <h2 class="text-base font-bold text-textPrimary">Turunkan User</h2>
+                        <h2 class="text-base font-bold text-textPrimary">Aktifkan User</h2>
                         <button
-                            @click="cancelDemote"
-                            aria-label="Tutup"
-                            class="flex justify-center items-center w-8 h-8 rounded-lg transition-colors text-textSecondary shrink-0 hover:bg-overlay hover:text-textPrimary"
+                            @click="cancelUnsuspend"
+                            class="flex justify-center items-center w-8 h-8 rounded-lg transition-colors text-textSecondary hover:bg-overlay hover:text-textPrimary"
                         >
                             <svg
                                 viewBox="0 0 24 24"
@@ -399,30 +425,34 @@ function handlePageChange(page: number) {
                     </div>
                     <div class="py-5 px-6">
                         <p class="text-sm leading-relaxed text-textSecondary">
-                            Turunkan <strong class="text-textPrimary">{{ pendingUser.username }}</strong> ke role
-                            <strong class="text-textPrimary">User</strong>?
+                            Aktifkan kembali akun
+                            <strong class="text-textPrimary">{{ pendingUser.username }}</strong
+                            >?
                         </p>
                     </div>
-                    <div class="flex gap-2.5 justify-end py-4 px-6 border-t border-divider bg-background">
+                    <div
+                        class="flex gap-2.5 justify-end py-4 px-6 border-t border-divider bg-background"
+                    >
                         <button
-                            @click="cancelDemote"
+                            @click="cancelUnsuspend"
                             :disabled="actionLoading"
                             class="py-2 px-5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
                         >
                             Batal
                         </button>
                         <button
-                            @click="confirmDemote"
+                            @click="confirmUnsuspend"
                             :disabled="actionLoading"
-                            class="py-2 px-5 text-sm font-semibold text-white bg-orange-600 rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-85"
+                            class="py-2 px-5 text-sm font-semibold text-white rounded-lg transition-opacity disabled:opacity-50 bg-success hover:opacity-85"
                         >
-                            {{ actionLoading ? 'Memproses...' : 'Ya, Turunkan' }}
+                            {{ actionLoading ? 'Memproses...' : 'Ya, Aktifkan' }}
                         </button>
                     </div>
                 </div>
             </div>
         </teleport>
 
+        <!-- Delete Modal -->
         <teleport to="body">
             <div
                 v-if="showDeleteModal && pendingUser"
@@ -430,15 +460,16 @@ function handlePageChange(page: number) {
                 style="background: rgba(0, 0, 0, 0.45)"
                 @click.self="cancelDelete"
             >
-                <div class="flex overflow-hidden flex-col w-full rounded-2xl shadow-2xl mpanel bg-surface max-w-115">
+                <div
+                    class="flex overflow-hidden flex-col w-full rounded-2xl shadow-2xl bg-surface max-w-115"
+                >
                     <div
                         class="flex gap-3 justify-between items-center py-4 px-6 border-b border-divider bg-background"
                     >
                         <h2 class="text-base font-bold text-textPrimary">Hapus User</h2>
                         <button
                             @click="cancelDelete"
-                            aria-label="Tutup"
-                            class="flex justify-center items-center w-8 h-8 rounded-lg transition-colors text-textSecondary shrink-0 hover:bg-overlay hover:text-textPrimary"
+                            class="flex justify-center items-center w-8 h-8 rounded-lg transition-colors text-textSecondary hover:bg-overlay hover:text-textPrimary"
                         >
                             <svg
                                 viewBox="0 0 24 24"
@@ -460,32 +491,35 @@ function handlePageChange(page: number) {
                             >?
                         </p>
                         <div
-                            v-if="pendingUser.recipe_count > 0"
+                            v-if="(pendingUser.recipe_count ?? 0) > 0"
                             class="py-3 px-4 rounded-lg border-error bg-errorSoft border-l-[3px]"
                         >
-                            <p class="flex gap-1.5 items-center mb-1 text-sm font-bold text-error">PERHATIAN</p>
+                            <p class="flex gap-1.5 items-center mb-1 text-sm font-bold text-error">
+                                PERHATIAN
+                            </p>
                             <p class="text-sm text-error">
                                 Tindakan ini juga akan
-                                <strong>MENGHAPUS {{ pendingUser.recipe_count }} resep</strong> yang dibuat oleh user
-                                ini!
+                                <strong>MENGHAPUS {{ pendingUser.recipe_count }} resep</strong> yang
+                                dibuat oleh user ini!
                             </p>
                         </div>
-                        <p
-                            v-if="!deleteConfirmed && pendingUser.recipe_count > 0"
-                            class="mt-3 text-xs text-textSecondary"
+                        <label
+                            v-if="(pendingUser.recipe_count ?? 0) > 0"
+                            class="flex gap-2 items-center mt-3 cursor-pointer"
                         >
-                            Centang untuk konfirmasi:
-                        </p>
-                        <label v-if="pendingUser.recipe_count > 0" class="flex gap-2 items-center mt-2 cursor-pointer">
                             <input
                                 type="checkbox"
                                 v-model="deleteConfirmed"
                                 class="w-4 h-4 rounded cursor-pointer focus:ring-2 border-border text-error focus:ring-error"
                             />
-                            <span class="text-sm text-textPrimary">Saya mengerti dan ingin melanjutkan</span>
+                            <span class="text-sm text-textPrimary"
+                                >Saya mengerti dan ingin melanjutkan</span
+                            >
                         </label>
                     </div>
-                    <div class="flex gap-2.5 justify-end py-4 px-6 border-t border-divider bg-background">
+                    <div
+                        class="flex gap-2.5 justify-end py-4 px-6 border-t border-divider bg-background"
+                    >
                         <button
                             @click="cancelDelete"
                             :disabled="actionLoading"
@@ -495,7 +529,10 @@ function handlePageChange(page: number) {
                         </button>
                         <button
                             @click="confirmDelete"
-                            :disabled="actionLoading || (pendingUser.recipe_count > 0 && !deleteConfirmed)"
+                            :disabled="
+                                actionLoading ||
+                                ((pendingUser.recipe_count ?? 0) > 0 && !deleteConfirmed)
+                            "
                             class="py-2 px-5 text-sm font-semibold rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed bg-error text-textInverse hover:opacity-85"
                         >
                             {{ actionLoading ? 'Menghapus...' : 'Ya, Hapus' }}
@@ -505,10 +542,11 @@ function handlePageChange(page: number) {
             </div>
         </teleport>
 
+        <!-- Success Toast -->
         <teleport to="body">
             <div
                 v-if="showSuccessToast"
-                class="flex fixed right-5 bottom-5 gap-3 items-start py-3 px-4 w-80 rounded-xl border shadow-lg border-success/30 bg-successSoft text-success z-60 max-w-[calc(100vw-40px)]"
+                class="flex fixed top-5 right-5 gap-3 items-start py-3 px-4 w-80 rounded-xl border shadow-lg border-success/30 bg-successSoft text-success z-60 max-w-[calc(100vw-40px)]"
             >
                 <p class="flex-1 text-sm font-medium leading-snug">{{ successMessage }}</p>
                 <button

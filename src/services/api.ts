@@ -1,15 +1,18 @@
 import axios, { type AxiosInstance, type AxiosResponse } from 'axios';
 import type {
+    AdminRecipesResponse,
+    AdminStatsResponse,
     AuthResponse,
-    RecipeResponse,
-    SearchResponse,
+    CreateRecipeData,
     LoginCredentials,
+    MessageResponse,
+    ProfileResponse,
+    RecipeResponse,
     RegisterData,
     SearchCriteria,
-    CreateRecipeData,
-    ModerationStatsResponse,
-    ModerationRecipesResponse,
-    UserResponse,
+    SearchResponse,
+    UserDetailResponse,
+    UserListResponse,
 } from '@/types';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -17,12 +20,9 @@ const API_URL = import.meta.env.VITE_API_URL;
 const api: AxiosInstance = axios.create({
     baseURL: API_URL,
     timeout: 10000,
-    headers: {
-        'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
 });
 
-// request interceptor
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
@@ -31,12 +31,9 @@ api.interceptors.request.use(
         }
         return config;
     },
-    (error) => {
-        return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
 );
 
-// response interceptor
 api.interceptors.response.use(
     (response: AxiosResponse) => response.data,
     (error) => {
@@ -47,55 +44,78 @@ api.interceptors.response.use(
 
 export default {
     auth: {
-        register: (data: RegisterData): Promise<AuthResponse> => api.post('/users/register', data),
-        login: (data: LoginCredentials): Promise<AuthResponse> => api.post('/users/login', data),
-        getCurrentUser: (): Promise<{ success: boolean; message: string; data: any }> => api.get('/users/me'),
+        register: (data: RegisterData): Promise<AuthResponse> => api.post('/auth/register', data),
+
+        login: (data: LoginCredentials): Promise<AuthResponse> => api.post('/auth/login', data),
+
+        currentUser: (): Promise<UserDetailResponse> => api.get('/auth/me'),
     },
 
     recipes: {
-        getAll: (params?: Record<string, any>): Promise<RecipeResponse> => api.get('/recipes', { params }),
-        getMy: (): Promise<RecipeResponse> => api.get('/recipes/my'),
-        getById: (id: number): Promise<RecipeResponse> => api.get(`/recipes/${id}`),
-        search: (data: SearchCriteria): Promise<SearchResponse> => api.post('/search', data),
+        showAll: (params?: Record<string, string>): Promise<RecipeResponse> =>
+            api.get('/recipes', { params }),
+
+        showMine: (): Promise<RecipeResponse> => api.get('/recipes/my'),
+
+        showRecipe: (id: number): Promise<RecipeResponse> => api.get(`/recipes/${id}`),
+
+        showMyRecipeById: (id: number): Promise<RecipeResponse> => api.get(`/recipes/${id}/edit`),
+
         create: (data: CreateRecipeData): Promise<RecipeResponse> => api.post('/recipes', data),
-        update: (id: number, data: CreateRecipeData): Promise<RecipeResponse> => api.put(`/recipes/${id}`, data),
-        delete: (id: number): Promise<{ success: boolean; message: string }> => api.delete(`/recipes/${id}`),
+
+        update: (id: number, data: CreateRecipeData): Promise<RecipeResponse> =>
+            api.put(`/recipes/${id}`, data),
+
+        delete: (id: number): Promise<MessageResponse> => api.delete(`/recipes/${id}`),
     },
 
-    moderation: {
-        getStats: (): Promise<ModerationStatsResponse> => api.get('/moderation/stats'),
-        getPending: (): Promise<ModerationRecipesResponse> => api.get('/moderation/pending'),
-        getByStatus: (status: 'pending' | 'approved' | 'rejected'): Promise<ModerationRecipesResponse> =>
-            api.get('/moderation/recipes', { params: { status } }),
-        getAllRecipes: (): Promise<ModerationRecipesResponse> => api.get('/moderation/recipes/all'),
-        getRecipeById: (id: number): Promise<RecipeResponse> => api.get(`/moderation/recipes/${id}`),
-        approve: (id: number): Promise<RecipeResponse> => api.put(`/moderation/recipes/${id}/approve`),
-        reject: (id: number, reason?: string): Promise<RecipeResponse> =>
-            api.put(`/moderation/recipes/${id}/reject`, { reason }),
+    search: {
+        query: (data: SearchCriteria): Promise<SearchResponse> => api.post('/search', data),
     },
 
     profile: {
-        getProfile: (): Promise<{ success: boolean; data: any }> => api.get('/profile'),
-        updateProfile: (username: string): Promise<{ success: boolean; message: string; data: any }> =>
+        showProfile: (): Promise<ProfileResponse> => api.get('/profile'),
+
+        updateProfile: (username: string): Promise<MessageResponse> =>
             api.put('/profile', { username }),
-        updatePassword: (
-            currentPassword: string,
-            newPassword: string
-        ): Promise<{ success: boolean; message: string }> =>
+
+        updatePassword: (currentPassword: string, newPassword: string): Promise<MessageResponse> =>
             api.put('/profile/password', { currentPassword, newPassword }),
     },
 
     admin: {
-        getAllUsers: (params?: Record<string, any>): Promise<UserResponse> => api.get('/admin/users', { params }),
-        getAllRecipes: (params?: Record<string, any>): Promise<RecipeResponse> => api.get('/admin/recipes', { params }),
-        getStats: (params?: Record<string, any>): Promise<RecipeResponse> => api.get('/admin/stats', { params }),
-        promoteUser: (userId: number): Promise<{ success: boolean; message: string }> =>
-            api.put(`/admin/users/${userId}/promote`),
-        demoteUser: (userId: number): Promise<{ success: boolean; message: string }> =>
-            api.put(`/admin/users/${userId}/demote`),
-        deleteUser: (userId: number): Promise<{ success: boolean; message: string }> =>
+        showAllUsers: (params?: Record<string, string>): Promise<UserListResponse> =>
+            api.get('/admin/users', { params }),
+
+        suspendUser: (userId: number): Promise<MessageResponse> =>
+            api.put(`/admin/users/${userId}/suspend`),
+
+        unsuspendUser: (userId: number): Promise<MessageResponse> =>
+            api.put(`/admin/users/${userId}/unsuspend`),
+
+        deleteUser: (userId: number): Promise<MessageResponse> =>
             api.delete(`/admin/users/${userId}`),
-        deleteRecipe: (id: number): Promise<{ success: boolean; message: string }> =>
-            api.delete(`/admin/recipes/${id}`),
+
+        showRecipe: (id: number): Promise<RecipeResponse> => api.get(`/admin/recipes/${id}`),
+
+        showAllRecipes: (params?: Record<string, string>): Promise<AdminRecipesResponse> =>
+            api.get('/admin/recipes', { params }),
+
+        showPendingRecipes: (): Promise<AdminRecipesResponse> => api.get('/admin/recipes/pending'),
+
+        showRecipesByStatus: (
+            status: 'pending' | 'approved' | 'rejected'
+        ): Promise<AdminRecipesResponse> =>
+            api.get('/admin/recipes/status', { params: { status } }),
+
+        approveRecipe: (id: number): Promise<RecipeResponse> =>
+            api.put(`/admin/recipes/${id}/approve`),
+
+        rejectRecipe: (id: number, reason?: string): Promise<RecipeResponse> =>
+            api.put(`/admin/recipes/${id}/reject`, { reason }),
+
+        deleteRecipe: (id: number): Promise<MessageResponse> => api.delete(`/admin/recipes/${id}`),
+
+        showStats: (): Promise<AdminStatsResponse> => api.get('/admin/stats'),
     },
 };

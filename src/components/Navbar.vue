@@ -1,25 +1,15 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
-import { useModerationStore } from '@/stores/moderationStore';
 
 const router = useRouter();
 const authStore = useAuthStore();
-const moderationStore = useModerationStore();
 const dropdownRef = ref<HTMLElement | null>(null);
 const isDropdownOpen = ref(false);
 const isMobileMenuOpen = ref(false);
 
-const isAdmin = computed(() => authStore.user?.role_id === 1);
-const isModerator = computed(() => authStore.user?.role_id === 2);
-const pendingCount = computed(() => moderationStore.stats.pending);
-
-onMounted(async () => {
-    if (isModerator.value || isAdmin.value) {
-        await moderationStore.fetchStats();
-    }
-
+onMounted(() => {
     document.addEventListener('click', handleClickOutside);
 });
 
@@ -64,22 +54,17 @@ function handleLogout() {
 <template>
     <nav class="sticky top-0 z-50 border-b bg-surface border-divider shadow-xs">
         <div class="container px-4 mx-auto">
-            <div class="flex justify-between items-center h-16">
-                <RouterLink to="/" class="text-2xl font-bold text-textPrimary"> 🍳 Resep App </RouterLink>
+            <div class="flex justify-between items-center h-14">
+                <RouterLink to="/" class="text-2xl font-bold text-textPrimary">
+                    🍳 Resep App
+                </RouterLink>
 
                 <div class="hidden items-center space-x-6 lg:flex">
                     <template v-if="authStore.isAuthenticated">
-                        <template v-if="isAdmin">
+                        <template v-if="authStore.isAdmin">
                             <RouterLink to="/admin" class="nav-link">Dashboard</RouterLink>
                             <RouterLink to="/admin/users" class="nav-link">User</RouterLink>
                             <RouterLink to="/admin/recipes" class="nav-link">Resep</RouterLink>
-                        </template>
-
-                        <template v-else-if="isModerator">
-                            <RouterLink to="/" class="nav-link">Home</RouterLink>
-                            <RouterLink to="/search" class="nav-link">Pencarian</RouterLink>
-                            <RouterLink to="/my-recipes" class="nav-link">Resep Saya</RouterLink>
-                            <RouterLink to="/create-recipe" class="nav-link">Buat Resep</RouterLink>
                         </template>
 
                         <template v-else>
@@ -94,13 +79,13 @@ function handleLogout() {
                                 <div
                                     class="flex justify-center items-center w-8 h-8 text-white rounded-full bg-primary"
                                 >
-                                    <span class="text-sm font-bold">
-                                        {{ getUserInitial() }}
-                                    </span>
+                                    <span class="text-sm font-bold">{{ getUserInitial() }}</span>
                                 </div>
                                 <span>{{ authStore.user?.username }}</span>
                                 <svg
-                                    :class="['h-4 w-4 transition-transform', isDropdownOpen && 'rotate-180']"
+                                    :class="['h-4 w-4 transition-transform',
+                                        isDropdownOpen && 'rotate-180',
+                                    ]"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -123,45 +108,35 @@ function handleLogout() {
                                         {{ authStore.user?.username }}
                                     </p>
                                     <p class="mt-1 text-xs">
-                                        <span v-if="isAdmin" class="text-error bg-errorSoft role-badges"> Admin </span>
                                         <span
-                                            v-else-if="isModerator"
-                                            class="text-secondary bg-secondarySoft role-badges"
+                                            v-if="authStore.isAdmin"
+                                            class="text-error bg-errorSoft role-badges"
+                                            >Admin</span
                                         >
-                                            Moderator
-                                        </span>
-                                        <span v-else class="text-primary bg-primarySoft role-badges"> User </span>
+                                        <span v-else class="text-primary bg-primarySoft role-badges"
+                                            >User</span
+                                        >
                                     </p>
                                 </div>
 
                                 <div class="py-1">
-                                    <RouterLink to="/profile" @click="closeDropdown" class="dropdown-nav-link">
+                                    <RouterLink
+                                        to="/profile"
+                                        @click="closeDropdown"
+                                        class="dropdown-nav-link"
+                                    >
                                         Profil Saya
                                     </RouterLink>
-
                                     <RouterLink
-                                        v-if="!isAdmin && !isModerator"
+                                        v-if="!authStore.isAdmin"
                                         to="/my-recipes"
                                         @click="closeDropdown"
                                         class="dropdown-nav-link"
                                     >
                                         Resep Saya
                                     </RouterLink>
-
                                     <RouterLink
-                                        v-if="isModerator"
-                                        to="/moderation"
-                                        @click="closeDropdown"
-                                        class="dropdown-nav-link"
-                                    >
-                                        Dashboard
-                                        <span v-if="pendingCount > 0" class="notification-number">
-                                            {{ pendingCount }}
-                                        </span>
-                                    </RouterLink>
-
-                                    <RouterLink
-                                        v-if="isAdmin"
+                                        v-if="authStore.isAdmin"
                                         to="/admin"
                                         @click="closeDropdown"
                                         class="dropdown-nav-link"
@@ -207,80 +182,82 @@ function handleLogout() {
                 </button>
             </div>
 
-            <div v-if="isMobileMenuOpen && authStore.isAuthenticated" class="pb-4 border-t lg:hidden border-divider">
+            <div
+                v-if="isMobileMenuOpen && authStore.isAuthenticated"
+                class="pb-4 border-t lg:hidden border-divider"
+            >
                 <div class="py-3 px-4 border-b bg-surface border-divider">
                     <div class="flex items-center space-x-3">
                         <div
                             class="flex justify-center items-center w-10 h-10 rounded-full text-textInverse bg-primary"
                         >
-                            <span class="text-sm font-bold">
-                                {{ getUserInitial() }}
-                            </span>
+                            <span class="text-sm font-bold">{{ getUserInitial() }}</span>
                         </div>
                         <div>
                             <p class="text-sm font-medium text-textPrimary">
                                 {{ authStore.user?.username }}
                             </p>
                             <p class="mt-1 text-xs">
-                                <span v-if="isAdmin" class="role-badges text-error bg-errorSoft"> Admin </span>
-                                <span v-else-if="isModerator" class="role-badges text-secondary bg-secondarySoft">
-                                    Moderator
-                                </span>
-                                <span v-else class="role-badges text-primary bg-primarySoft"> User </span>
+                                <span
+                                    v-if="authStore.isAdmin"
+                                    class="role-badges text-error bg-errorSoft"
+                                    >Admin</span
+                                >
+                                <span v-else class="role-badges text-primary bg-primarySoft"
+                                    >User</span
+                                >
                             </p>
                         </div>
                     </div>
                 </div>
 
                 <div class="py-2">
-                    <template v-if="isAdmin">
-                        <RouterLink to="/admin" @click="closeMobileMenu" class="mobile-nav-link">
-                            Dashboard
-                        </RouterLink>
-                        <RouterLink to="/admin/users" @click="closeMobileMenu" class="mobile-nav-link">
-                            User
-                        </RouterLink>
-                        <RouterLink to="/admin/recipes" @click="closeMobileMenu" class="mobile-nav-link">
-                            Resep
-                        </RouterLink>
-                    </template>
-
-                    <template v-else-if="isModerator">
-                        <RouterLink to="/" @click="closeMobileMenu" class="mobile-nav-link"> Home </RouterLink>
-                        <RouterLink to="/search" @click="closeMobileMenu" class="mobile-nav-link">
-                            Pencarian
-                        </RouterLink>
-                        <RouterLink to="/moderation" @click="closeMobileMenu" class="mobile-nav-link">
-                            <span class="flex justify-between items-center">
-                                Dashboard
-                                <span v-if="pendingCount > 0" class="notification-badges">
-                                    {{ pendingCount }}
-                                </span>
-                            </span>
-                        </RouterLink>
-                        <RouterLink to="/my-recipes" @click="closeMobileMenu" class="mobile-nav-link">
-                            Resep Saya
-                        </RouterLink>
+                    <template v-if="authStore.isAdmin">
+                        <RouterLink to="/admin" @click="closeMobileMenu" class="mobile-nav-link"
+                            >Dashboard</RouterLink
+                        >
+                        <RouterLink
+                            to="/admin/users"
+                            @click="closeMobileMenu"
+                            class="mobile-nav-link"
+                            >User</RouterLink
+                        >
+                        <RouterLink
+                            to="/admin/recipes"
+                            @click="closeMobileMenu"
+                            class="mobile-nav-link"
+                            >Resep</RouterLink
+                        >
                     </template>
 
                     <template v-else>
-                        <RouterLink to="/" @click="closeMobileMenu" class="mobile-nav-link"> Home </RouterLink>
-                        <RouterLink to="/search" @click="closeMobileMenu" class="mobile-nav-link">
-                            Pencarian
-                        </RouterLink>
-                        <RouterLink to="/my-recipes" @click="closeMobileMenu" class="mobile-nav-link">
-                            Resep Saya
-                        </RouterLink>
-                        <RouterLink to="/create-recipe" @click="closeMobileMenu" class="mobile-nav-link">
-                            Buat Resep
-                        </RouterLink>
+                        <RouterLink to="/" @click="closeMobileMenu" class="mobile-nav-link"
+                            >Home</RouterLink
+                        >
+                        <RouterLink to="/search" @click="closeMobileMenu" class="mobile-nav-link"
+                            >Pencarian</RouterLink
+                        >
+                        <RouterLink
+                            to="/my-recipes"
+                            @click="closeMobileMenu"
+                            class="mobile-nav-link"
+                            >Resep Saya</RouterLink
+                        >
+                        <RouterLink
+                            to="/create-recipe"
+                            @click="closeMobileMenu"
+                            class="mobile-nav-link"
+                            >Buat Resep</RouterLink
+                        >
                     </template>
 
                     <div class="pt-2 mt-2 border-t border-divider">
-                        <RouterLink to="/profile" @click="closeMobileMenu" class="mobile-nav-link">
-                            Profil Saya
-                        </RouterLink>
-                        <button @click="handleLogout" class="text-error mobile-nav-link">Keluar</button>
+                        <RouterLink to="/profile" @click="closeMobileMenu" class="mobile-nav-link"
+                            >Profil Saya</RouterLink
+                        >
+                        <button @click="handleLogout" class="text-error mobile-nav-link">
+                            Keluar
+                        </button>
                     </div>
                 </div>
             </div>

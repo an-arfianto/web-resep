@@ -3,8 +3,44 @@ export interface User {
     username: string;
     role_id: number;
     role_name?: string;
+    is_suspended: boolean;
     created_at?: string;
+    recipe_count?: number;
 }
+
+export interface LoginCredentials {
+    username: string;
+    password: string;
+}
+
+export interface RegisterData {
+    username: string;
+    password: string;
+}
+
+export interface AuthResponse {
+    success: boolean;
+    message: string;
+    data: {
+        user: User;
+        token: string;
+    };
+}
+
+export interface UserDetailResponse {
+    success: boolean;
+    message: string;
+    data: User;
+}
+
+export interface UserListResponse {
+    success: boolean;
+    message: string;
+    count?: number;
+    data: User[];
+}
+
+export type RecipeStatus = 'pending' | 'approved' | 'rejected';
 
 export interface Ingredient {
     name: string;
@@ -20,39 +56,25 @@ export interface Recipe {
     description?: string;
     instructions?: string;
     ingredients: Ingredient[] | string;
-    ingredientsText?: string;
     user_id?: number;
     creator_username?: string;
+    creator_is_suspended?: boolean;
+    reviewer_username?: string | null;
+    reviewed_by?: number | null;
+    reviewed_at?: string | null;
+    rejection_reason?: string | null;
+    status?: RecipeStatus;
     matched_count?: number;
     created_at: string;
     updated_at?: string;
-    status?: RecipeStatus;
-    rejection_reason?: string;
 }
 
-export interface LoginCredentials {
-    username: string;
-    password: string;
-}
-
-export interface RegisterData extends LoginCredentials {
-    role_id: number;
-}
-
-export interface AuthResponse {
-    success: boolean;
-    message: string;
-    data: {
-        user: User;
-        token: string;
-    };
-}
-
-export interface UserResponse {
-    success: boolean;
-    message: string;
-    data: User | User[];
-    count?: number;
+export interface CreateRecipeData {
+    name: string;
+    category: string;
+    description?: string;
+    instructions: string;
+    ingredients: Ingredient[];
 }
 
 export interface RecipeResponse {
@@ -78,50 +100,41 @@ export interface SearchResponse {
     data: Recipe[];
 }
 
-export interface CreateRecipeData {
-    name: string;
-    category: string;
-    description?: string;
-    instructions: string;
-    ingredients: Ingredient[];
-}
-
-export type RecipeStatus = 'pending' | 'approved' | 'rejected';
-
-export interface ModerationRecipe {
-    id: number;
-    name: string;
-    category: string;
-    status: RecipeStatus;
-    created_at: string;
-    user_id: number;
-    creator_username: string;
-    ingredients: string;
-    description?: string;
-    instructions?: string;
-    reviewed_by?: number | null;
-    reviewed_at?: string | null;
-    reviewer_username?: string | null;
-    rejection_reason?: string | null;
-}
-
-export interface ModerationStats {
-    total: number;
-    pending: number;
-    approved: number;
-    rejected: number;
-}
-
-export interface ModerationStatsResponse {
+export interface ProfileResponse {
     success: boolean;
-    data: ModerationStats;
+    data: User;
 }
 
-export interface ModerationRecipesResponse {
+export interface AdminStats {
+    totalUsers: number;
+    totalRecipes: number;
+    pendingRecipes: number;
+    suspendedUsers: number;
+    recipesByCategory: { category: string; count: number }[];
+    recipesByStatus: {
+        pending: number;
+        approved: number;
+        rejected: number;
+    };
+    usersByRole: { role_name: string; count: number }[];
+}
+
+export interface AdminStatsResponse {
     success: boolean;
+    message: string;
+    data: AdminStats;
+}
+
+export interface AdminRecipesResponse {
+    success: boolean;
+    message: string;
     count: number;
-    status?: RecipeStatus;
-    data: ModerationRecipe[];
+    data: Recipe[];
+}
+
+export interface MessageResponse {
+    success: boolean;
+    message: string;
 }
 
 export interface ApiError {

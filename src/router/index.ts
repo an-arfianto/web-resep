@@ -2,7 +2,7 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore';
 
 const routes: RouteRecordRaw[] = [
-    // login register
+    // public routes
     {
         path: '/login',
         name: 'Login',
@@ -16,7 +16,7 @@ const routes: RouteRecordRaw[] = [
         meta: { guest: true },
     },
 
-    // protected routes
+    // protect routes
     {
         path: '/profile',
         name: 'Profile',
@@ -28,44 +28,37 @@ const routes: RouteRecordRaw[] = [
         path: '/',
         name: 'Home',
         component: () => import('@/views/Home.vue'),
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, userOnly: true },
     },
     {
         path: '/search',
         name: 'Search',
         component: () => import('@/views/Search.vue'),
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, userOnly: true },
     },
     {
         path: '/recipe/:id',
         name: 'RecipeDetail',
         component: () => import('@/views/RecipeDetail.vue'),
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, userOnly: true },
     },
     {
         path: '/my-recipes',
         name: 'MyRecipes',
         component: () => import('@/views/MyRecipes.vue'),
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, userOnly: true },
     },
     {
         path: '/create-recipe',
         name: 'CreateRecipe',
         component: () => import('@/views/CreateRecipe.vue'),
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, userOnly: true },
     },
     {
         path: '/edit-recipe/:id',
         name: 'EditRecipe',
         component: () => import('@/views/EditRecipe.vue'),
-        meta: { requiresAuth: true },
-    },
-
-    {
-        path: '/moderation',
-        name: 'ModerationDashboard',
-        component: () => import('@/views/moderation/Dashboard.vue'),
-        meta: { requiresAuth: true, requiresModerator: true },
+        meta: { requiresAuth: true, userOnly: true },
     },
 
     {
@@ -93,34 +86,25 @@ const router = createRouter({
     routes,
 });
 
-// navigation guard
 router.beforeEach(async (to, _from, next) => {
     const authStore = useAuthStore();
+
     if (authStore.token && !authStore.user) {
         await authStore.checkAuth();
     }
 
     const isAuthenticated = authStore.isAuthenticated;
-    const isAdmin = authStore.user?.role_id === 1;
-    const isModerator = authStore.user?.role_id === 2;
+    const isAdmin = authStore.isAdmin;
 
-    // guest routes (belum login)
     if (to.meta.guest) {
         if (isAuthenticated) {
-            if (isAdmin) {
-                next('/admin');
-            } else if (isModerator) {
-                next('/moderation');
-            } else {
-                next('/');
-            }
+            next(isAdmin ? '/admin' : '/');
         } else {
             next();
         }
         return;
     }
 
-    // protected routes
     if (to.meta.requiresAuth) {
         if (!isAuthenticated) {
             next('/login');
@@ -128,12 +112,12 @@ router.beforeEach(async (to, _from, next) => {
         }
 
         if (to.meta.requiresAdmin && !isAdmin) {
-            next(isModerator ? '/moderation' : '/');
+            next('/');
             return;
         }
 
-        if (to.meta.requiresModerator && !isModerator && !isAdmin) {
-            next('/');
+        if (to.meta.userOnly && isAdmin) {
+            next('/admin');
             return;
         }
 

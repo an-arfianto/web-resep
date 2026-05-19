@@ -15,12 +15,8 @@ const formData = reactive<LoginCredentials>({
 async function handleLogin(): Promise<void> {
     const success = await authStore.login(formData);
     if (success) {
-        const userRole = authStore.user?.role_id;
-
-        if (userRole === 1) {
+        if (authStore.isAdmin) {
             router.push('/admin');
-        } else if (userRole === 2) {
-            router.push('/moderation');
         } else {
             router.push('/');
         }
@@ -35,7 +31,9 @@ async function handleLogin(): Promise<void> {
 
             <form @submit.prevent="handleLogin" class="flex flex-col gap-4">
                 <div>
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary">Username</label>
+                    <label class="block mb-2 text-sm font-semibold text-textSecondary"
+                        >Username</label
+                    >
                     <input
                         v-model="formData.username"
                         type="text"
@@ -46,7 +44,9 @@ async function handleLogin(): Promise<void> {
                 </div>
 
                 <div>
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary">Password</label>
+                    <label class="block mb-2 text-sm font-semibold text-textSecondary"
+                        >Password</label
+                    >
                     <input
                         v-model="formData.password"
                         type="password"
@@ -70,7 +70,10 @@ async function handleLogin(): Promise<void> {
 
                 <p class="text-sm text-center text-textSecondary">
                     Tidak memiliki akun?
-                    <RouterLink to="/register" class="font-semibold text-primary hover:text-primaryPressed">
+                    <RouterLink
+                        to="/register"
+                        class="font-semibold text-primary hover:text-primaryPressed"
+                    >
                         Registrasi!
                     </RouterLink>
                 </p>
