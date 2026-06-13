@@ -100,8 +100,8 @@ async function handleUpdatePassword() {
 </script>
 
 <template>
-    <div class="flex flex-col gap-5 p-4 mx-auto w-full max-w-6xl lg:px-6">
-        <h1 class="text-2xl font-bold text-textPrimary">Profil Saya</h1>
+    <div class="container-body">
+        <h1 class="mb-1 card-title">Profil Saya</h1>
 
         <div class="border-b border-divider">
             <nav class="flex gap-8 -mb-px">
@@ -158,8 +158,8 @@ async function handleUpdatePassword() {
                 </div>
 
                 <div v-else class="card">
-                    <h3 class="mb-4 text-lg font-bold text-textPrimary">Statistik Resep</h3>
-                    <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+                    <p class="card-title">Statistik Resep</p>
+                    <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
                         <div class="p-6 text-center rounded-xl bg-overlay">
                             <div class="text-3xl font-bold text-textPrimary">
                                 {{ profile.recipe_count || 0 }}
@@ -194,7 +194,7 @@ async function handleUpdatePassword() {
 
             <div v-show="activeTab === 'settings'" class="flex flex-col gap-5">
                 <div class="card">
-                    <h3 class="mb-4 text-lg font-bold text-textPrimary">Ubah Username</h3>
+                    <p class="text-xl card-title">Ubah Username</p>
                     <div class="max-w-md">
                         <label class="block mb-2 text-sm font-medium text-textPrimary"
                             >Username</label
@@ -208,7 +208,7 @@ async function handleUpdatePassword() {
                         <button
                             @click="handleUpdateUsername"
                             :disabled="usernameLoading"
-                            class="disabled:opacity-50 disabled:cursor-not-allowed button bg-primary text-textInverse hover:bg-primaryPressed"
+                            class="disabled:opacity-50 button bg-primary text-textInverse hover:bg-primaryPressed"
                         >
                             {{ usernameLoading ? 'Mohon Tunggu...' : 'Ubah Username' }}
                         </button>
@@ -216,7 +216,7 @@ async function handleUpdatePassword() {
                 </div>
 
                 <div class="card">
-                    <h3 class="mb-4 text-lg font-bold text-textPrimary">Ubah Password</h3>
+                    <h3 class="text-xl card-title">Ubah Password</h3>
                     <div class="space-y-4 max-w-md">
                         <div>
                             <label class="block mb-2 text-sm font-medium text-textPrimary"
@@ -254,7 +254,7 @@ async function handleUpdatePassword() {
                         <button
                             @click="handleUpdatePassword"
                             :disabled="passwordLoading"
-                            class="disabled:opacity-50 disabled:cursor-not-allowed button bg-primary text-textInverse hover:bg-primaryPressed"
+                            class="disabled:opacity-50 button bg-primary text-textInverse hover:bg-primaryPressed"
                         >
                             {{ passwordLoading ? 'Mohon Tunggu...' : 'Ubah Password' }}
                         </button>
@@ -264,12 +264,9 @@ async function handleUpdatePassword() {
         </template>
 
         <teleport to="body">
-            <div v-if="showSuccessToast" class="fixed top-5 right-5 toast toast-success z-60">
-                <p class="flex-1 text-sm font-medium leading-snug">{{ successMessage }}</p>
-                <button
-                    @click="showSuccessToast = false"
-                    class="mt-0.5 opacity-60 transition-opacity hover:opacity-100 shrink-0"
-                >
+            <div v-if="showSuccessToast" class="toast">
+                <p class="toast-text">{{ successMessage }}</p>
+                <button @click="showSuccessToast = false" class="toast-close-btn">
                     <svg
                         viewBox="0 0 24 24"
                         fill="none"

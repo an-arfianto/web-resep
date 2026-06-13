@@ -22,7 +22,6 @@
     --color-errorSoft: #f1d6df;
     --color-border: #dfdad9;
     --color-divider: #e6e2e0;
-    --color-inputBackground: #f4ede8;
 }
 
 @layer base {
@@ -33,12 +32,20 @@
 }
 
 @layer components {
+    .container-body {
+        @apply mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-6 lg:px-6;
+    }
+
     .button {
         @apply items-center rounded-lg px-4 py-2 text-center font-medium transition-colors;
     }
 
     .input-field {
-        @apply bg-inputBackground text-textPrimary focus:ring-primary border-border w-full rounded-lg border px-4 py-2 transition-all outline-none focus:border-transparent focus:ring-2;
+        @apply bg-overlay text-textPrimary focus:ring-primary border-border placeholder-textMuted w-full rounded-lg border px-4 py-2 transition-all outline-none focus:border-transparent focus:ring-2;
+    }
+
+    .input-field-title {
+        @apply text-textSecondary mb-2 block text-sm font-semibold;
     }
 
     .card {
@@ -47,6 +54,14 @@
 
     .card-interactive {
         @apply border-border bg-surface flex flex-col gap-3 rounded-xl border p-5 hover:shadow-md;
+    }
+
+    .card-title {
+        @apply text-textPrimary text-2xl font-bold lg:text-3xl;
+    }
+
+    .card-subtitle {
+        @apply text-textSecondary text-sm leading-relaxed;
     }
 
     .role-badges {
@@ -102,6 +117,10 @@
         @apply px-6 py-5;
     }
 
+    .modal-text {
+        @apply text-textSecondary text-sm leading-relaxed;
+    }
+
     .modal-footer {
         @apply bg-background border-divider flex justify-end gap-2.5 border-t px-6 py-4;
     }
@@ -111,35 +130,23 @@
     }
 
     .toast {
-        @apply z-60 flex w-80 max-w-sm items-start gap-3 rounded-xl px-4 py-3 text-sm shadow-lg;
+        @apply bg-primarySoft border-primary/30 text-primary fixed top-5 right-5 z-60 flex w-80 max-w-sm items-start gap-3 rounded-xl border px-4 py-3 text-sm shadow-lg;
     }
 
-    .toast-success {
-        @apply bg-successSoft border-success/30 text-success border;
+    .toast-text {
+        @apply text-primary flex-1 text-sm leading-snug font-medium;
     }
 
-    .toast-error {
-        @apply bg-errorSoft border-error/30 text-error border;
+    .toast-close-btn {
+        @apply mt-0.5 shrink-0 opacity-60 transition-opacity hover:opacity-100;
     }
 
     .alert-box {
-        @apply rounded-lg px-3 py-2.5;
+        @apply bg-errorSoft border-error/30 rounded-lg border px-3 py-2.5;
     }
 
-    .alert-error {
-        @apply bg-errorSoft text-error border-error/30 border;
-    }
-
-    .alert-warning {
-        @apply bg-warningSoft text-warning border-warning/30 border;
-    }
-
-    .alert-success {
-        @apply bg-successSoft text-success border-success/30 border;
-    }
-
-    .notification-number {
-        @apply bg-error text-textInverse ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold;
+    .alert-text {
+        @apply text-error text-sm font-semibold;
     }
 
     .loading-spin {
@@ -167,7 +174,7 @@
     }
 
     .section-title {
-        @apply text-textPrimary mb-0.5 text-xl font-bold;
+        @apply text-textPrimary mb-0.5 text-2xl font-bold;
     }
 
     .section-subtitle {

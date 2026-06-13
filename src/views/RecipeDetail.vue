@@ -35,7 +35,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="flex flex-col gap-5 p-4 mx-auto w-full max-w-4xl lg:px-6">
+    <div class="container-body">
         <button
             @click="$router.back()"
             class="inline-flex gap-1.5 items-center button bg-overlay text-textSecondary w-fit hover:bg-divider hover:text-textPrimary"
@@ -59,8 +59,8 @@ onMounted(() => {
         </div>
 
         <div v-else-if="recipeStore.error" class="card">
-            <div class="alert-box alert-error">
-                <p class="text-sm font-semibold text-error">{{ recipeStore.error }}</p>
+            <div class="alert-box">
+                <p class="alert-text">{{ recipeStore.error }}</p>
             </div>
         </div>
 
@@ -68,7 +68,7 @@ onMounted(() => {
             <div class="card">
                 <div class="flex flex-col gap-4">
                     <div class="flex flex-row gap-3 justify-between items-start">
-                        <h1 class="text-2xl font-bold leading-tight lg:text-4xl text-textPrimary">
+                        <h1 class="mb-0 card-title">
                             {{ recipe.name }}
                         </h1>
                         <span class="category-badges shrink-0">
@@ -77,7 +77,7 @@ onMounted(() => {
                     </div>
 
                     <div
-                        class="flex flex-col gap-2 py-3 px-4 rounded-lg sm:flex-row sm:gap-6 sm:items-center bg-background"
+                        class="flex flex-col sm:flex-row sm:gap-6 sm:items-center card bg-background"
                     >
                         <div v-if="recipe.creator_username" class="flex gap-2 items-center text-sm">
                             <span class="font-medium text-textSecondary">Oleh:</span>
@@ -94,10 +94,7 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <p
-                        v-if="recipe.description"
-                        class="text-base leading-relaxed lg:text-lg text-textSecondary"
-                    >
+                    <p v-if="recipe.description" class="text-base card-subtitle">
                         {{ recipe.description }}
                     </p>
                 </div>
@@ -105,15 +102,15 @@ onMounted(() => {
 
             <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
                 <div class="card">
-                    <h2 class="mb-4 text-xl font-bold lg:text-2xl text-textPrimary">Bahan-bahan</h2>
-                    <div class="flex flex-col p-4 rounded-lg bg-background">
+                    <p class="mb-2 card-title">Bahan-bahan</p>
+                    <div class="flex flex-col card bg-background">
                         <div
                             v-for="(ingredient, index) in ingredientsList"
                             :key="index"
                             class="flex gap-1 items-start"
                         >
                             <span class="text-primary shrink-0">•</span>
-                            <span class="text-sm leading-relaxed text-textPrimary">
+                            <span class="card-subtitle text-textPrimary">
                                 <span
                                     v-if="ingredient.quantity"
                                     class="font-semibold text-textPrimary"
@@ -128,9 +125,9 @@ onMounted(() => {
                 </div>
 
                 <div class="card">
-                    <h2 class="mb-4 text-xl font-bold lg:text-2xl text-textPrimary">Instruksi</h2>
-                    <div class="p-4 rounded-lg bg-background">
-                        <p class="text-sm leading-relaxed whitespace-pre-line text-textPrimary">
+                    <p class="mb-2 card-title">Instruksi</p>
+                    <div class="card bg-background">
+                        <p class="whitespace-pre-line card-subtitle text-textPrimary">
                             {{ recipe.instructions }}
                         </p>
                     </div>

@@ -58,17 +58,27 @@ function goToPage(page: number) {
 </script>
 
 <template>
-    <div v-if="totalPages > 1" class="flex flex-col gap-4 justify-between items-center mt-6 lg:flex-row">
-        <div class="text-xs text-textPrimary">{{ startItem }} - {{ endItem }}, dari {{ totalItems }} item</div>
+    <div
+        v-if="totalPages > 1"
+        class="flex flex-col gap-4 justify-between items-center mt-6 lg:flex-row"
+    >
+        <div class="text-xs text-textPrimary">
+            {{ startItem }} - {{ endItem }}, dari {{ totalItems }} item
+        </div>
 
         <div class="flex gap-2 items-center">
             <button
                 @click="goToPage(currentPage - 1)"
                 :disabled="currentPage === 1"
-                class="flex justify-center items-center w-8 h-8 rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-border bg-surface text-textPrimary hover:bg-overlay"
+                class="flex justify-center items-center w-8 h-8 rounded-lg border transition-colors disabled:opacity-50 border-border bg-surface text-textPrimary hover:bg-overlay"
             >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 19l-7-7 7-7"
+                    />
                 </svg>
             </button>
 
@@ -93,10 +103,15 @@ function goToPage(page: number) {
             <button
                 @click="goToPage(currentPage + 1)"
                 :disabled="currentPage === totalPages"
-                class="flex justify-center items-center w-8 h-8 rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-border bg-surface text-textPrimary hover:bg-overlay"
+                class="flex justify-center items-center w-8 h-8 rounded-lg border transition-colors disabled:opacity-50 border-border bg-surface text-textPrimary hover:bg-overlay"
             >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                    />
                 </svg>
             </button>
         </div>

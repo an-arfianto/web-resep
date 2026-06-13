@@ -28,15 +28,13 @@ async function handleRegister(): Promise<void> {
 </script>
 
 <template>
-    <div class="flex flex-col gap-5 p-4 mx-auto w-full max-w-xl lg:px-6">
+    <div class="max-w-xl container-body">
         <div class="card">
-            <h1 class="mb-6 text-3xl font-bold text-center text-textPrimary">Register</h1>
+            <h1 class="mb-4 card-title">Register</h1>
 
             <form @submit.prevent="handleRegister" class="flex flex-col gap-4">
                 <div>
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary">
-                        Username
-                    </label>
+                    <label class="input-field-title"> Username </label>
                     <input
                         v-model="formData.username"
                         type="text"
@@ -47,9 +45,7 @@ async function handleRegister(): Promise<void> {
                 </div>
 
                 <div>
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary">
-                        Password
-                    </label>
+                    <label class="input-field-title"> Password </label>
                     <input
                         v-model="formData.password"
                         type="password"
@@ -61,9 +57,7 @@ async function handleRegister(): Promise<void> {
                 </div>
 
                 <div>
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary">
-                        Konfirmasi Password
-                    </label>
+                    <label class="input-field-title"> Konfirmasi Password </label>
                     <input
                         v-model="confirmPassword"
                         type="password"
@@ -73,14 +67,14 @@ async function handleRegister(): Promise<void> {
                     />
                 </div>
 
-                <div v-if="authStore.error" class="alert-box alert-error">
-                    <p class="text-sm font-semibold">{{ authStore.error }}</p>
+                <div v-if="authStore.error" class="alert-box">
+                    <p class="alert-text">{{ authStore.error }}</p>
                 </div>
 
                 <button
                     type="submit"
                     :disabled="authStore.loading"
-                    class="w-full button bg-primary text-textInverse hover:bg-primarySoft hover:text-primary"
+                    class="w-full button bg-primary text-textInverse hover:bg-primaryPressed"
                 >
                     {{ authStore.loading ? 'Mohon Tunggu...' : 'Register' }}
                 </button>

@@ -27,20 +27,10 @@ function roleBarWidth(count: number): string {
     return `${Math.max(Math.round((count / maxRoleCount.value) * 100), 4)}%`;
 }
 
-// Only 2 roles now: admin and user
-const roleBadge: Record<string, string> = {
-    admin: 'bg-errorSoft text-error',
-    user: 'bg-primarySoft text-primary',
-};
-
 const roleBar: Record<string, string> = {
     admin: 'bg-error',
     user: 'bg-primary',
 };
-
-function getRoleBadgeClass(roleName: string): string {
-    return roleBadge[roleName] ?? 'bg-overlay text-textSecondary';
-}
 
 function getRoleBarClass(roleName: string): string {
     return roleBar[roleName] ?? 'bg-primary';
@@ -62,7 +52,7 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-6xl lg:px-6">
+    <div class="container-body">
         <div v-if="loading" class="flex justify-center py-20">
             <div class="loading-spin"></div>
         </div>
@@ -73,30 +63,30 @@ onMounted(async () => {
 
         <template v-else>
             <div
-                class="grid overflow-hidden grid-cols-1 gap-px rounded-2xl shadow-sm lg:flex lg:grid-cols-4 lg:gap-0 bg-divider"
+                class="grid overflow-hidden grid-cols-2 gap-px rounded-2xl shadow-sm lg:grid-cols-4 bg-divider"
             >
                 <div class="stat-card">
                     <p class="stat-value">{{ stats?.totalUsers ?? 0 }}</p>
                     <p class="stat-label">Total User</p>
                 </div>
-                <div class="hidden my-3 w-px lg:block bg-divider"></div>
                 <div class="stat-card">
-                    <p class="stat-value text-error">{{ stats?.suspendedUsers ?? 0 }}</p>
+                    <p class="stat-value text-error">
+                        {{ stats?.suspendedUsers ?? 0 }}
+                    </p>
                     <p class="stat-label">Disuspend</p>
                 </div>
-                <div class="hidden my-3 w-px lg:block bg-divider"></div>
                 <div class="stat-card">
                     <p class="stat-value">{{ stats?.totalRecipes ?? 0 }}</p>
                     <p class="stat-label">Total Resep</p>
                 </div>
-                <div class="hidden my-3 w-px lg:block bg-divider"></div>
                 <div class="stat-card">
-                    <p class="stat-value">{{ stats?.recipesByCategory?.length ?? 0 }}</p>
+                    <p class="stat-value">
+                        {{ stats?.recipesByCategory?.length ?? 0 }}
+                    </p>
                     <p class="stat-label">Kategori</p>
                 </div>
             </div>
 
-            <!-- Recipe status stats -->
             <div
                 class="grid overflow-hidden grid-cols-1 gap-px rounded-2xl shadow-sm lg:grid-cols-3 bg-divider"
             >
@@ -113,7 +103,9 @@ onMounted(async () => {
                     <p class="stat-label">Disetujui</p>
                 </div>
                 <div class="stat-card">
-                    <p class="stat-value text-error">{{ stats?.recipesByStatus?.rejected ?? 0 }}</p>
+                    <p class="stat-value text-error">
+                        {{ stats?.recipesByStatus?.rejected ?? 0 }}
+                    </p>
                     <p class="stat-label">Ditolak</p>
                 </div>
             </div>
@@ -170,7 +162,9 @@ onMounted(async () => {
                                 <div class="overflow-hidden flex-1 h-2 rounded-full bg-overlay">
                                     <div
                                         class="h-full rounded-full duration-500 bg-primary transition-[width]"
-                                        :style="{ width: categoryBarWidth(cat.count) }"
+                                        :style="{
+                                            width: categoryBarWidth(cat.count),
+                                        }"
                                     />
                                 </div>
                                 <span
@@ -208,7 +202,9 @@ onMounted(async () => {
                                     <div
                                         class="h-full rounded-full duration-500 transition-[width]"
                                         :class="getRoleBarClass(role.role_name)"
-                                        :style="{ width: roleBarWidth(role.count) }"
+                                        :style="{
+                                            width: roleBarWidth(role.count),
+                                        }"
                                     />
                                 </div>
                                 <span

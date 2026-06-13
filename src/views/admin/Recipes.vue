@@ -240,29 +240,10 @@ function handlePageChange(page: number) {
 </script>
 
 <template>
-    <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-6xl lg:px-6">
-        <div class="flex flex-wrap gap-3 justify-between items-start">
-            <div>
-                <h1 class="mb-0.5 text-2xl font-extrabold text-textPrimary">Kelola Resep</h1>
-                <p class="text-xs text-textSecondary">{{ recipes.length }} resep ditemukan</p>
-            </div>
-            <RouterLink
-                to="/admin"
-                class="inline-flex border button border-border bg-surface text-textSecondary hover:bg-overlay hover:text-textPrimary"
-            >
-                <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    width="15"
-                    height="15"
-                >
-                    <line x1="19" y1="12" x2="5" y2="12" />
-                    <polyline points="12 19 5 12 12 5" />
-                </svg>
-                Dashboard
-            </RouterLink>
+    <div class="container-body">
+        <div>
+            <h1 class="section-title">Kelola Resep</h1>
+            <p class="section-subtitle">{{ recipes.length }} resep ditemukan</p>
         </div>
 
         <div class="flex flex-wrap gap-2">
@@ -270,11 +251,11 @@ function handlePageChange(page: number) {
                 v-for="tab in TABS"
                 :key="tab.key"
                 @click="handleTabChange(tab.key)"
-                class="py-2 px-4 text-sm font-semibold rounded-lg border transition-colors"
+                class="border button"
                 :class="
                     activeTab === tab.key
                         ? 'border-primary bg-primary text-textInverse'
-                        : 'border-border bg-surface text-textPrimary hover:bg-overlay hover:text-textPrimary'
+                        : 'border-border bg-surface text-textPrimary hover:bg-overlay'
                 "
             >
                 {{ tab.label }}
@@ -326,7 +307,7 @@ function handlePageChange(page: number) {
                     <div class="flex flex-wrap gap-2 pt-1 mt-auto border-t border-divider">
                         <button
                             @click="openDetailModal(recipe.id)"
-                            class="py-1.5 px-3 text-xs font-semibold rounded-lg transition-colors bg-overlay text-textSecondary hover:bg-divider"
+                            class="text-sm button bg-overlay text-textSecondary hover:bg-divider"
                         >
                             Detail
                         </button>
@@ -335,20 +316,20 @@ function handlePageChange(page: number) {
                         >
                             <button
                                 @click="openApproveModal(recipe.id, recipe.name)"
-                                class="py-1.5 px-3 text-xs font-semibold rounded-lg transition-colors hover:opacity-80 bg-successSoft text-success"
+                                class="text-sm hover:opacity-80 button bg-successSoft text-success"
                             >
                                 Setujui
                             </button>
                             <button
                                 @click="openRejectModal(recipe.id, recipe.name)"
-                                class="py-1.5 px-3 text-xs font-semibold rounded-lg transition-colors hover:opacity-80 bg-warningSoft text-warning"
+                                class="text-sm hover:opacity-80 button bg-warningSoft text-warning"
                             >
                                 Tolak
                             </button>
                         </template>
                         <button
                             @click="openDeleteModal(recipe.id, recipe.name)"
-                            class="py-1.5 px-3 ml-auto text-xs font-semibold rounded-lg transition-colors hover:opacity-80 bg-errorSoft text-error"
+                            class="ml-auto text-sm hover:opacity-80 button bg-errorSoft text-error"
                         >
                             Hapus
                         </button>
@@ -358,8 +339,8 @@ function handlePageChange(page: number) {
 
             <Pagination
                 v-if="recipes.length > itemsPerPage"
-                :total="recipes.length"
-                :per-page="itemsPerPage"
+                :total-items="recipes.length"
+                :items-per-page="itemsPerPage"
                 :current-page="currentPage"
                 @page-change="handlePageChange"
             />
@@ -519,7 +500,7 @@ function handlePageChange(page: number) {
                             </template>
                             <button
                                 @click="closeDetailModal"
-                                class="button bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
+                                class="button bg-overlay text-textSecondary hover:bg-divider"
                             >
                                 Tutup
                             </button>
@@ -559,14 +540,14 @@ function handlePageChange(page: number) {
                         <button
                             @click="cancelApprove"
                             :disabled="actionLoading"
-                            class="button bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
+                            class="button bg-overlay text-textSecondary hover:bg-divider"
                         >
                             Batal
                         </button>
                         <button
                             @click="confirmApprove"
                             :disabled="actionLoading"
-                            class="text-white disabled:opacity-50 disabled:cursor-not-allowed button bg-success hover:opacity-85"
+                            class="hover:opacity-80 text-textInverse button bg-success"
                         >
                             {{ actionLoading ? 'Memproses...' : 'Ya, Setujui' }}
                         </button>
@@ -601,27 +582,27 @@ function handlePageChange(page: number) {
                             >?
                         </p>
                         <label class="block mb-1.5 text-sm font-semibold text-textSecondary"
-                            >Alasan penolakan (opsional)</label
+                            >Alasan penolakan</label
                         >
                         <textarea
                             v-model="rejectReason"
                             rows="3"
                             placeholder="Tulis alasan penolakan untuk dikirim ke pemilik resep..."
-                            class="py-2 px-3 w-full text-sm rounded-lg border resize-none focus:ring-2 focus:outline-none border-border bg-background text-textPrimary placeholder-textMuted focus:ring-primary"
+                            class="resize-none input-field"
                         />
                     </div>
                     <div class="modal-footer">
                         <button
                             @click="cancelReject"
                             :disabled="actionLoading"
-                            class="button bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
+                            class="button bg-overlay text-textSecondary hover:bg-divider"
                         >
                             Batal
                         </button>
                         <button
                             @click="confirmReject"
                             :disabled="actionLoading"
-                            class="disabled:opacity-50 disabled:cursor-not-allowed button bg-error text-textInverse hover:opacity-85"
+                            class="disabled:opacity-50 button bg-error text-textInverse hover:opacity-85"
                         >
                             {{ actionLoading ? 'Memproses...' : 'Ya, Tolak' }}
                         </button>
@@ -659,14 +640,14 @@ function handlePageChange(page: number) {
                     <div class="modal-footer">
                         <button
                             @click="cancelDelete"
-                            class="button bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
+                            class="button bg-overlay text-textSecondary hover:bg-divider"
                         >
                             Batal
                         </button>
                         <button
                             @click="confirmDelete"
                             :disabled="deletingId !== null"
-                            class="disabled:opacity-50 disabled:cursor-not-allowed button bg-error text-textInverse hover:opacity-85"
+                            class="disabled:opacity-50 button bg-error text-textInverse hover:opacity-85"
                         >
                             {{ deletingId !== null ? 'Menghapus...' : 'Ya, Hapus' }}
                         </button>
@@ -676,10 +657,7 @@ function handlePageChange(page: number) {
         </teleport>
 
         <teleport to="body">
-            <div
-                v-if="showSuccessToast"
-                class="flex fixed top-5 right-5 gap-3 items-start py-3 px-4 w-80 rounded-xl border shadow-lg border-success/30 bg-successSoft text-success z-60 max-w-[calc(100vw-40px)]"
-            >
+            <div v-if="showSuccessToast" class="fixed top-5 right-5 toast toast-success">
                 <p class="flex-1 text-sm font-medium leading-snug">{{ successMessage }}</p>
                 <button
                     @click="showSuccessToast = false"

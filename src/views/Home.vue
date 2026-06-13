@@ -25,11 +25,16 @@ function handlePageChange(page: number) {
 </script>
 
 <template>
-    <div class="flex flex-col gap-5 p-4 mx-auto w-full max-w-6xl lg:px-6">
+    <div class="container-body">
         <div class="mb-12 text-center">
             <h1 class="mb-4 text-4xl font-bold lg:text-5xl text-textPrimary">Resep App</h1>
-            <p class="mb-8 text-xl text-textSecondary">Pencarian resep masakan menggunakan Boolean Retrieval</p>
-            <RouterLink to="/search" class="button bg-primary text-textInverse hover:bg-primarySoft hover:text-primary">
+            <p class="mb-8 text-xl text-textSecondary">
+                Pencarian resep masakan menggunakan Boolean Retrieval
+            </p>
+            <RouterLink
+                to="/search"
+                class="button bg-primary text-textInverse hover:bg-primarySoft hover:text-primary"
+            >
                 Cari Resep
             </RouterLink>
         </div>
@@ -47,7 +52,11 @@ function handlePageChange(page: number) {
 
             <div v-else>
                 <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    <RecipeCard v-for="recipe in paginatedRecipes" :key="recipe.id" :recipe="recipe" />
+                    <RecipeCard
+                        v-for="recipe in paginatedRecipes"
+                        :key="recipe.id"
+                        :recipe="recipe"
+                    />
                 </div>
 
                 <Pagination

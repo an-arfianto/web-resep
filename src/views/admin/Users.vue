@@ -167,29 +167,10 @@ function handlePageChange(page: number) {
 </script>
 
 <template>
-    <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-6xl lg:px-6">
-        <div class="flex flex-wrap gap-3 justify-between items-start">
-            <div>
-                <h1 class="mb-0.5 text-2xl font-extrabold text-textPrimary">Kelola User</h1>
-                <p class="text-xs text-textSecondary">{{ users.length }} total user terdaftar</p>
-            </div>
-            <RouterLink
-                to="/admin"
-                class="inline-flex border button border-border bg-surface text-textSecondary hover:bg-overlay hover:text-textPrimary"
-            >
-                <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    width="15"
-                    height="15"
-                >
-                    <line x1="19" y1="12" x2="5" y2="12" />
-                    <polyline points="12 19 5 12 12 5" />
-                </svg>
-                Dashboard
-            </RouterLink>
+    <div class="container-body">
+        <div>
+            <h1 class="section-title">Kelola User</h1>
+            <p class="section-subtitle">{{ users.length }} total user terdaftar</p>
         </div>
 
         <div v-if="loading" class="flex justify-center py-20">
@@ -201,7 +182,7 @@ function handlePageChange(page: number) {
                 <p class="text-base font-bold text-textPrimary">Tidak ada user</p>
             </div>
 
-            <div v-else class="overflow-hidden rounded-2xl border border-border bg-surface">
+            <div v-else class="overflow-hidden rounded-xl border border-border bg-surface">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
@@ -215,16 +196,13 @@ function handlePageChange(page: number) {
                                         sortDirection === 'asc' ? '↑' : '↓'
                                     }}</span>
                                 </th>
+                                <th class="py-3 px-4 font-semibold text-left text-textSecondary">
+                                    Role
+                                </th>
                                 <th
                                     class="py-3 px-4 font-semibold text-left cursor-pointer text-textSecondary hover:text-textPrimary"
-                                    @click="sortBy('role_name')"
+                                    @click="sortBy('is_suspended')"
                                 >
-                                    Role
-                                    <span v-if="sortColumn === 'role_name'">{{
-                                        sortDirection === 'asc' ? '↑' : '↓'
-                                    }}</span>
-                                </th>
-                                <th class="py-3 px-4 font-semibold text-left text-textSecondary">
                                     Status
                                 </th>
                                 <th
@@ -246,7 +224,7 @@ function handlePageChange(page: number) {
                                     }}</span>
                                 </th>
                                 <th class="py-3 px-4 font-semibold text-right text-textSecondary">
-                                    Action
+                                    Aksi
                                 </th>
                             </tr>
                         </thead>
@@ -254,7 +232,7 @@ function handlePageChange(page: number) {
                             <tr
                                 v-for="user in paginatedUsers"
                                 :key="user.id"
-                                class="transition-colors hover:bg-overlay/40"
+                                class="transition-colors hover:bg-overlay/20"
                             >
                                 <td class="py-3 px-4 font-medium text-textPrimary">
                                     {{ user.username }}
@@ -295,20 +273,20 @@ function handlePageChange(page: number) {
                                         <button
                                             v-if="!user.is_suspended"
                                             @click="openSuspendModal(user)"
-                                            class="py-1.5 px-3 text-xs font-semibold rounded-lg transition-colors hover:opacity-80 bg-warningSoft text-warning"
+                                            class="hover:opacity-80 button bg-warningSoft text-warning"
                                         >
                                             Suspend
                                         </button>
                                         <button
                                             v-else
                                             @click="openUnsuspendModal(user)"
-                                            class="py-1.5 px-3 text-xs font-semibold rounded-lg transition-colors hover:opacity-80 bg-successSoft text-success"
+                                            class="hover:opacity-80 button bg-successSoft text-success"
                                         >
                                             Aktifkan
                                         </button>
                                         <button
                                             @click="openDeleteModal(user)"
-                                            class="py-1.5 px-3 text-xs font-semibold rounded-lg transition-colors hover:opacity-80 bg-errorSoft text-error"
+                                            class="hover:opacity-80 button bg-errorSoft text-error"
                                         >
                                             Hapus
                                         </button>
@@ -323,32 +301,23 @@ function handlePageChange(page: number) {
 
             <Pagination
                 v-if="users.length > itemsPerPage"
-                :total="sortedUsers.length"
-                :per-page="itemsPerPage"
+                :total-items="sortedUsers.length"
+                :items-per-page="itemsPerPage"
                 :current-page="currentPage"
                 @page-change="handlePageChange"
             />
         </template>
 
-        <!-- Suspend Modal -->
         <teleport to="body">
             <div
                 v-if="showSuspendModal && pendingUser"
-                class="flex fixed inset-0 z-50 justify-center items-center p-5 backdrop-blur-sm"
-                style="background: rgba(0, 0, 0, 0.45)"
+                class="modal-backdrop"
                 @click.self="cancelSuspend"
             >
-                <div
-                    class="flex overflow-hidden flex-col w-full max-w-md rounded-2xl shadow-2xl bg-surface"
-                >
-                    <div
-                        class="flex gap-3 justify-between items-center py-4 px-6 border-b border-divider bg-background"
-                    >
-                        <h2 class="text-base font-bold text-textPrimary">Suspend User</h2>
-                        <button
-                            @click="cancelSuspend"
-                            class="flex justify-center items-center w-8 h-8 rounded-lg transition-colors text-textSecondary hover:bg-overlay hover:text-textPrimary"
-                        >
+                <div class="max-w-md modal-panel">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Suspend User</h2>
+                        <button @click="cancelSuspend" class="modal-close-btn">
                             <svg
                                 viewBox="0 0 24 24"
                                 fill="none"
@@ -362,54 +331,43 @@ function handlePageChange(page: number) {
                             </svg>
                         </button>
                     </div>
-                    <div class="py-5 px-6">
-                        <p class="text-sm leading-relaxed text-textSecondary">
-                            Suspend
-                            <strong class="text-textPrimary">{{ pendingUser.username }}</strong
-                            >? User tidak akan bisa login sampai di-unsuspend.
+                    <div class="modal-body">
+                        <p class="modal-text">
+                            <b>{{ pendingUser.username }}</b> tidak akan bisa login sampai
+                            di-unsuspend dan semua resep yang telah disetujui akan kembali ke status
+                            <b>PENDING</b>.
                         </p>
                     </div>
-                    <div
-                        class="flex gap-2.5 justify-end py-4 px-6 border-t border-divider bg-background"
-                    >
+                    <div class="modal-footer">
                         <button
                             @click="cancelSuspend"
                             :disabled="actionLoading"
-                            class="py-2 px-5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
+                            class="button bg-overlay text-textSecondary hover:bg-divider"
                         >
                             Batal
                         </button>
                         <button
                             @click="confirmSuspend"
                             :disabled="actionLoading"
-                            class="py-2 px-5 text-sm font-semibold text-white rounded-lg transition-opacity disabled:opacity-50 bg-warning hover:opacity-85"
+                            class="hover:opacity-80 button text-textInverse bg-warning"
                         >
-                            {{ actionLoading ? 'Memproses...' : 'Ya, Suspend' }}
+                            {{ actionLoading ? 'Memproses...' : 'Suspend' }}
                         </button>
                     </div>
                 </div>
             </div>
         </teleport>
 
-        <!-- Unsuspend Modal -->
         <teleport to="body">
             <div
                 v-if="showUnsuspendModal && pendingUser"
-                class="flex fixed inset-0 z-50 justify-center items-center p-5 backdrop-blur-sm"
-                style="background: rgba(0, 0, 0, 0.45)"
+                class="modal-backdrop"
                 @click.self="cancelUnsuspend"
             >
-                <div
-                    class="flex overflow-hidden flex-col w-full max-w-md rounded-2xl shadow-2xl bg-surface"
-                >
-                    <div
-                        class="flex gap-3 justify-between items-center py-4 px-6 border-b border-divider bg-background"
-                    >
-                        <h2 class="text-base font-bold text-textPrimary">Aktifkan User</h2>
-                        <button
-                            @click="cancelUnsuspend"
-                            class="flex justify-center items-center w-8 h-8 rounded-lg transition-colors text-textSecondary hover:bg-overlay hover:text-textPrimary"
-                        >
+                <div class="max-w-md modal-panel">
+                    <div class="modal-header">
+                        <h2 class="modal-text">Aktifkan User</h2>
+                        <button @click="cancelUnsuspend" class="modal-close-btn">
                             <svg
                                 viewBox="0 0 24 24"
                                 fill="none"
@@ -423,54 +381,43 @@ function handlePageChange(page: number) {
                             </svg>
                         </button>
                     </div>
-                    <div class="py-5 px-6">
-                        <p class="text-sm leading-relaxed text-textSecondary">
+                    <div class="modal-body">
+                        <p class="modal-text">
                             Aktifkan kembali akun
                             <strong class="text-textPrimary">{{ pendingUser.username }}</strong
                             >?
                         </p>
                     </div>
-                    <div
-                        class="flex gap-2.5 justify-end py-4 px-6 border-t border-divider bg-background"
-                    >
+                    <div class="modal-footer">
                         <button
                             @click="cancelUnsuspend"
                             :disabled="actionLoading"
-                            class="py-2 px-5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
+                            class="button bg-overlay text-textSecondary hover:bg-divider"
                         >
                             Batal
                         </button>
                         <button
                             @click="confirmUnsuspend"
                             :disabled="actionLoading"
-                            class="py-2 px-5 text-sm font-semibold text-white rounded-lg transition-opacity disabled:opacity-50 bg-success hover:opacity-85"
+                            class="hover:opacity-80 button text-textInverse bg-success"
                         >
-                            {{ actionLoading ? 'Memproses...' : 'Ya, Aktifkan' }}
+                            {{ actionLoading ? 'Memproses...' : 'Aktifkan' }}
                         </button>
                     </div>
                 </div>
             </div>
         </teleport>
 
-        <!-- Delete Modal -->
         <teleport to="body">
             <div
                 v-if="showDeleteModal && pendingUser"
-                class="flex fixed inset-0 z-50 justify-center items-center p-5 backdrop-blur-sm"
-                style="background: rgba(0, 0, 0, 0.45)"
+                class="modal-backdrop"
                 @click.self="cancelDelete"
             >
-                <div
-                    class="flex overflow-hidden flex-col w-full rounded-2xl shadow-2xl bg-surface max-w-115"
-                >
-                    <div
-                        class="flex gap-3 justify-between items-center py-4 px-6 border-b border-divider bg-background"
-                    >
-                        <h2 class="text-base font-bold text-textPrimary">Hapus User</h2>
-                        <button
-                            @click="cancelDelete"
-                            class="flex justify-center items-center w-8 h-8 rounded-lg transition-colors text-textSecondary hover:bg-overlay hover:text-textPrimary"
-                        >
+                <div class="max-w-md modal-panel">
+                    <div class="modal-header">
+                        <h2 class="modal-title">Hapus User</h2>
+                        <button @click="cancelDelete" class="modal-close-btn">
                             <svg
                                 viewBox="0 0 24 24"
                                 fill="none"
@@ -485,27 +432,25 @@ function handlePageChange(page: number) {
                         </button>
                     </div>
                     <div class="py-5 px-6">
-                        <p class="mb-3 text-sm leading-relaxed text-textSecondary">
+                        <p class="modal-text">
                             Anda yakin ingin menghapus user
-                            <strong class="text-textPrimary">{{ pendingUser.username }}</strong
+                            <b>{{ pendingUser.username }}</b
                             >?
                         </p>
                         <div
                             v-if="(pendingUser.recipe_count ?? 0) > 0"
-                            class="py-3 px-4 rounded-lg border-error bg-errorSoft border-l-[3px]"
+                            class="my-3 text-sm alert-box"
                         >
-                            <p class="flex gap-1.5 items-center mb-1 text-sm font-bold text-error">
-                                PERHATIAN
-                            </p>
-                            <p class="text-sm text-error">
+                            <p class="mb-1 font-bold">PERHATIAN</p>
+                            <p>
                                 Tindakan ini juga akan
-                                <strong>MENGHAPUS {{ pendingUser.recipe_count }} resep</strong> yang
-                                dibuat oleh user ini!
+                                <b>MENGHAPUS {{ pendingUser.recipe_count }} resep</b> yang dibuat
+                                oleh user ini!
                             </p>
                         </div>
                         <label
                             v-if="(pendingUser.recipe_count ?? 0) > 0"
-                            class="flex gap-2 items-center mt-3 cursor-pointer"
+                            class="flex gap-2 items-center cursor-pointer"
                         >
                             <input
                                 type="checkbox"
@@ -517,13 +462,11 @@ function handlePageChange(page: number) {
                             >
                         </label>
                     </div>
-                    <div
-                        class="flex gap-2.5 justify-end py-4 px-6 border-t border-divider bg-background"
-                    >
+                    <div class="modal-footer">
                         <button
                             @click="cancelDelete"
                             :disabled="actionLoading"
-                            class="py-2 px-5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 bg-overlay text-textSecondary hover:bg-divider hover:text-textPrimary"
+                            class="button bg-overlay text-textSecondary hover:bg-divider"
                         >
                             Batal
                         </button>
@@ -533,26 +476,19 @@ function handlePageChange(page: number) {
                                 actionLoading ||
                                 ((pendingUser.recipe_count ?? 0) > 0 && !deleteConfirmed)
                             "
-                            class="py-2 px-5 text-sm font-semibold rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed bg-error text-textInverse hover:opacity-85"
+                            class="hover:opacity-80 disabled:opacity-50 button text-textInverse bg-error"
                         >
-                            {{ actionLoading ? 'Menghapus...' : 'Ya, Hapus' }}
+                            {{ actionLoading ? 'Menghapus...' : 'Hapus' }}
                         </button>
                     </div>
                 </div>
             </div>
         </teleport>
 
-        <!-- Success Toast -->
         <teleport to="body">
-            <div
-                v-if="showSuccessToast"
-                class="flex fixed top-5 right-5 gap-3 items-start py-3 px-4 w-80 rounded-xl border shadow-lg border-success/30 bg-successSoft text-success z-60 max-w-[calc(100vw-40px)]"
-            >
-                <p class="flex-1 text-sm font-medium leading-snug">{{ successMessage }}</p>
-                <button
-                    @click="showSuccessToast = false"
-                    class="mt-0.5 opacity-60 transition-opacity hover:opacity-100 shrink-0"
-                >
+            <div v-if="showSuccessToast" class="fixed top-5 right-5 toast">
+                <p class="toast-text">{{ successMessage }}</p>
+                <button @click="showSuccessToast = false" class="toast-close-btn">
                     <svg
                         viewBox="0 0 24 24"
                         fill="none"

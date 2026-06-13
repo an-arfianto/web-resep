@@ -71,7 +71,7 @@ async function confirmDelete() {
 <template>
     <div class="card-interactive" @click="handleCardClick">
         <div class="flex gap-3 justify-between items-start">
-            <h3 class="flex-1 text-lg font-bold leading-snug text-textPrimary line-clamp-2">
+            <h3 class="flex-1 section-title line-clamp-2">
                 {{ recipe.name }}
             </h3>
             <span :class="['status-badges shrink-0', statusStyles[recipe.status || 'pending']]">
@@ -83,18 +83,15 @@ async function confirmDelete() {
             <span class="category-badges">{{ recipe.category }}</span>
         </div>
 
-        <p class="text-sm leading-relaxed text-textSecondary line-clamp-2">
+        <p class="card-subtitle line-clamp-2">
             {{ recipe.ingredients }}
         </p>
 
-        <p class="text-xs text-textMuted">{{ formatDate(recipe.created_at) }}</p>
+        <p class="section-subtitle">{{ formatDate(recipe.created_at) }}</p>
 
-        <div
-            v-if="recipe.status === 'rejected' && recipe.rejection_reason"
-            class="alert-box alert-error"
-        >
-            <p class="flex gap-1.5 items-center mb-1 text-xs font-bold">Alasan Penolakan</p>
-            <p class="text-xs leading-relaxed">{{ recipe.rejection_reason }}</p>
+        <div v-if="recipe.status === 'rejected' && recipe.rejection_reason" class="alert-box">
+            <p class="flex gap-1.5 mb-1 alert-text">Alasan Penolakan</p>
+            <p class="font-normal alert-text">{{ recipe.rejection_reason }}</p>
         </div>
 
         <div class="flex gap-2 pt-3 mt-auto border-t border-divider">
@@ -136,9 +133,9 @@ async function confirmDelete() {
                         </button>
                     </div>
                     <div class="modal-body">
-                        <p class="text-sm leading-relaxed text-textSecondary">
+                        <p class="modal-text">
                             Anda yakin ingin menghapus
-                            <strong class="text-textPrimary">{{ recipe.name }}</strong
+                            <b>{{ recipe.name }}</b
                             >?
                         </p>
                     </div>
@@ -153,7 +150,7 @@ async function confirmDelete() {
                         <button
                             @click="confirmDelete"
                             :disabled="deleteLoading"
-                            class="disabled:opacity-50 disabled:cursor-not-allowed button bg-error text-textInverse hover:opacity-85"
+                            class="disabled:opacity-50 button bg-error text-textInverse hover:opacity-85"
                         >
                             {{ deleteLoading ? 'Menghapus...' : 'Ya, Hapus' }}
                         </button>

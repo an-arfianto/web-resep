@@ -74,9 +74,9 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="flex flex-col gap-5 p-4 mx-auto w-full max-w-6xl lg:px-6">
+    <div class="container-body">
         <div class="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
-            <h1 class="text-2xl font-bold text-textPrimary">Resep Saya</h1>
+            <h1 class="mb-1 card-title">Resep Saya</h1>
             <RouterLink
                 to="/create-recipe"
                 class="inline-flex gap-1.5 items-center button bg-successSoft text-success hover:bg-success hover:text-textInverse"
@@ -90,7 +90,7 @@ onMounted(async () => {
         </div>
 
         <div v-else-if="recipeStore.error" class="card">
-            <div class="alert-box alert-error">
+            <div class="alert-box">
                 <p class="text-sm font-semibold text-error">{{ recipeStore.error }}</p>
             </div>
         </div>
@@ -207,15 +207,13 @@ onMounted(async () => {
                 class="modal-backdrop"
                 @click.self="closeDetailModal"
             >
-                <div
-                    class="flex overflow-hidden flex-col w-full max-w-2xl rounded-2xl shadow-2xl bg-surface max-h-[85vh]"
-                >
+                <div class="max-w-2xl modal-panel max-h-[85vh]">
                     <div class="modal-header">
                         <div class="flex-1 min-w-0">
                             <div class="flex flex-wrap gap-2 items-center mb-1">
-                                <h2 class="text-base font-bold text-textPrimary">
+                                <p class="modal-title">
                                     {{ selectedRecipe.name }}
-                                </h2>
+                                </p>
                             </div>
                             <div class="flex flex-wrap gap-1.5">
                                 <span class="category-badges">{{ selectedRecipe.category }}</span>
@@ -247,10 +245,10 @@ onMounted(async () => {
                         </button>
                     </div>
 
-                    <div class="flex overflow-y-auto flex-col flex-1 gap-4 p-5">
+                    <div class="flex overflow-y-auto flex-col flex-1 gap-5 modal-body">
                         <div
                             v-if="selectedRecipe.status === 'pending'"
-                            class="py-3 px-4 rounded-lg border-l-4 border-warning bg-warningSoft"
+                            class="alert-box border-warning bg-warningSoft"
                         >
                             <p class="text-sm font-bold text-warning">Menunggu Review</p>
                             <p class="text-sm text-warning/80">
@@ -258,10 +256,7 @@ onMounted(async () => {
                                 publik.
                             </p>
                         </div>
-                        <div
-                            v-else-if="selectedRecipe.status === 'rejected'"
-                            class="py-3 px-4 rounded-lg border-l-4 border-error bg-errorSoft"
-                        >
+                        <div v-else-if="selectedRecipe.status === 'rejected'" class="alert-box">
                             <p class="text-sm font-bold text-error">Resep Ditolak</p>
                             <p
                                 v-if="selectedRecipe.rejection_reason"
@@ -274,9 +269,7 @@ onMounted(async () => {
                             </p>
                         </div>
 
-                        <div
-                            class="flex gap-2 items-center py-2 px-3 text-sm rounded-lg bg-background"
-                        >
+                        <div class="alert-box bg-background border-background">
                             <span class="text-textSecondary">Dibuat:</span>
                             <span class="font-medium text-textPrimary">{{
                                 formatDate(selectedRecipe.created_at)

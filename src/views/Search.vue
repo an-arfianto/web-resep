@@ -75,27 +75,39 @@ async function handleSearch(): Promise<void> {
 </script>
 
 <template>
-    <div class="flex flex-col gap-5 p-4 mx-auto w-full max-w-6xl lg:px-6">
+    <div class="container-body">
         <div class="card">
-            <h1 class="mb-6 text-2xl font-bold lg:text-3xl text-textPrimary">Pencarian Resep Boolean Retrieval</h1>
+            <h1 class="mb-4 card-title">Pencarian Resep Boolean Retrieval</h1>
 
             <div class="flex flex-col gap-4">
                 <div>
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary"> Operator Pencarian </label>
-                    <select v-model="searchData.operator" class="input-field" @change="handleOperatorChange">
-                        <option value="OR">OR - Cari resep yang terdapat beberapa bahan tersebut</option>
-                        <option value="AND">AND - Cari resep yang terdapat semua bahan tersebut</option>
-                        <option value="NOT">NOT - Cari resep yang terdapat bahan dengan pengecualian</option>
+                    <label class="input-field-title"> Operator Pencarian </label>
+                    <select
+                        v-model="searchData.operator"
+                        class="input-field"
+                        @change="handleOperatorChange"
+                    >
+                        <option value="OR">
+                            OR - Cari resep yang terdapat beberapa bahan tersebut
+                        </option>
+                        <option value="AND">
+                            AND - Cari resep yang terdapat semua bahan tersebut
+                        </option>
+                        <option value="NOT">
+                            NOT - Cari resep yang terdapat bahan dengan pengecualian
+                        </option>
                     </select>
                 </div>
 
                 <div>
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary"> Bahan-bahan * </label>
+                    <label class="input-field-title"> Bahan-bahan * </label>
                     <input
                         v-model="ingredientsInput"
                         type="text"
                         placeholder="e.g., ayam, nasi, kecap"
-                        :class="['input-field', errors.ingredients && 'border-error focus:ring-error']"
+                        :class="['input-field',
+                            errors.ingredients && 'border-error focus:ring-error',
+                        ]"
                         @keypress.enter="handleSearch"
                         @input="clearError('ingredients')"
                     />
@@ -106,9 +118,7 @@ async function handleSearch(): Promise<void> {
                 </div>
 
                 <div v-if="searchData.operator === 'NOT'">
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary">
-                        Bahan-bahan yang tidak diinginkan *
-                    </label>
+                    <label class="input-field-title"> Bahan-bahan yang tidak diinginkan * </label>
                     <input
                         v-model="excludedInput"
                         type="text"
@@ -126,7 +136,7 @@ async function handleSearch(): Promise<void> {
                 <button
                     @click="handleSearch"
                     :disabled="recipeStore.loading"
-                    class="w-auto disabled:opacity-50 disabled:cursor-not-allowed button bg-primary text-textInverse hover:opacity-85"
+                    class="w-auto disabled:opacity-50 button bg-primary text-textInverse hover:opacity-85"
                 >
                     {{ recipeStore.loading ? 'Mohon Tunggu...' : 'Cari Resep' }}
                 </button>
@@ -139,26 +149,24 @@ async function handleSearch(): Promise<void> {
 
         <template v-else-if="searched">
             <div v-if="recipeStore.error" class="card bg-errorSoft">
-                <p class="text-sm font-semibold text-error">{{ recipeStore.error }}</p>
+                <p class="card-subtitle text-error">{{ recipeStore.error }}</p>
             </div>
 
             <template v-else>
-                <div class="card bg-secondarySoft">
+                <div class="card bg-secondarySoft/50">
                     <div class="flex flex-col gap-3">
                         <div>
-                            <h2 class="mb-1 text-xl font-bold text-textPrimary">Hasil Pencarian</h2>
-                            <p class="text-base text-textPrimary">
+                            <p class="card-title">Hasil Pencarian</p>
+                            <p class="card-subtitle">
                                 Ditemukan
-                                <span class="font-bold text-secondary">{{ searchResult?.count || 0 }}</span>
+                                <b>{{ searchResult?.count || 0 }}</b>
                                 resep menggunakan operator
-                                <span class="py-0.5 px-2 text-sm font-bold rounded bg-secondary text-textInverse">
-                                    {{ searchResult?.operator }}
-                                </span>
+                                <b> {{ searchResult?.operator }} </b>
                             </p>
                         </div>
 
                         <div class="pt-3 border-t border-divider">
-                            <p class="mb-1 text-xs font-bold uppercase text-textSecondary">Bahan yang dicari:</p>
+                            <p class="font-bold uppercase card-subtitle">Bahan yang dicari:</p>
                             <div class="flex flex-wrap gap-1.5">
                                 <span
                                     v-for="ingredient in searchResult?.searchedIngredients"
@@ -170,8 +178,11 @@ async function handleSearch(): Promise<void> {
                             </div>
                         </div>
 
-                        <div v-if="searchResult?.excludedIngredients?.length" class="pt-3 border-t border-divider">
-                            <p class="mb-1 text-xs font-bold tracking-wide uppercase text-textSecondary">
+                        <div
+                            v-if="searchResult?.excludedIngredients?.length"
+                            class="pt-3 border-t border-divider"
+                        >
+                            <p class="font-bold uppercase card-subtitle">
                                 Bahan yang dikecualikan:
                             </p>
                             <div class="flex flex-wrap gap-1.5">
@@ -191,13 +202,17 @@ async function handleSearch(): Promise<void> {
                     v-if="searchResult && searchResult.count > 0"
                     class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
                 >
-                    <RecipeCard v-for="recipe in searchResult.data" :key="recipe.id" :recipe="recipe" />
+                    <RecipeCard
+                        v-for="recipe in searchResult.data"
+                        :key="recipe.id"
+                        :recipe="recipe"
+                    />
                 </div>
 
-                <div v-else class="flex flex-col gap-3 items-center py-20 card">
+                <div v-else class="flex flex-col gap-3 items-center card py-15">
                     <div class="text-center">
-                        <p class="text-lg font-bold text-textPrimary">Resep tidak ditemukan</p>
-                        <p class="mt-1 text-sm text-textSecondary">
+                        <p class="card-title">Resep tidak ditemukan</p>
+                        <p class="card-subtitle">
                             Coba dengan bahan yang lain atau ubah operator pencarian
                         </p>
                     </div>

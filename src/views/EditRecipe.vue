@@ -3,6 +3,7 @@ import { reactive, ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useRecipeStore } from '@/stores/recipeStore';
 import type { CreateRecipeData, Recipe, Ingredient } from '@/types';
+import { recipeCategory, unitIng } from '@/utils/recipeUtils';
 
 const route = useRoute();
 const router = useRouter();
@@ -103,9 +104,9 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="flex flex-col gap-5 py-6 px-4 mx-auto w-full max-w-4xl lg:px-6">
+    <div class="container-body">
         <div class="card">
-            <h1 class="mb-6 text-2xl font-bold lg:text-3xl text-textPrimary">Edit Resep</h1>
+            <h1 class="mb-4 card-title">Edit Resep</h1>
 
             <div v-if="recipeStore.loading && !recipe" class="flex justify-center py-20">
                 <div class="loading-spin"></div>
@@ -113,9 +114,7 @@ onMounted(async () => {
 
             <form v-else-if="recipe" @submit.prevent="handleSubmit" class="flex flex-col gap-5">
                 <div>
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary"
-                        >Nama Resep *</label
-                    >
+                    <label class="input-field-title">Nama Resep *</label>
                     <input
                         v-model="formData.name"
                         type="text"
@@ -126,26 +125,21 @@ onMounted(async () => {
                 </div>
 
                 <div>
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary"
-                        >Kategori *</label
-                    >
+                    <label class="input-field-title">Kategori *</label>
                     <select v-model="formData.category" required class="input-field">
                         <option value="" disabled>Pilih Kategori</option>
-                        <option value="Masakan Utama">Masakan Utama</option>
-                        <option value="Makanan Pembuka">Makanan Pembuka</option>
-                        <option value="Makanan Penutup">Makanan Penutup</option>
-                        <option value="Salad">Salad</option>
-                        <option value="Kue">Kue</option>
-                        <option value="Sup">Sup</option>
-                        <option value="Minuman">Minuman</option>
-                        <option value="Cemilan">Cemilan</option>
+                        <option
+                            v-for="category in recipeCategory"
+                            :key="category"
+                            :value="category"
+                        >
+                            {{ category }}
+                        </option>
                     </select>
                 </div>
 
                 <div>
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary"
-                        >Deskripsi</label
-                    >
+                    <label class="input-field-title">Deskripsi</label>
                     <textarea
                         v-model="formData.description"
                         rows="3"
@@ -155,10 +149,7 @@ onMounted(async () => {
                 </div>
 
                 <div>
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary"
-                        >Bahan-bahan *</label
-                    >
-
+                    <label class="input-field-title">Bahan-bahan *</label>
                     <div class="flex flex-col gap-3">
                         <div
                             v-for="(ingredient, index) in formData.ingredients"
@@ -174,21 +165,13 @@ onMounted(async () => {
                             />
                             <select v-model="ingredient.unit" class="w-full sm:w-32 input-field">
                                 <option value="">Unit</option>
-                                <option value="g">g (gram)</option>
-                                <option value="kg">kg (kilogram)</option>
-                                <option value="ml">ml (mililiter)</option>
-                                <option value="l">l (liter)</option>
-                                <option value="cup">cup (cangkir)</option>
-                                <option value="sdm">sdm (sendok makan)</option>
-                                <option value="sdt">sdt (sendok teh)</option>
-                                <option value="butir">butir</option>
-                                <option value="buah">buah</option>
-                                <option value="siung">siung</option>
-                                <option value="batang">batang</option>
-                                <option value="lembar">lembar</option>
-                                <option value="potong">potong</option>
-                                <option value="jumput">jumput</option>
-                                <option value="secukupnya">secukupnya</option>
+                                <option
+                                    v-for="unit in unitIng"
+                                    :key="unit.value"
+                                    :value="unit.value"
+                                >
+                                    {{ unit.label }}
+                                </option>
                             </select>
                             <input
                                 v-model="ingredient.name"
@@ -228,9 +211,7 @@ onMounted(async () => {
                 </div>
 
                 <div>
-                    <label class="block mb-2 text-sm font-semibold text-textSecondary"
-                        >Instruksi *</label
-                    >
+                    <label class="input-field-title">Instruksi *</label>
                     <textarea
                         v-model="formData.instructions"
                         rows="8"
@@ -240,8 +221,8 @@ onMounted(async () => {
                     ></textarea>
                 </div>
 
-                <div v-if="error" class="alert-box alert-error">
-                    <p class="text-sm font-semibold text-error">{{ error }}</p>
+                <div v-if="error" class="alert-box">
+                    <p class="alert-text">{{ error }}</p>
                 </div>
 
                 <div class="flex flex-col gap-3 sm:flex-row">
@@ -255,7 +236,7 @@ onMounted(async () => {
                     <button
                         type="submit"
                         :disabled="loading"
-                        class="sm:flex-1 disabled:opacity-50 disabled:cursor-not-allowed button bg-primary text-textInverse hover:opacity-85"
+                        class="sm:flex-1 disabled:opacity-50 button bg-primary text-textInverse hover:opacity-85"
                     >
                         {{ loading ? 'Mohon Tunggu...' : 'Simpan Perubahan' }}
                     </button>
@@ -264,15 +245,9 @@ onMounted(async () => {
         </div>
 
         <teleport to="body">
-            <div
-                v-if="showSuccessToast"
-                class="flex fixed top-5 right-5 gap-3 items-start py-3 px-4 w-80 rounded-xl border shadow-lg border-success/30 bg-successSoft text-success z-60 max-w-[calc(100vw-40px)]"
-            >
-                <p class="flex-1 text-sm font-medium leading-snug">{{ successMessage }}</p>
-                <button
-                    @click="showSuccessToast = false"
-                    class="mt-0.5 opacity-60 transition-opacity hover:opacity-100 shrink-0"
-                >
+            <div v-if="showSuccessToast" class="toast">
+                <p class="toast-text">{{ successMessage }}</p>
+                <button @click="showSuccessToast = false" class="toast-close-btn">
                     <svg
                         viewBox="0 0 24 24"
                         fill="none"
