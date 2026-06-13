@@ -34,6 +34,3 @@ export const unitIng = [
     { value: 'jumput', label: 'jumput' },
     { value: 'secukupnya', label: 'secukupnya' },
 ] as const;
-
-export type RecipeCategory = (typeof recipeCategory)[number];
-export type IngredientUnit = (typeof unitIng)[number]['value'];
